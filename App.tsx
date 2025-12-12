@@ -1001,8 +1001,8 @@ export default function App() {
                     const investor = users.find(u => u.id === inv.investorId);
                     return (
                         <tr key={inv.id} className="border-b hover:bg-gray-50">
-                            <td className="p-4 text-sm font-bold">{investor?.name || 'مستثمر'}</td>
-                            <td className="p-4 text-sm text-gray-600">{cycle?.animalType}</td>
+                            <td className="p-4 text-sm font-bold text-gray-900">{investor?.name || 'مستثمر'}</td>
+                            <td className="p-4 text-sm text-gray-800">{cycle?.animalType}</td>
                             <td className="p-4 text-sm font-bold text-green-700">{inv.amount.toLocaleString()} ج.م</td>
                             <td className="p-4">
                                 {inv.transferReceiptUrl ? (
@@ -1013,7 +1013,7 @@ export default function App() {
                                     <span className="text-gray-400 text-xs">لا يوجد</span>
                                 )}
                             </td>
-                            <td className="p-4 text-sm text-gray-500">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
+                            <td className="p-4 text-sm text-gray-600">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
                             <td className="p-4"><StatusBadge status={inv.status} /></td>
                             <td className="p-4">
                                 {inv.status === 'PENDING_APPROVAL' && (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, Sprout, LayoutDashboard, Wallet, TrendingUp, History, 
@@ -322,89 +323,93 @@ const ProfileView: React.FC<{
           </div>
         </Card>
 
-        {/* Verification & Documents */}
-        <Card className="p-6">
-          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <ShieldCheck size={20} className="text-primary"/> التوثيق والأمان
-          </h3>
-          
-          <div className="space-y-4">
-             {/* Digital ID */}
-             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                   <div className={`p-2 rounded-full ${user.idCardFrontUrl ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
-                      <FileText size={20} />
-                   </div>
-                   <div>
-                      <p className="font-medium text-sm">بطاقة الرقم القومي</p>
-                      <p className="text-xs text-gray-500">{user.idCardFrontUrl ? 'تم الرفع' : 'مطلوب'}</p>
-                   </div>
-                </div>
-                {!user.idCardFrontUrl && <Button size="sm" variant="outline" onClick={() => handleFileUpload('idCardFrontUrl')}>رفع</Button>}
-             </div>
-
-             {/* Criminal Record (Breeders Only) */}
-             {user.role === UserRole.BREEDER && (
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        {/* Verification & Documents - Hidden for Admin */}
+        {user.role !== UserRole.ADMIN && (
+          <Card className="p-6">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <ShieldCheck size={20} className="text-primary"/> التوثيق والأمان
+            </h3>
+            
+            <div className="space-y-4">
+               {/* Digital ID */}
+               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                     <div className={`p-2 rounded-full ${user.criminalRecordUrl ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
-                        <FileWarning size={20} />
+                     <div className={`p-2 rounded-full ${user.idCardFrontUrl ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
+                        <FileText size={20} />
                      </div>
                      <div>
-                        <p className="font-medium text-sm">الفيش الجنائي</p>
-                        <p className="text-xs text-gray-500">{user.criminalRecordUrl ? 'تم الرفع' : 'مطلوب للتوثيق'}</p>
+                        <p className="font-medium text-sm">بطاقة الرقم القومي</p>
+                        <p className="text-xs text-gray-500">{user.idCardFrontUrl ? 'تم الرفع' : 'مطلوب'}</p>
                      </div>
                   </div>
-                  {!user.criminalRecordUrl && <Button size="sm" variant="outline" onClick={() => handleFileUpload('criminalRecordUrl')}>رفع</Button>}
-                </div>
-             )}
+                  {!user.idCardFrontUrl && <Button size="sm" variant="outline" onClick={() => handleFileUpload('idCardFrontUrl')}>رفع</Button>}
+               </div>
 
-             {/* Physical Contracts */}
-             <div className="border-t pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-700 mb-2">العقود الورقية</h4>
-                <p className="text-xs text-gray-500 mb-3">يجب إرسال أصول العقود الموقعة وصور الأوراق الثبوتية عبر البريد إلى: <span className="font-bold text-gray-700">ص.ب 1234، القاهرة الجديدة، مبنى دواب.</span></p>
-                
-                {user.physicalPapersVerified ? (
-                   <div className="bg-green-50 text-green-700 p-3 rounded-lg flex items-center gap-2 text-sm font-bold">
-                      <CheckCircle size={18} /> تم استلام ومراجعة الأوراق الأصلية
-                   </div>
-                ) : user.physicalPapersSent ? (
-                   <div className="bg-yellow-50 text-yellow-700 p-3 rounded-lg flex items-center gap-2 text-sm">
-                      <Clock size={18} /> بانتظار استلام البريد من قبل الإدارة
-                   </div>
-                ) : (
-                   <Button onClick={handlePhysicalPaperConfirm} variant="secondary" className="w-full">
-                      تأكيد إرسال الأوراق بالبريد
-                   </Button>
-                )}
-             </div>
-          </div>
-        </Card>
+               {/* Criminal Record (Breeders Only) */}
+               {user.role === UserRole.BREEDER && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                       <div className={`p-2 rounded-full ${user.criminalRecordUrl ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
+                          <FileWarning size={20} />
+                       </div>
+                       <div>
+                          <p className="font-medium text-sm">الفيش الجنائي</p>
+                          <p className="text-xs text-gray-500">{user.criminalRecordUrl ? 'تم الرفع' : 'مطلوب للتوثيق'}</p>
+                       </div>
+                    </div>
+                    {!user.criminalRecordUrl && <Button size="sm" variant="outline" onClick={() => handleFileUpload('criminalRecordUrl')}>رفع</Button>}
+                  </div>
+               )}
 
-        {/* Financial Info (IBAN) */}
-        <Card className="p-6 md:col-span-2">
-          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <Banknote size={20} className="text-primary"/> بيانات الحساب البنكي (لتحويل الأرباح)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <Input 
-                label="اسم البنك" 
-                value={formData.bankName || ''} 
-                disabled={!isEditing} 
-                onChange={e => setFormData({...formData, bankName: e.target.value})} 
-                placeholder="مثال: البنك الأهلي المصري"
-             />
-             <Input 
-                label="رقم الآيبان (IBAN)" 
-                value={formData.iban || ''} 
-                disabled={!isEditing} 
-                onChange={e => setFormData({...formData, iban: e.target.value})} 
-                placeholder="EG..."
-                dir="ltr"
-                className="text-left font-mono placeholder:text-right"
-             />
-          </div>
-        </Card>
+               {/* Physical Contracts */}
+               <div className="border-t pt-4 mt-4">
+                  <h4 className="text-sm font-bold text-gray-700 mb-2">العقود الورقية</h4>
+                  <p className="text-xs text-gray-500 mb-3">يجب إرسال أصول العقود الموقعة وصور الأوراق الثبوتية عبر البريد إلى: <span className="font-bold text-gray-700">ص.ب 1234، القاهرة الجديدة، مبنى دواب.</span></p>
+                  
+                  {user.physicalPapersVerified ? (
+                     <div className="bg-green-50 text-green-700 p-3 rounded-lg flex items-center gap-2 text-sm font-bold">
+                        <CheckCircle size={18} /> تم استلام ومراجعة الأوراق الأصلية
+                     </div>
+                  ) : user.physicalPapersSent ? (
+                     <div className="bg-yellow-50 text-yellow-700 p-3 rounded-lg flex items-center gap-2 text-sm">
+                        <Clock size={18} /> بانتظار استلام البريد من قبل الإدارة
+                     </div>
+                  ) : (
+                     <Button onClick={handlePhysicalPaperConfirm} variant="secondary" className="w-full">
+                        تأكيد إرسال الأوراق بالبريد
+                     </Button>
+                  )}
+               </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Financial Info (IBAN) - Hidden for Admin */}
+        {user.role !== UserRole.ADMIN && (
+          <Card className="p-6 md:col-span-2">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <Banknote size={20} className="text-primary"/> بيانات الحساب البنكي (لتحويل الأرباح)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <Input 
+                  label="اسم البنك" 
+                  value={formData.bankName || ''} 
+                  disabled={!isEditing} 
+                  onChange={e => setFormData({...formData, bankName: e.target.value})} 
+                  placeholder="مثال: البنك الأهلي المصري"
+               />
+               <Input 
+                  label="رقم الآيبان (IBAN)" 
+                  value={formData.iban || ''} 
+                  disabled={!isEditing} 
+                  onChange={e => setFormData({...formData, iban: e.target.value})} 
+                  placeholder="EG..."
+                  dir="ltr"
+                  className="text-left font-mono placeholder:text-right"
+               />
+            </div>
+          </Card>
+        )}
 
         {/* Stats for Breeder */}
         {user.role === UserRole.BREEDER && (

@@ -92,7 +92,7 @@ export const Input: React.FC<InputProps> = ({ label, className = '', ...props })
   <div className="mb-4">
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <input 
-      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${className}`}
       {...props}
     />
   </div>
@@ -183,7 +183,7 @@ export const SimplePlanBuilder: React.FC<PlanBuilderProps> = ({ animalType, onCh
                <span className="text-xs text-gray-500 w-20">علف مركز</span>
                <div className="flex items-center gap-3">
                   <button type="button" onClick={() => updateStage(idx, 'feed', -0.25)} className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600">-</button>
-                  <span className="font-bold w-12 text-center text-sm">{stage.feed}</span>
+                  <span className="font-bold w-12 text-center text-sm text-gray-900">{stage.feed}</span>
                   <button type="button" onClick={() => updateStage(idx, 'feed', 0.25)} className="w-6 h-6 rounded bg-green-100 hover:bg-green-200 flex items-center justify-center text-green-700">+</button>
                </div>
                <span className="text-xs text-gray-400">كجم</span>
@@ -192,7 +192,7 @@ export const SimplePlanBuilder: React.FC<PlanBuilderProps> = ({ animalType, onCh
                <span className="text-xs text-gray-500 w-20">مواد خشنة</span>
                <div className="flex items-center gap-3">
                   <button type="button" onClick={() => updateStage(idx, 'roughage', -0.5)} className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600">-</button>
-                  <span className="font-bold w-12 text-center text-sm">{stage.roughage}</span>
+                  <span className="font-bold w-12 text-center text-sm text-gray-900">{stage.roughage}</span>
                   <button type="button" onClick={() => updateStage(idx, 'roughage', 0.5)} className="w-6 h-6 rounded bg-green-100 hover:bg-green-200 flex items-center justify-center text-green-700">+</button>
                </div>
                <span className="text-xs text-gray-400">كجم</span>

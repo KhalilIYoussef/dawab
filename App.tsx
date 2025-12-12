@@ -6,7 +6,8 @@ import {
   AlertTriangle, DollarSign, Activity, Wheat, CheckCircle, Clock,
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
-  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins
+  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
+  Calculator, ArrowDown, ShoppingBag, Gavel
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -56,7 +57,7 @@ const StatCard: React.FC<{
   
   return (
     <div onClick={onClick} className={`${onClick ? 'cursor-pointer transform hover:scale-[1.02] transition-transform duration-200' : ''} h-full`}>
-      <Card className="p-6 flex items-center gap-4 hover:shadow-md transition-shadow h-full">
+      <Card className="p-6 flex items-center gap-4 hover:shadow-md transition-shadow h-full relative group">
         <div className={`p-4 rounded-2xl ${colors[color] || colors.primary}`}>
           <Icon size={28} />
         </div>
@@ -64,6 +65,11 @@ const StatCard: React.FC<{
           <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800">{value}</p>
         </div>
+        {onClick && (
+            <div className="absolute top-4 right-4 text-gray-300 group-hover:text-primary transition-colors">
+                <Info size={16} />
+            </div>
+        )}
       </Card>
     </div>
   );
@@ -486,6 +492,14 @@ export default function App() {
   const [logsModal, setLogsModal] = useState<{isOpen: boolean, cycle: Cycle | null}>({isOpen: false, cycle: null});
   const [logForm, setLogForm] = useState({ weight: '', food: '', notes: '' });
 
+  // -- Modal State for Financial Details (Admin) --
+  const [financialDetails, setFinancialDetails] = useState<{isOpen: boolean, type: 'TOTAL' | 'REVENUE' | 'INSURANCE' | 'NET_CAPITAL' | null}>({isOpen: false, type: null});
+
+  // -- Modal State for Ending Cycle (Admin) --
+  const [endCycleModal, setEndCycleModal] = useState<{isOpen: boolean, cycle: Cycle | null, salePrice: string}>({
+      isOpen: false, cycle: null, salePrice: ''
+  });
+
   // Success Modal State
   const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
@@ -562,6 +576,23 @@ export default function App() {
     if(confirm('هل أنت متأكد من حذف هذه الدورة نهائياً؟')) {
         setCycles(prev => prev.filter(c => c.id !== cycleId));
     }
+  };
+
+  // --- End Cycle Handler ---
+  const confirmEndCycle = () => {
+      if (!endCycleModal.cycle || !endCycleModal.salePrice) return;
+      
+      const salePrice = parseFloat(endCycleModal.salePrice);
+      
+      setCycles(prev => prev.map(c => c.id === endCycleModal.cycle!.id ? {
+          ...c,
+          status: CycleStatus.COMPLETED,
+          finalSalePrice: salePrice,
+          actualEndDate: new Date().toISOString().split('T')[0]
+      } : c));
+
+      setEndCycleModal({ isOpen: false, cycle: null, salePrice: '' });
+      setSuccessModal({ isOpen: true, message: `تم تسجيل بيع القطيع بمبلغ ${salePrice.toLocaleString()} ج.م وإنهاء الدورة بنجاح. سيتم توزيع الأرباح على المستثمرين (محاكاة).` });
   };
 
   const handleBreederCreateCycle = () => {
@@ -912,6 +943,18 @@ export default function App() {
                                                         <Button size="sm" variant="danger" onClick={() => updateCycleStatus(cycle.id, CycleStatus.REJECTED)}>رفض</Button>
                                                     </>
                                                 )}
+                                                {cycle.status === CycleStatus.ACTIVE && (
+                                                    <Button 
+                                                        size="sm" 
+                                                        variant="secondary" 
+                                                        onClick={() => setEndCycleModal({ isOpen: true, cycle, salePrice: '' })}
+                                                        title="البيع الفوري وإنهاء الدورة"
+                                                        className="px-2"
+                                                    >
+                                                        <Gavel size={16} className="md:ml-1" />
+                                                        <span className="hidden md:inline">بيع وإنهاء</span>
+                                                    </Button>
+                                                )}
                                                 {(cycle.status === CycleStatus.ACTIVE || cycle.status === CycleStatus.COMPLETED) && (
                                                     <button onClick={() => deleteCycle(cycle.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                                                         <Trash2 size={18} />
@@ -938,6 +981,8 @@ export default function App() {
     // 1. Calculate Financial Statistics
     const totalGross = investments.reduce((acc, inv) => acc + inv.amount, 0);
     const totalRevenue = totalGross * PLATFORM_FEE_PERCENT; // 2.5% of gross
+    const activeInvestments = investments.filter(inv => inv.status === 'APPROVED');
+    const totalTransactionsCount = investments.length;
     
     const totalInsurancePool = investments.reduce((acc, inv) => {
       // Calculate insurance fee portion (3%) only if insurance was applied
@@ -948,10 +993,143 @@ export default function App() {
 
     const netCapitalDeployed = totalGross - totalRevenue - totalInsurancePool;
 
+    // Helper for Modal Content
+    const renderFinancialDetailContent = () => {
+        switch(financialDetails.type) {
+            case 'TOTAL':
+                return (
+                    <div className="space-y-4">
+                        <div className="bg-gray-50 p-6 rounded-2xl text-center">
+                            <p className="text-gray-500 mb-2">إجمالي المبالغ المدفوعة</p>
+                            <p className="text-4xl font-bold text-gray-800">{totalGross.toLocaleString()} <span className="text-lg text-gray-400">ج.م</span></p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="border p-4 rounded-xl">
+                                <p className="text-sm text-gray-500 mb-1">عدد المعاملات</p>
+                                <p className="text-xl font-bold">{totalTransactionsCount}</p>
+                            </div>
+                            <div className="border p-4 rounded-xl">
+                                <p className="text-sm text-gray-500 mb-1">متوسط العملية</p>
+                                <p className="text-xl font-bold">{totalTransactionsCount > 0 ? Math.round(totalGross/totalTransactionsCount).toLocaleString() : 0} ج.م</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            يمثل هذا الرقم إجمالي التدفقات النقدية الواردة من المستثمرين قبل خصم أي رسوم إدارية أو تأمينية.
+                        </p>
+                    </div>
+                );
+            case 'REVENUE':
+                return (
+                    <div className="space-y-4">
+                        <div className="bg-green-50 p-6 rounded-2xl text-center">
+                            <p className="text-green-700 mb-2">صافي أرباح المنصة</p>
+                            <p className="text-4xl font-bold text-green-800">{totalRevenue.toLocaleString()} <span className="text-lg text-green-600">ج.م</span></p>
+                        </div>
+                        <div className="bg-white border rounded-xl p-4">
+                            <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><Calculator size={16}/> معادلة الاحتساب</h4>
+                            <div className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-lg font-mono" dir="ltr">
+                                <span>{totalGross.toLocaleString()}</span>
+                                <span className="text-gray-400">x</span>
+                                <span className="text-blue-600 font-bold">2.5%</span>
+                                <span className="text-gray-400">=</span>
+                                <span className="text-green-700 font-bold">{totalRevenue.toLocaleString()}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 text-right">
+                                يتم اقتطاع نسبة 2.5% من إجمالي مبلغ الاستثمار كرسوم تشغيل وإدارة للمنصة فور تأكيد الدفع.
+                            </p>
+                        </div>
+                    </div>
+                );
+            case 'INSURANCE':
+                 const insuredCount = investments.filter(inv => {
+                    const cycle = cycles.find(c => c.id === inv.cycleId);
+                    return inv.hasAnimalInsurance || cycle?.insurancePolicyNumber;
+                 }).length;
+                return (
+                    <div className="space-y-4">
+                        <div className="bg-blue-50 p-6 rounded-2xl text-center">
+                            <p className="text-blue-700 mb-2">محفظة التأمين المجمعة</p>
+                            <p className="text-4xl font-bold text-blue-800">{totalInsurancePool.toLocaleString()} <span className="text-lg text-blue-600">ج.م</span></p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="border p-4 rounded-xl bg-gray-50">
+                                <p className="text-sm text-gray-500 mb-1">العمليات المؤمنة</p>
+                                <p className="text-xl font-bold text-gray-800">{insuredCount}</p>
+                            </div>
+                             <div className="border p-4 rounded-xl bg-gray-50">
+                                <p className="text-sm text-gray-500 mb-1">نسبة الاستقطاع</p>
+                                <p className="text-xl font-bold text-red-600">3.0%</p>
+                            </div>
+                        </div>
+                        <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg text-sm text-yellow-800 flex gap-2 items-start">
+                            <ShieldCheck size={18} className="shrink-0 mt-0.5" />
+                            <p>يستخدم هذا الصندوق لتعويض المستثمرين والمربين في حالات النفوق القهري للحيوانات. يتم الخصم فقط من الدورات أو الأسهم التي طلب أصحابها التأمين.</p>
+                        </div>
+                    </div>
+                );
+            case 'NET_CAPITAL':
+                return (
+                    <div className="space-y-5">
+                         <div className="bg-purple-50 p-6 rounded-2xl text-center">
+                            <p className="text-purple-700 mb-2">صافي رأس المال المستثمر</p>
+                            <p className="text-4xl font-bold text-purple-900">{netCapitalDeployed.toLocaleString()} <span className="text-lg text-purple-600">ج.م</span></p>
+                        </div>
+                        
+                        <div className="relative border-r-2 border-gray-200 pr-6 mr-3 space-y-6">
+                            <div className="relative">
+                                <div className="absolute -right-[31px] top-1 w-4 h-4 rounded-full bg-gray-400 border-2 border-white"></div>
+                                <p className="text-sm text-gray-500">إجمالي التعاملات</p>
+                                <p className="font-bold text-lg">{totalGross.toLocaleString()} ج.م</p>
+                            </div>
+                            
+                            <div className="relative">
+                                <div className="absolute -right-[31px] top-1 w-4 h-4 rounded-full bg-red-400 border-2 border-white"></div>
+                                <p className="text-sm text-red-500 flex items-center gap-1"><ArrowDown size={14}/> يخصم: رسوم المنصة (2.5%)</p>
+                                <p className="font-bold text-lg text-red-600">-{totalRevenue.toLocaleString()} ج.م</p>
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute -right-[31px] top-1 w-4 h-4 rounded-full bg-red-400 border-2 border-white"></div>
+                                <p className="text-sm text-red-500 flex items-center gap-1"><ArrowDown size={14}/> يخصم: رسوم التأمين (3%)</p>
+                                <p className="font-bold text-lg text-red-600">-{totalInsurancePool.toLocaleString()} ج.م</p>
+                            </div>
+
+                            <div className="relative pt-2 border-t border-dashed">
+                                <div className="absolute -right-[31px] top-3 w-4 h-4 rounded-full bg-purple-600 border-2 border-white"></div>
+                                <p className="text-sm text-purple-700 font-bold">الصافي الفعلي لشراء الرؤوس</p>
+                                <p className="font-bold text-xl text-purple-900">{netCapitalDeployed.toLocaleString()} ج.م</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    const getModalTitle = () => {
+         switch(financialDetails.type) {
+            case 'TOTAL': return 'تفاصيل حجم التعاملات';
+            case 'REVENUE': return 'تحليل أرباح المنصة';
+            case 'INSURANCE': return 'صندوق التأمين والمخاطر';
+            case 'NET_CAPITAL': return 'تدفق رأس المال التشغيلي';
+            default: return '';
+        }
+    };
+
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-800">الإدارة المالية والحسابات</h2>
         
+        {/* Financial Modal */}
+        <Modal 
+            isOpen={financialDetails.isOpen} 
+            onClose={() => setFinancialDetails({...financialDetails, isOpen: false})} 
+            title={getModalTitle()}
+        >
+            {renderFinancialDetailContent()}
+        </Modal>
+
         {/* Financial Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
            <StatCard 
@@ -959,24 +1137,28 @@ export default function App() {
              value={`${totalGross.toLocaleString()} ج.م`} 
              icon={Activity} 
              color="secondary"
+             onClick={() => setFinancialDetails({isOpen: true, type: 'TOTAL'})}
            />
            <StatCard 
              title="صافي أرباح المنصة (2.5%)" 
              value={`${totalRevenue.toLocaleString()} ج.م`} 
              icon={TrendingUp} 
              color="primary"
+             onClick={() => setFinancialDetails({isOpen: true, type: 'REVENUE'})}
            />
            <StatCard 
              title="محفظة التأمين المجمعة (3%)" 
              value={`${totalInsurancePool.toLocaleString()} ج.م`} 
              icon={ShieldCheck} 
              color="blue"
+             onClick={() => setFinancialDetails({isOpen: true, type: 'INSURANCE'})}
            />
            <StatCard 
              title="صافي رأس المال المستثمر" 
              value={`${netCapitalDeployed.toLocaleString()} ج.م`} 
              icon={Coins} 
              color="purple"
+             onClick={() => setFinancialDetails({isOpen: true, type: 'NET_CAPITAL'})}
            />
         </div>
 
@@ -1035,334 +1217,220 @@ export default function App() {
   };
 
   const renderBreederDashboard = () => {
+    const myCycles = cycles.filter(c => c.breederId === currentUser!.id);
+    const activeCount = myCycles.filter(c => c.status === CycleStatus.ACTIVE).length;
+    
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-           <h2 className="text-2xl font-bold text-gray-800">مزرعتي</h2>
-           <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
-             <Plus size={20} /> إضافة دورة جديدة
-           </Button>
-        </div>
-
-        {/* Create Cycle Modal */}
-        <Modal 
-          isOpen={isCreateModalOpen} 
-          onClose={() => setCreateModalOpen(false)} 
-          title="تسجيل دورة تسمين جديدة"
-        >
-          <div className="space-y-4">
-             {/* Step 1: Basic Info */}
-             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h4 className="font-bold text-gray-700 mb-3 text-sm">بيانات الحيوان</h4>
-                <div className="grid grid-cols-2 gap-4">
-                   <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">النوع</label>
-                      <select 
-                        className="w-full px-3 py-2 border rounded-lg"
-                        value={breederForm.animalType}
-                        onChange={(e) => setBreederForm({...breederForm, animalType: e.target.value})}
-                      >
-                         <option value="cows">عجول تسمين</option>
-                         <option value="sheep">خراف برقي/رحماني</option>
-                      </select>
-                   </div>
-                   <Input 
-                      label="الوزن الحالي (كجم)" 
-                      type="number" 
-                      value={breederForm.initialWeight} 
-                      onChange={e => setBreederForm({...breederForm, initialWeight: Number(e.target.value)})}
-                   />
-                   <Input 
-                      label="الوزن المستهدف (كجم)" 
-                      type="number" 
-                      value={breederForm.targetWeight} 
-                      onChange={e => setBreederForm({...breederForm, targetWeight: Number(e.target.value)})}
-                   />
-                   <Input 
-                      label="سعر الرأس (شامل الرعاية)" 
-                      type="number" 
-                      value={breederForm.startPricePerHead} 
-                      onChange={e => setBreederForm({...breederForm, startPricePerHead: Number(e.target.value)})}
-                   />
-                </div>
-                
-                {/* Insurance Option for Breeder */}
-                <div className="mt-4 pt-3 border-t border-gray-200">
-                   <div className="flex items-center gap-3">
-                      <div className="relative flex items-center">
-                         <input 
-                           type="checkbox" 
-                           id="breederInsurance"
-                           checked={breederForm.isInsured}
-                           onChange={(e) => setBreederForm({...breederForm, isInsured: e.target.checked})}
-                           className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
-                         />
-                      </div>
-                      <label htmlFor="breederInsurance" className="text-sm font-medium text-gray-800 cursor-pointer flex items-center gap-2">
-                         <Shield size={18} className="text-blue-600"/>
-                         تأمين شامل على الحياة (يضاف للسعر)
-                      </label>
-                   </div>
-                   <p className="text-xs text-gray-500 mr-8 mt-1">تفعيل هذا الخيار يزيد من ثقة المستثمرين ويغطي مخاطر النفوق بالكامل.</p>
-                </div>
-             </div>
-
-             {/* Step 2: Feeding Plan Generator */}
-             <div className="border-t pt-4">
-                <h4 className="font-bold text-gray-700 mb-3 text-sm">خطة التغذية والرعاية</h4>
-                <SimplePlanBuilder 
-                  animalType={breederForm.animalType === 'sheep' ? 'sheep' : 'cows'}
-                  onChange={handlePlanChange}
-                />
-             </div>
-
-             <Button onClick={handleBreederCreateCycle} className="w-full mt-4">
-                إرسال للمراجعة
-             </Button>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">لوحة تحكم المربي</h2>
+            <p className="text-gray-500">أهلاً بك، {currentUser!.name}</p>
           </div>
-        </Modal>
-
-        {/* Breeder's Cycles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cycles.filter(c => c.breederId === currentUser?.id).map(cycle => (
-            <Card key={cycle.id} className="overflow-hidden group">
-              <div className="h-40 bg-gray-200 relative">
-                <img src={cycle.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute top-3 left-3">
-                  <StatusBadge status={cycle.status} type="cycle" />
-                </div>
-                {cycle.insurancePolicyNumber && (
-                   <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-blue-800 flex items-center gap-1 shadow-sm">
-                      <Shield size={12} className="fill-blue-100"/> مؤمن
-                   </div>
-                )}
-              </div>
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-2">
-                   <h3 className="font-bold text-lg">{cycle.animalType}</h3>
-                   <span className="text-primary font-bold">{cycle.startPricePerHead.toLocaleString()} ج.م</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                   <Clock size={16} /> <span>{cycle.expectedDuration} يوم</span>
-                   <span>•</span>
-                   <Wheat size={16} /> <span>{cycle.initialWeight} كجم</span>
-                </div>
-
-                {/* Funding Progress (If approved) */}
-                {cycle.status === CycleStatus.ACTIVE && (
-                   <div className="mb-4">
-                      <div className="flex justify-between text-xs mb-1">
-                         <span>تم التمويل</span>
-                         <span className="font-bold">{Math.round((cycle.currentFunding / cycle.fundingGoal) * 100)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                         <div className="bg-primary h-2 rounded-full" style={{ width: `${(cycle.currentFunding / cycle.fundingGoal) * 100}%` }}></div>
-                      </div>
-                   </div>
-                )}
-
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setLogsModal({isOpen: true, cycle})}>سجل المتابعة</Button>
-                  <Button size="sm" variant="ghost" className="text-xs" onClick={() => setDetailsModal({isOpen: true, cycle})}>تفاصيل</Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+          <Button onClick={() => setCreateModalOpen(true)} className="shadow-lg shadow-green-200">
+            <Plus size={20} />
+            إضافة دورة تسمين جديدة
+          </Button>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           <StatCard title="الدورات النشطة" value={activeCount} icon={Activity} color="primary" />
+           <StatCard title="إجمالي الدورات" value={myCycles.length} icon={LayoutDashboard} color="secondary" />
+           <StatCard title="تقييم المزرعة" value={currentUser!.rating || 5.0} icon={TrendingUp} color="accent" />
+        </div>
+
+        <h3 className="text-xl font-bold text-gray-700 mt-4">دورات التسمين الخاصة بي</h3>
+        {myCycles.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+            <Tractor size={48} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-500">لم تقم بإضافة أي دورات بعد.</p>
+            <Button onClick={() => setCreateModalOpen(true)} variant="outline" className="mt-4">إبدأ الآن</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {myCycles.map(cycle => (
+              <Card key={cycle.id} className="overflow-hidden flex flex-col">
+                <div className="relative h-48">
+                  <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover" />
+                  <div className="absolute top-2 right-2">
+                    <StatusBadge status={cycle.status} type="cycle" />
+                  </div>
+                  {cycle.insurancePolicyNumber && (
+                    <div className="absolute bottom-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                      <ShieldCheck size={12} /> مؤمنة
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 flex-1 flex flex-col">
+                  <div className="flex justify-between items-start mb-2">
+                     <h3 className="font-bold text-lg text-gray-800">{cycle.animalType}</h3>
+                     <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">{cycle.expectedDuration} يوم</span>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4 text-sm text-gray-600">
+                     <div className="flex justify-between">
+                        <span>الوزن الحالي:</span>
+                        <span className="font-bold">{cycle.initialWeight} كجم</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>التمويل:</span>
+                        <span className="font-bold text-green-700">{cycle.currentFunding.toLocaleString()} / {cycle.fundingGoal.toLocaleString()}</span>
+                     </div>
+                     <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                        <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(100, (cycle.currentFunding / cycle.fundingGoal) * 100)}%` }}></div>
+                     </div>
+                  </div>
+
+                  <div className="mt-auto grid grid-cols-2 gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setDetailsModal({ isOpen: true, cycle })}>
+                       التفاصيل
+                    </Button>
+                    <Button size="sm" onClick={() => setLogsModal({ isOpen: true, cycle })}>
+                       سجل المتابعة
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
 
   const renderInvestorDashboard = () => {
-    // Calculate simple stats for the investor
-    const myInvestments = investments.filter(i => i.investorId === currentUser?.id);
+    // Marketplace: Active cycles that are not fully funded (or available heads > 0)
+    // Note: Cycle status is ACTIVE means approved by admin.
+    const marketplaceCycles = cycles.filter(c => c.status === CycleStatus.ACTIVE && c.currentFunding < c.fundingGoal);
+    
+    // My Investments
+    const myInvestments = investments.filter(i => i.investorId === currentUser!.id);
     const totalInvested = myInvestments.reduce((sum, i) => sum + i.amount, 0);
-    const activeInvestmentsCount = myInvestments.filter(i => i.status === 'APPROVED' || i.status === 'PENDING_APPROVAL').length;
 
     return (
-      <div className="space-y-10 pb-10">
-        {/* Hero / Welcome Section */}
-        <div className="bg-gradient-to-l from-primary/90 to-primary text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-           <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-              <div>
-                 <h2 className="text-3xl font-bold mb-2">مرحباً، {currentUser?.name} 👋</h2>
-                 <p className="text-primary-100 opacity-90">استثمر في الثروة الحيوانية وحقق عوائد مستدامة.</p>
+      <div className="space-y-8">
+        {/* Header Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center gap-3 mb-2 opacity-90">
+                 <Wallet size={24} />
+                 <span className="font-medium">محفظتي الاستثمارية</span>
               </div>
-              <div className="flex gap-4">
-                 <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 min-w-[140px]">
-                    <p className="text-sm text-green-100 mb-1">إجمالي استثماراتي</p>
-                    <p className="text-2xl font-bold">{totalInvested.toLocaleString()} <span className="text-xs font-normal">ج.م</span></p>
-                 </div>
-                 <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 min-w-[140px]">
-                    <p className="text-sm text-green-100 mb-1">الدورات النشطة</p>
-                    <p className="text-2xl font-bold">{activeInvestmentsCount}</p>
-                 </div>
-              </div>
+              <p className="text-3xl font-bold">{totalInvested.toLocaleString()} <span className="text-base font-normal opacity-80">ج.م</span></p>
            </div>
+           
+           <StatCard title="الاستثمارات النشطة" value={myInvestments.filter(i => i.status === 'APPROVED').length} icon={Activity} color="secondary" />
+           <StatCard title="العوائد المتوقعة" value="-- %" icon={TrendingUp} color="accent" />
         </div>
 
         {/* Marketplace Section */}
-        <section>
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <Sprout className="text-primary" /> الفرص المتاحة للاستثمار
-            </h3>
-            <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-               <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors whitespace-nowrap">الكل</button>
-               <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors whitespace-nowrap">عجول تسمين</button>
-               <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors whitespace-nowrap">أغنام</button>
-               <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors whitespace-nowrap">الأعلى عائداً</button>
-            </div>
-          </div>
+        <div>
+           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+             <ShoppingBag size={24} className="text-primary" />
+             فرص الاستثمار المتاحة (السوق)
+           </h2>
+           
+           {marketplaceCycles.length === 0 ? (
+             <div className="text-center py-12 bg-white rounded-xl">
+               <p className="text-gray-500">لا توجد فرص متاحة حالياً. يرجى العودة لاحقاً.</p>
+             </div>
+           ) : (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {marketplaceCycles.map(cycle => {
+                  const percent = Math.round((cycle.currentFunding / cycle.fundingGoal) * 100);
+                  const breeder = users.find(u => u.id === cycle.breederId);
+                  const remaining = cycle.fundingGoal - cycle.currentFunding;
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {cycles.filter(c => c.status === CycleStatus.ACTIVE).map(cycle => {
-              const remaining = cycle.fundingGoal - cycle.currentFunding;
-              const isFullyFunded = remaining <= 0;
-              const percent = Math.min(100, Math.round((cycle.currentFunding / cycle.fundingGoal) * 100));
-
-              return (
-                <div key={cycle.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group h-full">
-                  {/* Image & Badges */}
-                  <div className="h-56 relative overflow-hidden">
-                    <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80"></div>
-                    
-                    <div className="absolute top-4 right-4 flex gap-2">
-                       <span className="bg-white/90 backdrop-blur text-gray-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                          <Clock size={12} className="text-primary" /> {cycle.expectedDuration} يوم
-                       </span>
-                    </div>
-
-                    <div className="absolute bottom-4 right-4 text-white w-full pr-4">
-                        <div className="flex justify-between items-end">
-                           <div>
-                              <h4 className="font-bold text-lg leading-tight mb-1">{cycle.animalType}</h4>
-                              <div className="flex items-center gap-1 text-xs text-gray-200">
-                                <MapPin size={12} /> مزرعة الحاج متولي (الشرقية)
-                              </div>
-                           </div>
-                           {cycle.insurancePolicyNumber && (
-                              <div className="ml-4 bg-blue-600/90 backdrop-blur px-3 py-1 rounded-l-lg text-xs font-bold flex items-center gap-1">
-                                 <Shield size={12} className="fill-white"/> مؤمن بالكامل
-                              </div>
-                           )}
-                        </div>
-                    </div>
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-6 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-4">
-                       <div>
-                          <p className="text-sm text-gray-500 mb-1">العائد المتوقع</p>
-                          <p className="font-bold text-xl text-primary">~20% <span className="text-xs font-normal text-gray-400">سنوي</span></p>
+                  return (
+                    <Card key={cycle.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
+                       <div className="relative h-48 group cursor-pointer" onClick={() => setDetailsModal({isOpen: true, cycle})}>
+                          <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                             <p className="text-white text-sm line-clamp-2">{cycle.description}</p>
+                          </div>
+                          {cycle.insurancePolicyNumber && (
+                            <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                               <ShieldCheck size={12} /> مؤمنة
+                            </div>
+                          )}
                        </div>
-                       <div className="text-left">
-                          <p className="text-sm text-gray-500 mb-1">سعر السهم</p>
-                          <p className="font-bold text-xl text-gray-800">{cycle.startPricePerHead.toLocaleString()} <span className="text-xs font-normal text-gray-400">ج.م</span></p>
-                       </div>
-                    </div>
+                       <div className="p-5 flex-1 flex flex-col">
+                          <div className="flex justify-between items-start mb-1">
+                             <h3 className="font-bold text-lg text-gray-900">{cycle.animalType}</h3>
+                             <Badge color="blue">{cycle.expectedDuration} يوم</Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 mb-4 flex items-center gap-1">
+                             <MapPin size={14}/> {breeder?.governorate || 'مصر'} • {breeder?.name}
+                          </p>
 
-                    {/* Progress */}
-                    <div className="mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                       <div className="flex justify-between text-xs mb-2 text-gray-500 font-medium">
-                          <span>تم جمع {percent}%</span>
-                          <span>المستهدف {cycle.fundingGoal.toLocaleString()} ج.م</span>
-                       </div>
-                       <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div className="bg-primary h-3 rounded-full shadow-[0_0_10px_rgba(25,135,84,0.5)] transition-all duration-1000" style={{ width: `${percent}%` }}></div>
-                       </div>
-                       <div className="mt-2 text-xs text-center text-gray-500">
-                          متبقي <span className="font-bold text-gray-800">{remaining.toLocaleString()} ج.م</span> لإغلاق الدورة
-                       </div>
-                    </div>
+                          <div className="space-y-3 mb-6">
+                             <div>
+                                <div className="flex justify-between text-sm mb-1">
+                                   <span className="text-gray-600">اكتمال التمويل</span>
+                                   <span className="font-bold text-primary">{percent}%</span>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                   <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
+                                </div>
+                             </div>
+                             
+                             <div className="flex justify-between items-center bg-green-50 p-2 rounded-lg">
+                                <span className="text-xs text-green-700">المبلغ المطلوب للاكتمال</span>
+                                <span className="font-bold text-green-800">{remaining.toLocaleString()} ج.م</span>
+                             </div>
+                          </div>
 
-                    <div className="mt-auto grid grid-cols-2 gap-3">
-                        <Button 
-                          onClick={() => openInvestModal(cycle.id, remaining)} 
-                          disabled={isFullyFunded}
-                          className={`w-full py-3 rounded-xl font-bold shadow-lg shadow-primary/20 ${isFullyFunded ? 'bg-gray-300 hover:bg-gray-300 cursor-not-allowed shadow-none' : ''}`}
-                        >
-                          {isFullyFunded ? 'مكتمل' : 'استثمر الآن'}
-                        </Button>
-                        <Button 
-                          onClick={() => openInvestModal(cycle.id, 5000)} 
-                          variant="outline" 
-                          className={`w-full py-3 rounded-xl border-gray-200 hover:border-primary hover:text-primary hover:bg-white ${isFullyFunded || remaining < 5000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          disabled={isFullyFunded || remaining < 5000}
-                        >
-                          مشاركة
-                        </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+                          <Button onClick={() => openInvestModal(cycle.id, remaining)} className="w-full mt-auto">
+                             استثمر الآن
+                          </Button>
+                       </div>
+                    </Card>
+                  );
+                })}
+             </div>
+           )}
+        </div>
 
-        {/* My Investments Section - Redesigned */}
-        {myInvestments.length > 0 && (
-          <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-            <div className="flex justify-between items-center mb-6">
-               <h3 className="text-xl font-bold text-gray-800">محفظتي الاستثمارية</h3>
-               <button className="text-primary text-sm font-bold hover:underline flex items-center gap-1">عرض الكل <ArrowRight size={16}/></button>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                   <tr className="border-b border-gray-100">
-                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">الدورة</th>
-                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">قيمة الاستثمار</th>
-                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">تاريخ البدء</th>
-                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">الحالة</th>
-                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">التأمين</th>
-                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">الإجراء</th>
-                   </tr>
-                </thead>
-                <tbody>
-                   {myInvestments.map(inv => {
-                      const cycle = cycles.find(c => c.id === inv.cycleId);
-                      return (
-                         <tr key={inv.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                            <td className="py-4 px-4">
-                               <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
-                                     <img src={cycle?.imageUrl} className="w-full h-full object-cover" alt=""/>
-                                  </div>
-                                  <div>
-                                     <p className="font-bold text-gray-800 text-sm">{cycle?.animalType}</p>
-                                     <p className="text-xs text-gray-500">رقم {inv.contractCodes[0] || '---'}</p>
-                                  </div>
-                               </div>
-                            </td>
-                            <td className="py-4 px-4 font-bold text-gray-700">{inv.amount.toLocaleString()} ج.م</td>
-                            <td className="py-4 px-4 text-sm text-gray-500">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
-                            <td className="py-4 px-4"><StatusBadge status={inv.status} /></td>
-                            <td className="py-4 px-4">
-                               {inv.hasAnimalInsurance ? (
-                                  <span className="flex items-center gap-1 text-green-600 text-xs font-bold" title="مؤمن ضد المخاطر">
-                                     <Shield size={14} /> مؤمن
-                                  </span>
-                               ) : (
-                                  <span className="text-gray-400 text-xs">-</span>
-                               )}
-                            </td>
-                            <td className="py-4 px-4">
-                               <button className="text-gray-400 hover:text-primary transition-colors"><Eye size={18} /></button>
-                            </td>
-                         </tr>
-                      )
-                   })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+        {/* My Portfolio Section */}
+        <div>
+           <h2 className="text-xl font-bold text-gray-800 mb-4">استثماراتي الحالية</h2>
+           {myInvestments.length === 0 ? (
+              <p className="text-gray-500 text-sm">لم تقم بأي استثمار بعد.</p>
+           ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {myInvestments.map(inv => {
+                    const cycle = cycles.find(c => c.id === inv.cycleId);
+                    return (
+                       <Card key={inv.id} className="p-4 flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+                             <img src={cycle?.imageUrl} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1">
+                             <h4 className="font-bold text-gray-800">{cycle?.animalType}</h4>
+                             <p className="text-sm text-gray-500 mb-1">تاريخ الاستثمار: {new Date(inv.date).toLocaleDateString('ar-EG')}</p>
+                             <div className="flex gap-2">
+                                <Badge color={inv.status === 'APPROVED' ? 'green' : 'yellow'}>
+                                   {inv.status === 'APPROVED' ? 'مقبول' : 'قيد المراجعة'}
+                                </Badge>
+                                {inv.hasAnimalInsurance && <Badge color="blue">مؤمن</Badge>}
+                             </div>
+                          </div>
+                          <div className="text-left">
+                             <p className="font-bold text-lg text-primary">{inv.amount.toLocaleString()}</p>
+                             <p className="text-xs text-gray-400">ج.م</p>
+                             <button 
+                               onClick={() => setDetailsModal({ isOpen: true, cycle: cycle || null })}
+                               className="text-xs text-blue-600 hover:underline mt-1 block"
+                             >
+                               تفاصيل الدورة
+                             </button>
+                          </div>
+                       </Card>
+                    );
+                 })}
+              </div>
+           )}
+        </div>
       </div>
     );
   };
@@ -1395,6 +1463,56 @@ export default function App() {
            <Button className="w-full mt-6" onClick={() => setSuccessModal({ ...successModal, isOpen: false })}>
              حسناً
            </Button>
+        </div>
+      </Modal>
+
+      {/* End Cycle / Sell Modal */}
+      <Modal 
+        isOpen={endCycleModal.isOpen} 
+        onClose={() => setEndCycleModal({ ...endCycleModal, isOpen: false })} 
+        title="إنهاء الدورة والبيع الفوري"
+      >
+        <div className="space-y-4">
+            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 flex items-start gap-3">
+                <Gavel size={24} className="text-orange-600 mt-1" />
+                <div>
+                    <h4 className="font-bold text-orange-800">تنبيه هام</h4>
+                    <p className="text-sm text-orange-700">هذا الإجراء نهائي. سيتم تحويل حالة الدورة إلى "مكتملة" ولن يتمكن المستثمرون من الاستثمار بها بعد الآن. سيتم اعتبار القطيع مباعاً بالكامل.</p>
+                </div>
+            </div>
+
+            <div>
+                <Input 
+                    label="سعر البيع النهائي للقطيع (ج.م)" 
+                    type="number"
+                    value={endCycleModal.salePrice}
+                    onChange={(e) => setEndCycleModal({...endCycleModal, salePrice: e.target.value})}
+                    placeholder="أدخل إجمالي المبلغ المحصل من البيع"
+                />
+            </div>
+
+            {endCycleModal.cycle && endCycleModal.salePrice && (
+                 <div className="bg-gray-100 p-3 rounded-lg text-sm space-y-2">
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">رأس المال المستثمر:</span>
+                        <span className="font-bold">{endCycleModal.cycle.currentFunding.toLocaleString()} ج.م</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">سعر البيع:</span>
+                        <span className="font-bold text-green-700">{parseFloat(endCycleModal.salePrice).toLocaleString()} ج.م</span>
+                    </div>
+                    <div className="border-t border-gray-300 pt-2 flex justify-between font-bold">
+                        <span>الربح/الخسارة الإجمالية:</span>
+                        <span className={parseFloat(endCycleModal.salePrice) >= endCycleModal.cycle.currentFunding ? 'text-green-600' : 'text-red-600'}>
+                             {(parseFloat(endCycleModal.salePrice) - endCycleModal.cycle.currentFunding).toLocaleString()} ج.م
+                        </span>
+                    </div>
+                 </div>
+            )}
+
+            <Button onClick={confirmEndCycle} className="w-full bg-orange-600 hover:bg-orange-700 text-white">
+                تأكيد البيع وإنهاء الدورة
+            </Button>
         </div>
       </Modal>
 
@@ -1657,6 +1775,114 @@ export default function App() {
                 </div>
             </div>
         )}
+      </Modal>
+
+      {/* Create Cycle Modal (Breeder) */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        title="إضافة دورة تسمين جديدة"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">نوع الحيوان</label>
+              <select 
+                className="w-full px-3 py-2 border rounded-lg bg-white"
+                value={breederForm.animalType}
+                onChange={(e) => setBreederForm({...breederForm, animalType: e.target.value as 'cows' | 'sheep' || 'cows'})}
+              >
+                <option value="cows">عجول تسمين</option>
+                <option value="sheep">خراف</option>
+              </select>
+            </div>
+            <Input 
+              label="مدة الدورة (يوم)" 
+              type="number" 
+              value={breederForm.expectedDuration} 
+              onChange={(e) => setBreederForm({...breederForm, expectedDuration: Number(e.target.value)})}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input 
+              label="الوزن الحالي (كجم)" 
+              type="number" 
+              value={breederForm.initialWeight} 
+              onChange={(e) => setBreederForm({...breederForm, initialWeight: Number(e.target.value)})}
+            />
+            <Input 
+              label="الوزن المستهدف (كجم)" 
+              type="number" 
+              value={breederForm.targetWeight} 
+              onChange={(e) => setBreederForm({...breederForm, targetWeight: Number(e.target.value)})}
+            />
+          </div>
+
+          <Input 
+            label="سعر الرأس / تكلفة البداية (ج.م)" 
+            type="number" 
+            value={breederForm.startPricePerHead} 
+            onChange={(e) => setBreederForm({...breederForm, startPricePerHead: Number(e.target.value)})}
+          />
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">وصف الدورة والسلالة</label>
+            <textarea 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary h-24"
+              placeholder="اكتب تفاصيل عن السلالة، مصدر الشراء، والمميزات..."
+              value={breederForm.description}
+              onChange={(e) => setBreederForm({...breederForm, description: e.target.value})}
+            />
+            <button 
+                type="button" 
+                onClick={async () => {
+                    if (!breederForm.description) return;
+                    // Mock analysis or implement real call if needed, but for now simple alert or just placeholder
+                    alert("سيتم تحليل الوصف (محاكاة)");
+                }}
+                className="text-xs text-blue-600 hover:underline mt-1 flex items-center gap-1"
+            >
+                <Sprout size={12}/> تحليل الوصف بالذكاء الاصطناعي
+            </button>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+             <div className="flex justify-between items-center mb-4">
+                <h4 className="font-bold text-gray-800 text-sm">خطة التغذية والبرنامج الوقائي</h4>
+                <Badge color="green">مساعد ذكي</Badge>
+             </div>
+             
+             {/* Use key to force re-render when animal type changes */}
+             <SimplePlanBuilder 
+               key={breederForm.animalType}
+               animalType={breederForm.animalType as 'cows' | 'sheep'}
+               onChange={handlePlanChange}
+             />
+          </div>
+
+          <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3">
+             <input 
+                type="checkbox" 
+                id="cycleInsurance"
+                checked={breederForm.isInsured}
+                onChange={(e) => setBreederForm({...breederForm, isInsured: e.target.checked})}
+                className="mt-1 w-4 h-4 text-blue-600 rounded"
+             />
+             <div>
+                <label htmlFor="cycleInsurance" className="font-bold text-gray-800 text-sm cursor-pointer">
+                   طلب تأمين شامل على الدورة
+                </label>
+                <p className="text-xs text-gray-500">
+                   يغطي النفوق والأمراض الوبائية. سيتم خصم قسط التأمين من التمويل.
+                </p>
+             </div>
+          </div>
+
+          <Button onClick={handleBreederCreateCycle} className="w-full">
+            إرسال للمراجعة
+          </Button>
+        </div>
       </Modal>
 
       {/* Sidebar */}

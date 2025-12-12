@@ -769,7 +769,7 @@ export default function App() {
                            <img src={user.profilePictureUrl || `https://i.pravatar.cc/150?u=${user.id}`} alt="" className="w-full h-full object-cover"/>
                         </div>
                         <div>
-                           <p className="font-bold">{user.name}</p>
+                           <p className="font-bold text-gray-900">{user.name}</p>
                            <p className="text-xs text-gray-500">{user.phone}</p>
                         </div>
                       </div>
@@ -886,7 +886,7 @@ export default function App() {
                                             </div>
                                         </td>
                                         <td className="p-4 text-sm">
-                                            <p className="font-semibold">{breeder?.name || 'مجهول'}</p>
+                                            <p className="font-semibold text-gray-900">{breeder?.name || 'مجهول'}</p>
                                             <p className="text-xs text-gray-500">{breeder?.phone}</p>
                                         </td>
                                         <td className="p-4 text-sm">

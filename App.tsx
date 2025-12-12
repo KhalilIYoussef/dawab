@@ -39,7 +39,13 @@ const SidebarItem: React.FC<{ icon: any, label: string, active: boolean, onClick
   </button>
 );
 
-const StatCard: React.FC<{ title: string, value: string | number, icon: any, color: 'primary' | 'secondary' | 'accent' }> = ({ title, value, icon: Icon, color }) => {
+const StatCard: React.FC<{ 
+  title: string, 
+  value: string | number, 
+  icon: any, 
+  color: 'primary' | 'secondary' | 'accent',
+  onClick?: () => void 
+}> = ({ title, value, icon: Icon, color, onClick }) => {
   const colors = {
     primary: 'bg-green-50 text-green-600',
     secondary: 'bg-orange-50 text-orange-600',
@@ -47,15 +53,17 @@ const StatCard: React.FC<{ title: string, value: string | number, icon: any, col
   };
   
   return (
-    <Card className="p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
-      <div className={`p-4 rounded-2xl ${colors[color]}`}>
-        <Icon size={28} />
-      </div>
-      <div>
-        <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
-        <p className="text-2xl font-bold text-gray-800">{value}</p>
-      </div>
-    </Card>
+    <div onClick={onClick} className={`${onClick ? 'cursor-pointer transform hover:scale-[1.02] transition-transform duration-200' : ''}`}>
+      <Card className="p-6 flex items-center gap-4 hover:shadow-md transition-shadow h-full">
+        <div className={`p-4 rounded-2xl ${colors[color]}`}>
+          <Icon size={28} />
+        </div>
+        <div>
+          <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
+          <p className="text-2xl font-bold text-gray-800">{value}</p>
+        </div>
+      </Card>
+    </div>
   );
 };
 
@@ -697,10 +705,37 @@ export default function App() {
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-800">لوحة تحكم الإدارة</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <StatCard title="إجمالي الاستثمارات" value={`${cycles.reduce((acc, c) => acc + c.currentFunding, 0).toLocaleString()} ج.م`} icon={DollarSign} color="primary" />
-          <StatCard title="الدورات النشطة" value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} icon={Sprout} color="secondary" />
-          <StatCard title="المستخدمين" value={users.length} icon={Users} color="accent" />
-          <StatCard title="طلبات التسجيل" value={users.filter(u => u.status === UserStatus.PENDING).length} icon={UserPlus} color="primary" />
+          <StatCard 
+            title="إجمالي الاستثمارات" 
+            value={`${cycles.reduce((acc, c) => acc + c.currentFunding, 0).toLocaleString()} ج.م`} 
+            icon={DollarSign} 
+            color="primary" 
+            onClick={() => setActiveTab('financials')}
+          />
+          <StatCard 
+            title="الدورات النشطة" 
+            value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} 
+            icon={Sprout} 
+            color="secondary" 
+            onClick={() => {
+              setActiveTab('cycles');
+              setCycleFilter(CycleStatus.ACTIVE);
+            }}
+          />
+          <StatCard 
+            title="المستخدمين" 
+            value={users.length} 
+            icon={Users} 
+            color="accent" 
+            onClick={() => setActiveTab('users')}
+          />
+          <StatCard 
+            title="طلبات التسجيل" 
+            value={users.filter(u => u.status === UserStatus.PENDING).length} 
+            icon={UserPlus} 
+            color="primary" 
+            onClick={() => setActiveTab('users')}
+          />
         </div>
       </div>
     );

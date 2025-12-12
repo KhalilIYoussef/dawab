@@ -6,7 +6,7 @@ import {
   AlertTriangle, DollarSign, Activity, Wheat, CheckCircle, Clock,
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
-  Banknote, Image as ImageIcon, ClipboardList, Scale
+  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -480,21 +480,23 @@ export default function App() {
     isOpen: false,
     cycle: null as Cycle | null,
     amount: 0,
-    receiptFile: null as File | null
+    receiptFile: null as File | null,
+    wantsInsurance: false, // New state for investor opting for insurance
   });
 
   // Admin specific states
   const [cycleFilter, setCycleFilter] = useState<CycleStatus | 'ALL'>('ALL');
 
   // -- States for Breeder Form --
-  const [breederForm, setBreederForm] = useState<Partial<Cycle>>({
+  const [breederForm, setBreederForm] = useState<Partial<Cycle> & { isInsured: boolean }>({
     animalType: 'cows',
     initialWeight: 200,
     targetWeight: 450,
     startPricePerHead: 30000,
     description: '',
     fatteningPlan: STANDARD_COW_PLAN, 
-    expectedDuration: 180
+    expectedDuration: 180,
+    isInsured: false, // Breeder chooses if the whole cycle is insured
   });
 
   // -- Stable handler for PlanBuilder to avoid infinite loops --
@@ -571,7 +573,9 @@ export default function App() {
       healthCertUrl: '#',
       imageUrl: 'https://images.unsplash.com/photo-1546445317-29f4545e9d53',
       description: breederForm.description || '',
-      fatteningPlan: breederForm.fatteningPlan
+      fatteningPlan: breederForm.fatteningPlan,
+      // If breeder checks insurance, we flag it. In a real app, cost might increase.
+      insurancePolicyNumber: breederForm.isInsured ? 'PENDING-REQ' : undefined 
     };
     
     setCycles([...cycles, newCycle]);
@@ -614,7 +618,8 @@ export default function App() {
       isOpen: true,
       cycle: cycle,
       amount: amount,
-      receiptFile: null
+      receiptFile: null,
+      wantsInsurance: false, // Reset option
     });
   };
 
@@ -627,7 +632,7 @@ export default function App() {
 
   // STEP 3: Confirm and Submit Investment
   const submitInvestment = () => {
-    const { cycle, amount, receiptFile } = investModal;
+    const { cycle, amount, receiptFile, wantsInsurance } = investModal;
     if (!cycle || !currentUser) return;
 
     if (!receiptFile) {
@@ -649,7 +654,8 @@ export default function App() {
       contractCodes: [`DW-${cycle.id}-${Math.floor(Math.random() * 1000)}`],
       date: new Date().toISOString(),
       status: 'PENDING_APPROVAL',
-      transferReceiptUrl: receiptUrl // Add the receipt
+      transferReceiptUrl: receiptUrl, // Add the receipt
+      hasAnimalInsurance: !!cycle.insurancePolicyNumber || wantsInsurance // Either included by breeder OR opted by investor
     };
 
     setInvestments([...investments, newInvestment]);
@@ -662,12 +668,14 @@ export default function App() {
     } : c));
 
     // Close invest modal
-    setInvestModal({ isOpen: false, cycle: null, amount: 0, receiptFile: null });
+    setInvestModal({ isOpen: false, cycle: null, amount: 0, receiptFile: null, wantsInsurance: false });
 
     // Show success
     setSuccessModal({ 
       isOpen: true, 
-      message: `تم تسجيل طلب استثمار بقيمة ${amount.toLocaleString()} ج.م بنجاح!\n\nسيقوم فريق الإدارة بمراجعة إيصال التحويل وتأكيد العملية.`
+      message: `تم تسجيل طلب استثمار بقيمة ${amount.toLocaleString()} ج.م بنجاح!
+      ${wantsInsurance ? '\n تم إضافة طلب التأمين على الحياة للحيوان.' : ''}
+      \nسيقوم فريق الإدارة بمراجعة إيصال التحويل وتأكيد العملية.`
     });
   };
 
@@ -815,8 +823,13 @@ export default function App() {
                                     <tr key={cycle.id} className="border-b hover:bg-gray-50">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-lg bg-gray-200 overflow-hidden">
+                                                <div className="w-12 h-12 rounded-lg bg-gray-200 overflow-hidden relative">
                                                     <img src={cycle.imageUrl} alt="" className="w-full h-full object-cover"/>
+                                                    {cycle.insurancePolicyNumber && (
+                                                      <div className="absolute bottom-0 right-0 bg-blue-600 text-white p-0.5 rounded-tl-lg" title="دورة مؤمنة">
+                                                        <Shield size={10} />
+                                                      </div>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-gray-800">{cycle.animalType}</p>
@@ -981,6 +994,26 @@ export default function App() {
                       onChange={e => setBreederForm({...breederForm, startPricePerHead: Number(e.target.value)})}
                    />
                 </div>
+                
+                {/* Insurance Option for Breeder */}
+                <div className="mt-4 pt-3 border-t border-gray-200">
+                   <div className="flex items-center gap-3">
+                      <div className="relative flex items-center">
+                         <input 
+                           type="checkbox" 
+                           id="breederInsurance"
+                           checked={breederForm.isInsured}
+                           onChange={(e) => setBreederForm({...breederForm, isInsured: e.target.checked})}
+                           className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
+                         />
+                      </div>
+                      <label htmlFor="breederInsurance" className="text-sm font-medium text-gray-800 cursor-pointer flex items-center gap-2">
+                         <Shield size={18} className="text-blue-600"/>
+                         تأمين شامل على الحياة (يضاف للسعر)
+                      </label>
+                   </div>
+                   <p className="text-xs text-gray-500 mr-8 mt-1">تفعيل هذا الخيار يزيد من ثقة المستثمرين ويغطي مخاطر النفوق بالكامل.</p>
+                </div>
              </div>
 
              {/* Step 2: Feeding Plan Generator */}
@@ -1007,6 +1040,11 @@ export default function App() {
                 <div className="absolute top-3 left-3">
                   <StatusBadge status={cycle.status} type="cycle" />
                 </div>
+                {cycle.insurancePolicyNumber && (
+                   <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-blue-800 flex items-center gap-1 shadow-sm">
+                      <Shield size={12} className="fill-blue-100"/> مؤمن
+                   </div>
+                )}
               </div>
               <div className="p-5">
                 <div className="flex justify-between items-start mb-2">
@@ -1107,10 +1145,19 @@ export default function App() {
                        </span>
                     </div>
 
-                    <div className="absolute bottom-4 right-4 text-white">
-                        <h4 className="font-bold text-lg leading-tight mb-1">{cycle.animalType}</h4>
-                        <div className="flex items-center gap-1 text-xs text-gray-200">
-                          <MapPin size={12} /> مزرعة الحاج متولي (الشرقية)
+                    <div className="absolute bottom-4 right-4 text-white w-full pr-4">
+                        <div className="flex justify-between items-end">
+                           <div>
+                              <h4 className="font-bold text-lg leading-tight mb-1">{cycle.animalType}</h4>
+                              <div className="flex items-center gap-1 text-xs text-gray-200">
+                                <MapPin size={12} /> مزرعة الحاج متولي (الشرقية)
+                              </div>
+                           </div>
+                           {cycle.insurancePolicyNumber && (
+                              <div className="ml-4 bg-blue-600/90 backdrop-blur px-3 py-1 rounded-l-lg text-xs font-bold flex items-center gap-1">
+                                 <Shield size={12} className="fill-white"/> مؤمن بالكامل
+                              </div>
+                           )}
                         </div>
                     </div>
                   </div>
@@ -1182,6 +1229,7 @@ export default function App() {
                       <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">قيمة الاستثمار</th>
                       <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">تاريخ البدء</th>
                       <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">الحالة</th>
+                      <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">التأمين</th>
                       <th className="text-right py-4 px-4 text-sm font-medium text-gray-500">الإجراء</th>
                    </tr>
                 </thead>
@@ -1204,6 +1252,15 @@ export default function App() {
                             <td className="py-4 px-4 font-bold text-gray-700">{inv.amount.toLocaleString()} ج.م</td>
                             <td className="py-4 px-4 text-sm text-gray-500">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
                             <td className="py-4 px-4"><StatusBadge status={inv.status} /></td>
+                            <td className="py-4 px-4">
+                               {inv.hasAnimalInsurance ? (
+                                  <span className="flex items-center gap-1 text-green-600 text-xs font-bold" title="مؤمن ضد المخاطر">
+                                     <Shield size={14} /> مؤمن
+                                  </span>
+                               ) : (
+                                  <span className="text-gray-400 text-xs">-</span>
+                               )}
+                            </td>
                             <td className="py-4 px-4">
                                <button className="text-gray-400 hover:text-primary transition-colors"><Eye size={18} /></button>
                             </td>
@@ -1285,6 +1342,39 @@ export default function App() {
                     </span>
                  </div>
               </div>
+
+              {/* Insurance Option for Investor (Only if Breeder hasn't insured it) */}
+              {investModal.cycle && !investModal.cycle.insurancePolicyNumber && (
+                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
+                    <div className="flex items-start gap-3">
+                       <input 
+                          type="checkbox" 
+                          id="investorInsurance"
+                          checked={investModal.wantsInsurance}
+                          onChange={(e) => setInvestModal({...investModal, wantsInsurance: e.target.checked})}
+                          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                       />
+                       <div>
+                          <label htmlFor="investorInsurance" className="font-bold text-gray-800 text-sm flex items-center gap-1 cursor-pointer">
+                             <Shield size={14} className="text-blue-600"/> إضافة تأمين على الحياة (ضد النفوق)
+                          </label>
+                          <p className="text-xs text-gray-500 mt-1">
+                             تكلفة إضافية: <span className="font-bold">{(investModal.amount * 0.03).toLocaleString()} ج.م</span> (3% من قيمة الاستثمار).
+                             <br/>
+                             <span className="text-blue-600">الإجمالي المتوقع: {(investModal.amount + (investModal.wantsInsurance ? investModal.amount * 0.03 : 0)).toLocaleString()} ج.م</span>
+                          </p>
+                       </div>
+                    </div>
+                 </div>
+              )}
+
+              {/* Display if Breeder ALREADY insured it */}
+              {investModal.cycle && investModal.cycle.insurancePolicyNumber && (
+                 <div className="bg-green-50 border border-green-100 rounded-lg p-3 mb-4 flex items-center gap-2 text-green-800 text-sm font-bold">
+                    <Shield size={18} className="fill-green-200"/>
+                    هذه الدورة مؤمنة بالكامل من قبل المربي. استثمارك في أمان!
+                 </div>
+              )}
 
               <div className="bg-white p-3 rounded border border-gray-200">
                   <p className="text-xs font-bold text-gray-500 mb-2">بيانات التحويل البنكي:</p>

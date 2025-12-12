@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, Sprout, LayoutDashboard, Wallet, TrendingUp, History, 
@@ -6,7 +5,7 @@ import {
   AlertTriangle, DollarSign, Activity, Wheat, CheckCircle, Clock,
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
-  Banknote, Image as ImageIcon
+  Banknote, Image as ImageIcon, ClipboardList, Scale
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -458,9 +457,16 @@ export default function App() {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [cycles, setCycles] = useState<Cycle[]>(INITIAL_CYCLES);
   const [investments, setInvestments] = useState<Investment[]>(INITIAL_INVESTMENTS);
+  const [logs, setLogs] = useState<CycleLog[]>(INITIAL_LOGS);
+  
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   
+  // -- Modals State for Breeder --
+  const [detailsModal, setDetailsModal] = useState<{isOpen: boolean, cycle: Cycle | null}>({isOpen: false, cycle: null});
+  const [logsModal, setLogsModal] = useState<{isOpen: boolean, cycle: Cycle | null}>({isOpen: false, cycle: null});
+  const [logForm, setLogForm] = useState({ weight: '', food: '', notes: '' });
+
   // Success Modal State
   const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
@@ -566,6 +572,24 @@ export default function App() {
     setCycles([...cycles, newCycle]);
     setCreateModalOpen(false);
     setSuccessModal({ isOpen: true, message: 'تم إرسال الدورة للمراجعة من قبل الإدارة.' });
+  };
+
+  // --- LOGS HANDLER ---
+  const handleSaveLog = () => {
+    if (!logsModal.cycle || !logForm.weight) {
+        alert("يرجى إدخال الوزن على الأقل.");
+        return;
+    }
+    const newLog: CycleLog = {
+        id: Math.random().toString(36).substr(2, 9),
+        cycleId: logsModal.cycle.id,
+        date: new Date().toISOString(),
+        weight: Number(logForm.weight),
+        foodDetails: logForm.food,
+        notes: logForm.notes
+    };
+    setLogs([newLog, ...logs]);
+    setLogForm({ weight: '', food: '', notes: '' });
   };
 
   // STEP 1: Open the Modal
@@ -1005,8 +1029,8 @@ export default function App() {
                 )}
 
                 <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline" className="flex-1 text-xs">سجل المتابعة</Button>
-                  <Button size="sm" variant="ghost" className="text-xs">تفاصيل</Button>
+                  <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setLogsModal({isOpen: true, cycle})}>سجل المتابعة</Button>
+                  <Button size="sm" variant="ghost" className="text-xs" onClick={() => setDetailsModal({isOpen: true, cycle})}>تفاصيل</Button>
                 </div>
               </div>
             </Card>
@@ -1303,6 +1327,131 @@ export default function App() {
              تأكيد الدفع وإتمام الاستثمار
            </Button>
         </div>
+      </Modal>
+
+      {/* Logs Modal (Breeder) */}
+      <Modal 
+        isOpen={logsModal.isOpen} 
+        onClose={() => setLogsModal({ ...logsModal, isOpen: false })} 
+        title="سجل المتابعة الدورية"
+      >
+        <div className="space-y-6">
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><Plus size={18}/> إضافة تحديث جديد</h4>
+                <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Input 
+                            label="الوزن الحالي (كجم)" 
+                            type="number" 
+                            value={logForm.weight}
+                            onChange={(e) => setLogForm({...logForm, weight: e.target.value})}
+                            className="bg-white"
+                        />
+                        <Input 
+                            label="تفاصيل العلف" 
+                            value={logForm.food}
+                            onChange={(e) => setLogForm({...logForm, food: e.target.value})}
+                            placeholder="مثال: 5ك علف + 2ك تبن"
+                            className="bg-white"
+                        />
+                    </div>
+                    <textarea 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
+                        placeholder="ملاحظات بيطرية أو عامة..."
+                        value={logForm.notes}
+                        onChange={(e) => setLogForm({...logForm, notes: e.target.value})}
+                    ></textarea>
+                    <Button onClick={handleSaveLog} className="w-full">حفظ التحديث</Button>
+                </div>
+            </div>
+
+            <div className="border-t pt-4">
+                <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2"><History size={18}/> السجل السابق</h4>
+                <div className="space-y-4">
+                    {logs.filter(l => l.cycleId === logsModal.cycle?.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(log => (
+                        <div key={log.id} className="relative pl-4 border-r-2 border-primary/20 pr-4 pb-4 last:pb-0">
+                            <div className="absolute -right-[9px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
+                            <div className="flex justify-between items-start mb-1">
+                                <span className="text-xs font-bold text-gray-500">{new Date(log.date).toLocaleDateString('ar-EG')}</span>
+                                {log.weight && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{log.weight} كجم</span>}
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-sm">
+                                <div className="flex items-start gap-2 mb-1">
+                                    <Utensils size={14} className="mt-0.5 text-gray-400"/>
+                                    <span className="text-gray-700">{log.foodDetails}</span>
+                                </div>
+                                {log.notes && (
+                                    <div className="flex items-start gap-2 text-gray-500">
+                                        <FileText size={14} className="mt-0.5"/>
+                                        <span>{log.notes}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                    {logs.filter(l => l.cycleId === logsModal.cycle?.id).length === 0 && (
+                        <p className="text-center text-gray-400 text-sm py-4">لا توجد سجلات سابقة لهذه الدورة.</p>
+                    )}
+                </div>
+            </div>
+        </div>
+      </Modal>
+
+      {/* Details Modal (Breeder) */}
+      <Modal 
+        isOpen={detailsModal.isOpen} 
+        onClose={() => setDetailsModal({ ...detailsModal, isOpen: false })} 
+        title="تفاصيل الدورة"
+      >
+        {detailsModal.cycle && (
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <img src={detailsModal.cycle.imageUrl} className="w-20 h-20 rounded-xl object-cover border border-gray-200" alt=""/>
+                    <div>
+                        <h3 className="font-bold text-lg">{detailsModal.cycle.animalType}</h3>
+                        <p className="text-sm text-gray-500">{detailsModal.cycle.description}</p>
+                        <div className="flex gap-2 mt-1">
+                            <Badge color={detailsModal.cycle.status === CycleStatus.ACTIVE ? 'green' : 'yellow'}>
+                                {detailsModal.cycle.status === CycleStatus.ACTIVE ? 'نشطة' : 'معلقة'}
+                            </Badge>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl text-sm">
+                    <div>
+                        <p className="text-gray-500 text-xs mb-1">تاريخ البدء</p>
+                        <p className="font-bold">{new Date(detailsModal.cycle.startDate).toLocaleDateString('ar-EG')}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 text-xs mb-1">مدة الدورة</p>
+                        <p className="font-bold">{detailsModal.cycle.expectedDuration} يوم</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 text-xs mb-1">الوزن المبدئي</p>
+                        <p className="font-bold">{detailsModal.cycle.initialWeight} كجم</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 text-xs mb-1">الوزن المستهدف</p>
+                        <p className="font-bold text-green-600">{detailsModal.cycle.targetWeight} كجم</p>
+                    </div>
+                    <div className="col-span-2 border-t pt-2 mt-1">
+                         <div className="flex justify-between items-center">
+                            <p className="text-gray-500 text-xs">نسبة التمويل</p>
+                            <p className="font-bold text-blue-600">{Math.round((detailsModal.cycle.currentFunding / detailsModal.cycle.fundingGoal) * 100)}%</p>
+                         </div>
+                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                             <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${(detailsModal.cycle.currentFunding / detailsModal.cycle.fundingGoal) * 100}%` }}></div>
+                         </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm"><ClipboardList size={16}/> خطة التسمين المعتمدة</h4>
+                    <FatteningPlanViewer planText={detailsModal.cycle.fatteningPlan || ''} />
+                </div>
+            </div>
+        )}
       </Modal>
 
       {/* Sidebar */}

@@ -6,7 +6,7 @@ import {
   AlertTriangle, DollarSign, Activity, Wheat, CheckCircle, Clock,
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
-  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield
+  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -17,6 +17,10 @@ import {
 } from './types';
 import { analyzeCycleRisk } from './services/geminiService';
 import { Button, Card, Badge, Modal, Input, FatteningPlanViewer, SimplePlanBuilder } from './components/UIComponents';
+
+// --- Constants ---
+const PLATFORM_FEE_PERCENT = 0.025; // 2.5% Platform Operation Fee
+const INSURANCE_FEE_PERCENT = 0.03; // 3.0% Animal Life Insurance
 
 // --- Helper Components (Defined outside App to avoid re-renders) ---
 
@@ -574,7 +578,7 @@ export default function App() {
       imageUrl: 'https://images.unsplash.com/photo-1546445317-29f4545e9d53',
       description: breederForm.description || '',
       fatteningPlan: breederForm.fatteningPlan,
-      // If breeder checks insurance, we flag it. In a real app, cost might increase.
+      // If breeder checks insurance, we flag it.
       insurancePolicyNumber: breederForm.isInsured ? 'PENDING-REQ' : undefined 
     };
     
@@ -640,7 +644,13 @@ export default function App() {
        return;
     }
 
-    const sharePercentage = amount / cycle.fundingGoal;
+    // Calculate Fees (Deducted from Total Amount)
+    const platformFee = amount * PLATFORM_FEE_PERCENT;
+    const insuranceFee = (wantsInsurance || cycle.insurancePolicyNumber) ? amount * INSURANCE_FEE_PERCENT : 0;
+    const totalDeductions = platformFee + insuranceFee;
+    const netInvestment = amount - totalDeductions;
+
+    const sharePercentage = netInvestment / cycle.fundingGoal;
     
     // Create local object URL for the uploaded file to display it (Simulation)
     const receiptUrl = URL.createObjectURL(receiptFile);
@@ -649,8 +659,8 @@ export default function App() {
       id: Math.random().toString(36).substr(2, 9),
       investorId: currentUser.id,
       cycleId: cycle.id,
-      amount: amount,
-      headsCount: sharePercentage, // e.g. 0.5 head
+      amount: amount, // Total paid
+      headsCount: sharePercentage, // Share based on NET investment
       contractCodes: [`DW-${cycle.id}-${Math.floor(Math.random() * 1000)}`],
       date: new Date().toISOString(),
       status: 'PENDING_APPROVAL',
@@ -660,11 +670,11 @@ export default function App() {
 
     setInvestments([...investments, newInvestment]);
     
-    // Update cycle funding locally for demo
+    // Update cycle funding locally for demo (using NET investment technically, but for visual goal tracking we usually track capital raised. Let's track net for accurate filling)
     setCycles(cycles.map(c => c.id === cycle.id ? {
       ...c,
-      currentFunding: c.currentFunding + amount,
-      availableHeads: (c.currentFunding + amount) >= c.fundingGoal ? 0 : 1
+      currentFunding: c.currentFunding + netInvestment, // Only net goes to cycle
+      availableHeads: (c.currentFunding + netInvestment) >= c.fundingGoal ? 0 : 1
     } : c));
 
     // Close invest modal
@@ -674,7 +684,8 @@ export default function App() {
     setSuccessModal({ 
       isOpen: true, 
       message: `تم تسجيل طلب استثمار بقيمة ${amount.toLocaleString()} ج.م بنجاح!
-      ${wantsInsurance ? '\n تم إضافة طلب التأمين على الحياة للحيوان.' : ''}
+      \nصافي الاستثمار في الدورة: ${netInvestment.toLocaleString()} ج.م
+      ${wantsInsurance ? '\n تم تفعيل التأمين على الحياة.' : ''}
       \nسيقوم فريق الإدارة بمراجعة إيصال التحويل وتأكيد العملية.`
     });
   };
@@ -1318,7 +1329,7 @@ export default function App() {
               <p className="font-bold mb-3 text-gray-800 border-b pb-2">تفاصيل الاستثمار</p>
               
               <div className="mb-4">
-                 <label className="block text-xs font-medium text-gray-700 mb-1">قيمة الاستثمار (ج.م)</label>
+                 <label className="block text-xs font-medium text-gray-700 mb-1">المبلغ المراد استثماره (ج.م)</label>
                  <div className="relative">
                     <input 
                         type="number"
@@ -1327,7 +1338,6 @@ export default function App() {
                         onChange={(e) => {
                             const val = Number(e.target.value);
                             const remaining = investModal.cycle ? investModal.cycle.fundingGoal - investModal.cycle.currentFunding : 0;
-                            // Allow update if valid, or clamp? better to just check max logic
                             if (val <= remaining) {
                                 setInvestModal({ ...investModal, amount: val });
                             }
@@ -1356,24 +1366,44 @@ export default function App() {
                        />
                        <div>
                           <label htmlFor="investorInsurance" className="font-bold text-gray-800 text-sm flex items-center gap-1 cursor-pointer">
-                             <Shield size={14} className="text-blue-600"/> إضافة تأمين على الحياة (ضد النفوق)
+                             <Shield size={14} className="text-blue-600"/> تفعيل تأمين على الحياة (ضد النفوق)
                           </label>
                           <p className="text-xs text-gray-500 mt-1">
-                             تكلفة إضافية: <span className="font-bold">{(investModal.amount * 0.03).toLocaleString()} ج.م</span> (3% من قيمة الاستثمار).
-                             <br/>
-                             <span className="text-blue-600">الإجمالي المتوقع: {(investModal.amount + (investModal.wantsInsurance ? investModal.amount * 0.03 : 0)).toLocaleString()} ج.م</span>
+                             يتم خصم <span className="font-bold text-red-500">{(investModal.amount * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span> (3%) من مبلغ التمويل لصالح وثيقة التأمين.
                           </p>
                        </div>
                     </div>
                  </div>
               )}
 
-              {/* Display if Breeder ALREADY insured it */}
-              {investModal.cycle && investModal.cycle.insurancePolicyNumber && (
-                 <div className="bg-green-50 border border-green-100 rounded-lg p-3 mb-4 flex items-center gap-2 text-green-800 text-sm font-bold">
-                    <Shield size={18} className="fill-green-200"/>
-                    هذه الدورة مؤمنة بالكامل من قبل المربي. استثمارك في أمان!
-                 </div>
+              {/* Calculation Summary (Invoice) */}
+              {investModal.amount > 0 && (
+                <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 mb-4 text-sm">
+                    <div className="flex justify-between mb-1">
+                        <span className="text-gray-600">المبلغ المدفوع:</span>
+                        <span className="font-bold">{investModal.amount.toLocaleString()} ج.م</span>
+                    </div>
+                    <div className="flex justify-between mb-1 text-red-600 text-xs">
+                        <span>- رسوم تشغيل المنصة (2.5%):</span>
+                        <span>{(investModal.amount * PLATFORM_FEE_PERCENT).toLocaleString()} ج.م</span>
+                    </div>
+                    {(investModal.wantsInsurance || investModal.cycle?.insurancePolicyNumber) && (
+                        <div className="flex justify-between mb-1 text-red-600 text-xs">
+                            <span>- رسوم التأمين (3%):</span>
+                            <span>{(investModal.amount * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
+                        </div>
+                    )}
+                    <div className="border-t border-gray-300 my-2 pt-2 flex justify-between font-bold text-green-700">
+                        <span>صافي الاستثمار (لشراء الرؤوس):</span>
+                        <span>
+                            {(
+                                investModal.amount - 
+                                (investModal.amount * PLATFORM_FEE_PERCENT) - 
+                                ((investModal.wantsInsurance || investModal.cycle?.insurancePolicyNumber) ? investModal.amount * INSURANCE_FEE_PERCENT : 0)
+                            ).toLocaleString()} ج.م
+                        </span>
+                    </div>
+                </div>
               )}
 
               <div className="bg-white p-3 rounded border border-gray-200">

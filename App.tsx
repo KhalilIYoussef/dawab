@@ -6,7 +6,7 @@ import {
   AlertTriangle, DollarSign, Activity, Wheat, CheckCircle, Clock,
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
-  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info
+  Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -43,24 +43,26 @@ const StatCard: React.FC<{
   title: string, 
   value: string | number, 
   icon: any, 
-  color: 'primary' | 'secondary' | 'accent',
+  color: 'primary' | 'secondary' | 'accent' | 'blue' | 'purple',
   onClick?: () => void 
 }> = ({ title, value, icon: Icon, color, onClick }) => {
   const colors = {
     primary: 'bg-green-50 text-green-600',
     secondary: 'bg-orange-50 text-orange-600',
     accent: 'bg-yellow-50 text-yellow-600',
+    blue: 'bg-blue-50 text-blue-600',
+    purple: 'bg-purple-50 text-purple-600',
   };
   
   return (
-    <div onClick={onClick} className={`${onClick ? 'cursor-pointer transform hover:scale-[1.02] transition-transform duration-200' : ''}`}>
+    <div onClick={onClick} className={`${onClick ? 'cursor-pointer transform hover:scale-[1.02] transition-transform duration-200' : ''} h-full`}>
       <Card className="p-6 flex items-center gap-4 hover:shadow-md transition-shadow h-full">
-        <div className={`p-4 rounded-2xl ${colors[color]}`}>
+        <div className={`p-4 rounded-2xl ${colors[color] || colors.primary}`}>
           <Icon size={28} />
         </div>
         <div>
           <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
-          <p className="text-2xl font-bold text-gray-800">{value}</p>
+          <p className="text-xl md:text-2xl font-bold text-gray-800">{value}</p>
         </div>
       </Card>
     </div>
@@ -933,9 +935,52 @@ export default function App() {
   };
 
   const renderAdminInvestments = () => {
+    // 1. Calculate Financial Statistics
+    const totalGross = investments.reduce((acc, inv) => acc + inv.amount, 0);
+    const totalRevenue = totalGross * PLATFORM_FEE_PERCENT; // 2.5% of gross
+    
+    const totalInsurancePool = investments.reduce((acc, inv) => {
+      // Calculate insurance fee portion (3%) only if insurance was applied
+      const cycle = cycles.find(c => c.id === inv.cycleId);
+      const hasInsurance = inv.hasAnimalInsurance || cycle?.insurancePolicyNumber;
+      return acc + (hasInsurance ? inv.amount * INSURANCE_FEE_PERCENT : 0);
+    }, 0);
+
+    const netCapitalDeployed = totalGross - totalRevenue - totalInsurancePool;
+
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800">الإدارة المالية (طلبات الاستثمار)</h2>
+        <h2 className="text-2xl font-bold text-gray-800">الإدارة المالية والحسابات</h2>
+        
+        {/* Financial Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+           <StatCard 
+             title="إجمالي حجم التعاملات" 
+             value={`${totalGross.toLocaleString()} ج.م`} 
+             icon={Activity} 
+             color="secondary"
+           />
+           <StatCard 
+             title="صافي أرباح المنصة (2.5%)" 
+             value={`${totalRevenue.toLocaleString()} ج.م`} 
+             icon={TrendingUp} 
+             color="primary"
+           />
+           <StatCard 
+             title="محفظة التأمين المجمعة (3%)" 
+             value={`${totalInsurancePool.toLocaleString()} ج.م`} 
+             icon={ShieldCheck} 
+             color="blue"
+           />
+           <StatCard 
+             title="صافي رأس المال المستثمر" 
+             value={`${netCapitalDeployed.toLocaleString()} ج.م`} 
+             icon={Coins} 
+             color="purple"
+           />
+        </div>
+
+        <h3 className="text-xl font-bold text-gray-700 mt-8 mb-4">سجل طلبات الاستثمار</h3>
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -943,7 +988,7 @@ export default function App() {
                 <tr>
                   <th className="text-right p-4 text-sm text-gray-500">المستثمر</th>
                   <th className="text-right p-4 text-sm text-gray-500">الدورة</th>
-                  <th className="text-right p-4 text-sm text-gray-500">المبلغ</th>
+                  <th className="text-right p-4 text-sm text-gray-500">المبلغ المدفوع</th>
                   <th className="text-right p-4 text-sm text-gray-500">الإيصال</th>
                   <th className="text-right p-4 text-sm text-gray-500">التاريخ</th>
                   <th className="text-right p-4 text-sm text-gray-500">الحالة</th>

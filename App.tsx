@@ -7,7 +7,7 @@ import {
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
   Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
-  Calculator, ArrowDown, ShoppingBag, Gavel
+  Calculator, ArrowDown, ShoppingBag, Gavel, UserCog
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -22,6 +22,9 @@ import { Button, Card, Badge, Modal, Input, FatteningPlanViewer, SimplePlanBuild
 // --- Constants ---
 const PLATFORM_FEE_PERCENT = 0.025; // 2.5% Platform Operation Fee
 const INSURANCE_FEE_PERCENT = 0.03; // 3.0% Animal Life Insurance
+
+// Placeholder Logo URL matching the theme (Livestock Investment)
+const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/6202/6202865.png";
 
 // --- Helper Components (Defined outside App to avoid re-renders) ---
 
@@ -117,16 +120,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
     role: UserRole.INVESTOR
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Strict Input Control
+    if (name === 'phone') {
+        // Remove non-digits immediately
+        const numericValue = value.replace(/\D/g, '');
+        // Enforce max length of 11 chars
+        if (numericValue.length <= 11) {
+            setFormData({ ...formData, [name]: numericValue });
+        }
+    } else {
+        setFormData({ ...formData, [name]: value });
+    }
+    
     setError('');
+    setSuccess('');
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const user = users.find(u => u.phone === formData.phone);
     if (user) {
+      if (user.status === UserStatus.PENDING) {
+        setError('الحساب قيد المراجعة. يرجى انتظار تفعيل الحساب من قبل الإدارة.');
+        return;
+      }
+      if (user.status === UserStatus.REJECTED) {
+        setError('عذراً، تم رفض هذا الحساب. يرجى التواصل مع الدعم الفني.');
+        return;
+      }
       onLogin(user);
     } else {
       setError('رقم الهاتف غير مسجل. يرجى التأكد من الرقم أو إنشاء حساب جديد.');
@@ -135,27 +161,50 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (users.some(u => u.phone === formData.phone)) {
+    const { name, phone, password } = formData;
+
+    // 1. Check Duplicate
+    if (users.some(u => u.phone === phone)) {
       setError('رقم الهاتف مسجل بالفعل.');
       return;
     }
-    if (formData.phone.length < 11) {
-       setError('رقم الهاتف غير صحيح.');
+
+    // 2. Name Validation (Letters and spaces only)
+    const nameRegex = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+    if (!nameRegex.test(name)) {
+        setError("خطأ في الاسم: يجب أن يحتوي الاسم على أحرف فقط (دون أرقام أو رموز).");
+        return;
+    }
+
+    // 3. Phone Validation (Exactly 11 digits)
+    const phoneRegex = /^\d{11}$/;
+    if (!phoneRegex.test(phone)) {
+       setError('رقم الهاتف غير صحيح: يجب أن يتكون من 11 رقم بالضبط.');
        return;
+    }
+
+    // 4. Password Validation (Complex)
+    const hasNumber = /\d/;
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>\-_]/;
+    if (password.length < 8 || !hasNumber.test(password) || !hasSymbol.test(password)) {
+         setError("كلمة المرور ضعيفة: يجب أن تكون 8 أحرف على الأقل وتحتوي على رقم ورمز خاص (مثل @, #).");
+         return;
     }
 
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
-      name: formData.name,
-      phone: formData.phone,
+      name: name,
+      phone: phone,
       role: formData.role,
-      status: UserStatus.PENDING,
+      status: UserStatus.PENDING, // ALL REGISTRATIONS ARE PENDING
       documentsVerified: false,
       profilePictureUrl: `https://i.pravatar.cc/150?u=${Math.random()}`,
     };
 
     setUsers([...users, newUser]);
-    onLogin(newUser);
+    setIsRegistering(false); // Switch back to login view
+    setSuccess('تم إنشاء الحساب بنجاح! حسابك الآن قيد المراجعة، سيقوم المسؤول بتفعيله قريباً.');
+    setFormData(prev => ({ ...prev, name: '', role: UserRole.INVESTOR })); // Clear name but keep phone/pass
   };
 
   return (
@@ -164,7 +213,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
         {/* Visual Side */}
         <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-primary text-white p-12 text-center relative">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500595046743-cd271d694d30?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80')] opacity-10 bg-cover bg-center"></div>
-          <Sprout size={64} className="mb-6 z-10" />
+          <img src={LOGO_URL} alt="Dawab Logo" className="w-40 h-40 mb-6 z-10 object-contain drop-shadow-xl" />
           <h1 className="text-4xl font-bold mb-4 z-10">منصة دواب</h1>
           <p className="text-lg opacity-90 z-10">استثمر في الثروة الحيوانية بأمان، أو ابدأ دورتك الإنتاجية بتمويل تشاركي.</p>
         </div>
@@ -179,6 +228,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
               {isRegistering ? 'أدخل بياناتك للانضمام إلينا' : 'أدخل رقم هاتفك للمتابعة'}
             </p>
           </div>
+
+          {success && (
+             <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm flex items-start gap-2">
+                <CheckCircle size={18} className="shrink-0 mt-0.5" />
+                <span>{success}</span>
+             </div>
+          )}
 
           <form onSubmit={isRegistering ? handleRegisterSubmit : handleLoginSubmit} className="space-y-4">
             {isRegistering && (
@@ -195,6 +251,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
             <Input 
               label="رقم الهاتف" 
               name="phone" 
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={11}
               value={formData.phone} 
               onChange={handleInputChange} 
               placeholder="01xxxxxxxxx" 
@@ -233,7 +293,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
               </div>
             )}
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && (
+               <div className="mb-2 p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm flex items-start gap-2">
+                  <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                  <span>{error}</span>
+               </div>
+            )}
 
             <Button type="submit" className="w-full py-3 text-lg" disabled={false}>
               {isRegistering ? 'إنشاء الحساب' : 'دخول'}
@@ -242,7 +307,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
 
           <div className="mt-6 text-center">
             <button 
-              onClick={() => setIsRegistering(!isRegistering)}
+              onClick={() => {
+                  setIsRegistering(!isRegistering);
+                  setError('');
+                  setSuccess('');
+              }}
               className="text-primary hover:underline text-sm font-medium"
             >
               {isRegistering ? 'لدي حساب بالفعل؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد'}
@@ -333,7 +402,19 @@ const ProfileView: React.FC<{
           </h3>
           <div className="space-y-4">
              <Input label="الاسم" value={formData.name} disabled={!isEditing} onChange={e => setFormData({...formData, name: e.target.value})} />
-             <Input label="رقم الهاتف" value={formData.phone} disabled={!isEditing} onChange={e => setFormData({...formData, phone: e.target.value})} />
+             <Input 
+                label="رقم الهاتف" 
+                value={formData.phone} 
+                disabled={!isEditing} 
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={11}
+                onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    setFormData({...formData, phone: val});
+                }} 
+             />
              {user.role === UserRole.BREEDER && (
                 <>
                    <Input label="المحافظة" value={formData.governorate || ''} disabled={!isEditing} onChange={e => setFormData({...formData, governorate: e.target.value})} />
@@ -500,6 +581,15 @@ export default function App() {
       isOpen: false, cycle: null, salePrice: ''
   });
 
+  // -- Modal State for Adding User (Admin Only) --
+  const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({
+      name: '',
+      phone: '',
+      password: '',
+      role: UserRole.INVESTOR
+  });
+
   // Success Modal State
   const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
@@ -511,6 +601,10 @@ export default function App() {
     receiptFile: null as File | null,
     wantsInsurance: false, // New state for investor opting for insurance
   });
+
+  // Gemini AI Analysis State
+  const [aiAnalysis, setAiAnalysis] = useState<string>("");
+  const [loadingAi, setLoadingAi] = useState(false);
 
   // Admin specific states
   const [cycleFilter, setCycleFilter] = useState<CycleStatus | 'ALL'>('ALL');
@@ -553,6 +647,61 @@ export default function App() {
       documentsVerified: status,
       physicalPapersVerified: status
     } : u));
+  };
+
+  const handleAddUser = () => {
+      // Validation Logic
+      const { name, phone, password } = newUserForm;
+
+      // 1. Empty Check
+      if(!name || !phone || !password) {
+          alert("يرجى ملء جميع الحقول");
+          return;
+      }
+
+      // 2. Name Validation (Letters and spaces only)
+      // Regex allows Arabic range, English letters, and spaces.
+      const nameRegex = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+      if (!nameRegex.test(name)) {
+          alert("خطأ في الاسم: يجب أن يحتوي الاسم على أحرف فقط (دون أرقام أو رموز).");
+          return;
+      }
+
+      // 3. Phone Validation (Exactly 11 digits)
+      const phoneRegex = /^\d{11}$/;
+      if (!phoneRegex.test(phone)) {
+          alert("خطأ في رقم الهاتف: يجب أن يتكون من 11 رقم بالضبط.");
+          return;
+      }
+
+      // 4. Password Validation (Complex: Numbers + Symbols)
+      const hasNumber = /\d/;
+      const hasSymbol = /[!@#$%^&*(),.?":{}|<>\-_]/;
+      if (password.length < 8 || !hasNumber.test(password) || !hasSymbol.test(password)) {
+           alert("خطأ في كلمة المرور: يجب أن تكون 8 أحرف على الأقل وتحتوي على رقم ورمز خاص (مثل @, #, $).");
+           return;
+      }
+
+      // 5. Duplicate Check
+      if (users.some(u => u.phone === phone)) {
+        alert('رقم الهاتف مسجل بالفعل.');
+        return;
+      }
+
+      const newUser: User = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: name,
+        phone: phone,
+        role: newUserForm.role,
+        status: UserStatus.ACTIVE, // Admin added users are active by default
+        documentsVerified: false,
+        profilePictureUrl: `https://i.pravatar.cc/150?u=${Math.random()}`,
+      };
+
+      setUsers([...users, newUser]);
+      setAddUserModalOpen(false);
+      setNewUserForm({ name: '', phone: '', password: '', role: UserRole.INVESTOR });
+      setSuccessModal({ isOpen: true, message: 'تم إضافة المستخدم الجديد بنجاح.' });
   };
 
   const updateCycleStatus = (cycleId: string, newStatus: CycleStatus) => {
@@ -644,6 +793,19 @@ export default function App() {
     };
     setLogs([newLog, ...logs]);
     setLogForm({ weight: '', food: '', notes: '' });
+  };
+
+  const handleAnalyzeCycle = async () => {
+    if (!detailsModal.cycle) return;
+    setLoadingAi(true);
+    setAiAnalysis(""); // clear previous
+    try {
+        const result = await analyzeCycleRisk(detailsModal.cycle);
+        setAiAnalysis(result);
+    } catch(e) {
+        setAiAnalysis("فشل التحليل");
+    }
+    setLoadingAi(false);
   };
 
   // STEP 1: Open the Modal
@@ -777,7 +939,14 @@ export default function App() {
   const renderAdminUsers = () => {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800">إدارة المستخدمين</h2>
+        <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-800">إدارة المستخدمين</h2>
+            <Button onClick={() => setAddUserModalOpen(true)}>
+                <Plus size={18} />
+                إضافة مستخدم جديد
+            </Button>
+        </div>
+        
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -999,9 +1168,9 @@ export default function App() {
             case 'TOTAL':
                 return (
                     <div className="space-y-4">
-                        <div className="bg-gray-50 p-6 rounded-2xl text-center">
-                            <p className="text-gray-500 mb-2">إجمالي المبالغ المدفوعة</p>
-                            <p className="text-4xl font-bold text-gray-800">{totalGross.toLocaleString()} <span className="text-lg text-gray-400">ج.م</span></p>
+                        <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-2xl text-center">
+                            <p className="text-gray-600 mb-2 font-medium">إجمالي المبالغ المدفوعة</p>
+                            <p className="text-4xl font-bold text-gray-900">{totalGross.toLocaleString()} <span className="text-lg text-gray-500 font-normal">ج.م</span></p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="border p-4 rounded-xl">
@@ -1021,9 +1190,9 @@ export default function App() {
             case 'REVENUE':
                 return (
                     <div className="space-y-4">
-                        <div className="bg-green-50 p-6 rounded-2xl text-center">
-                            <p className="text-green-700 mb-2">صافي أرباح المنصة</p>
-                            <p className="text-4xl font-bold text-green-800">{totalRevenue.toLocaleString()} <span className="text-lg text-green-600">ج.م</span></p>
+                        <div className="bg-white border border-green-200 shadow-sm p-6 rounded-2xl text-center">
+                            <p className="text-green-700 mb-2 font-medium">صافي أرباح المنصة</p>
+                            <p className="text-4xl font-bold text-green-800">{totalRevenue.toLocaleString()} <span className="text-lg text-green-600 font-normal">ج.م</span></p>
                         </div>
                         <div className="bg-white border rounded-xl p-4">
                             <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><Calculator size={16}/> معادلة الاحتساب</h4>
@@ -1047,9 +1216,9 @@ export default function App() {
                  }).length;
                 return (
                     <div className="space-y-4">
-                        <div className="bg-blue-50 p-6 rounded-2xl text-center">
-                            <p className="text-blue-700 mb-2">محفظة التأمين المجمعة</p>
-                            <p className="text-4xl font-bold text-blue-800">{totalInsurancePool.toLocaleString()} <span className="text-lg text-blue-600">ج.م</span></p>
+                        <div className="bg-white border border-blue-200 shadow-sm p-6 rounded-2xl text-center">
+                            <p className="text-blue-700 mb-2 font-medium">محفظة التأمين المجمعة</p>
+                            <p className="text-4xl font-bold text-blue-800">{totalInsurancePool.toLocaleString()} <span className="text-lg text-blue-600 font-normal">ج.م</span></p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div className="border p-4 rounded-xl bg-gray-50">
@@ -1070,9 +1239,9 @@ export default function App() {
             case 'NET_CAPITAL':
                 return (
                     <div className="space-y-5">
-                         <div className="bg-purple-50 p-6 rounded-2xl text-center">
-                            <p className="text-purple-700 mb-2">صافي رأس المال المستثمر</p>
-                            <p className="text-4xl font-bold text-purple-900">{netCapitalDeployed.toLocaleString()} <span className="text-lg text-purple-600">ج.م</span></p>
+                         <div className="bg-white border border-purple-200 shadow-sm p-6 rounded-2xl text-center">
+                            <p className="text-purple-700 mb-2 font-medium">صافي رأس المال المستثمر</p>
+                            <p className="text-4xl font-bold text-purple-900">{netCapitalDeployed.toLocaleString()} <span className="text-lg text-purple-600 font-normal">ج.م</span></p>
                         </div>
                         
                         <div className="relative border-r-2 border-gray-200 pr-6 mr-3 space-y-6">
@@ -1217,781 +1386,521 @@ export default function App() {
   };
 
   const renderBreederDashboard = () => {
-    const myCycles = cycles.filter(c => c.breederId === currentUser!.id);
-    const activeCount = myCycles.filter(c => c.status === CycleStatus.ACTIVE).length;
-    
+    const myCycles = cycles.filter(c => c.breederId === currentUser?.id);
     return (
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">لوحة تحكم المربي</h2>
-            <p className="text-gray-500">أهلاً بك، {currentUser!.name}</p>
-          </div>
-          <Button onClick={() => setCreateModalOpen(true)} className="shadow-lg shadow-green-200">
-            <Plus size={20} />
-            إضافة دورة تسمين جديدة
-          </Button>
+        <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-800">إدارة مزرعتي</h2>
+            <Button onClick={() => setCreateModalOpen(true)}>
+                <Plus size={18} />
+                دورة جديدة
+            </Button>
         </div>
-
+        
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-           <StatCard title="الدورات النشطة" value={activeCount} icon={Activity} color="primary" />
-           <StatCard title="إجمالي الدورات" value={myCycles.length} icon={LayoutDashboard} color="secondary" />
-           <StatCard title="تقييم المزرعة" value={currentUser!.rating || 5.0} icon={TrendingUp} color="accent" />
+             <StatCard title="الدورات النشطة" value={myCycles.filter(c => c.status === CycleStatus.ACTIVE).length} icon={Sprout} color="primary" />
+             <StatCard title="إجمالي التمويل" value={`${myCycles.reduce((acc, c) => acc + c.currentFunding, 0).toLocaleString()} ج.م`} icon={DollarSign} color="secondary" />
+             <StatCard title="تقييم المزرعة" value={currentUser?.rating || '4.8'} icon={Activity} color="accent" />
         </div>
 
-        <h3 className="text-xl font-bold text-gray-700 mt-4">دورات التسمين الخاصة بي</h3>
-        {myCycles.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-            <Tractor size={48} className="mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">لم تقم بإضافة أي دورات بعد.</p>
-            <Button onClick={() => setCreateModalOpen(true)} variant="outline" className="mt-4">إبدأ الآن</Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Cycles List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCycles.map(cycle => (
-              <Card key={cycle.id} className="overflow-hidden flex flex-col">
-                <div className="relative h-48">
-                  <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover" />
-                  <div className="absolute top-2 right-2">
-                    <StatusBadge status={cycle.status} type="cycle" />
-                  </div>
-                  {cycle.insurancePolicyNumber && (
-                    <div className="absolute bottom-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                      <ShieldCheck size={12} /> مؤمنة
+                <Card key={cycle.id} className="overflow-hidden flex flex-col">
+                    <div className="h-48 relative">
+                        <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover" />
+                        <div className="absolute top-4 left-4">
+                             <StatusBadge status={cycle.status} type="cycle" />
+                        </div>
                     </div>
-                  )}
-                </div>
-                <div className="p-4 flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-2">
-                     <h3 className="font-bold text-lg text-gray-800">{cycle.animalType}</h3>
-                     <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">{cycle.expectedDuration} يوم</span>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4 text-sm text-gray-600">
-                     <div className="flex justify-between">
-                        <span>الوزن الحالي:</span>
-                        <span className="font-bold">{cycle.initialWeight} كجم</span>
-                     </div>
-                     <div className="flex justify-between">
-                        <span>التمويل:</span>
-                        <span className="font-bold text-green-700">{cycle.currentFunding.toLocaleString()} / {cycle.fundingGoal.toLocaleString()}</span>
-                     </div>
-                     <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(100, (cycle.currentFunding / cycle.fundingGoal) * 100)}%` }}></div>
-                     </div>
-                  </div>
-
-                  <div className="mt-auto grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setDetailsModal({ isOpen: true, cycle })}>
-                       التفاصيل
-                    </Button>
-                    <Button size="sm" onClick={() => setLogsModal({ isOpen: true, cycle })}>
-                       سجل المتابعة
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+                    <div className="p-4 flex-1 flex flex-col">
+                         <div className="flex justify-between items-start mb-2">
+                             <h3 className="font-bold text-lg text-gray-800">{cycle.animalType}</h3>
+                             <span className="text-xs font-bold bg-gray-100 px-2 py-1 rounded">{cycle.initialWeight} -> {cycle.targetWeight} كجم</span>
+                         </div>
+                         <div className="mb-4">
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="text-gray-600">التمويل: {Math.round((cycle.currentFunding/cycle.fundingGoal)*100)}%</span>
+                                <span className="font-bold">{cycle.currentFunding.toLocaleString()} / {cycle.fundingGoal.toLocaleString()}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${(cycle.currentFunding/cycle.fundingGoal)*100}%` }}></div>
+                            </div>
+                         </div>
+                         
+                         <div className="mt-auto flex gap-2">
+                            <Button variant="outline" size="sm" className="flex-1" onClick={() => { setDetailsModal({isOpen: true, cycle}); setAiAnalysis(""); }}>التفاصيل</Button>
+                            <Button variant="secondary" size="sm" className="flex-1" onClick={() => setLogsModal({isOpen: true, cycle})}>سجل المتابعة</Button>
+                         </div>
+                    </div>
+                </Card>
             ))}
-          </div>
-        )}
+        </div>
       </div>
     );
   };
 
   const renderInvestorDashboard = () => {
-    // Marketplace: Active cycles that are not fully funded (or available heads > 0)
-    // Note: Cycle status is ACTIVE means approved by admin.
-    const marketplaceCycles = cycles.filter(c => c.status === CycleStatus.ACTIVE && c.currentFunding < c.fundingGoal);
-    
-    // My Investments
-    const myInvestments = investments.filter(i => i.investorId === currentUser!.id);
-    const totalInvested = myInvestments.reduce((sum, i) => sum + i.amount, 0);
-
+    // Show active cycles for investment
+    const opportunities = cycles.filter(c => c.status === CycleStatus.ACTIVE);
     return (
-      <div className="space-y-8">
-        {/* Header Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-           <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 text-white shadow-lg">
-              <div className="flex items-center gap-3 mb-2 opacity-90">
-                 <Wallet size={24} />
-                 <span className="font-medium">محفظتي الاستثمارية</span>
-              </div>
-              <p className="text-3xl font-bold">{totalInvested.toLocaleString()} <span className="text-base font-normal opacity-80">ج.م</span></p>
-           </div>
-           
-           <StatCard title="الاستثمارات النشطة" value={myInvestments.filter(i => i.status === 'APPROVED').length} icon={Activity} color="secondary" />
-           <StatCard title="العوائد المتوقعة" value="-- %" icon={TrendingUp} color="accent" />
-        </div>
-
-        {/* Marketplace Section */}
-        <div>
-           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-             <ShoppingBag size={24} className="text-primary" />
-             فرص الاستثمار المتاحة (السوق)
-           </h2>
-           
-           {marketplaceCycles.length === 0 ? (
-             <div className="text-center py-12 bg-white rounded-xl">
-               <p className="text-gray-500">لا توجد فرص متاحة حالياً. يرجى العودة لاحقاً.</p>
-             </div>
-           ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {marketplaceCycles.map(cycle => {
-                  const percent = Math.round((cycle.currentFunding / cycle.fundingGoal) * 100);
-                  const breeder = users.find(u => u.id === cycle.breederId);
-                  const remaining = cycle.fundingGoal - cycle.currentFunding;
-
-                  return (
-                    <Card key={cycle.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
-                       <div className="relative h-48 group cursor-pointer" onClick={() => setDetailsModal({isOpen: true, cycle})}>
-                          <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                             <p className="text-white text-sm line-clamp-2">{cycle.description}</p>
-                          </div>
-                          {cycle.insurancePolicyNumber && (
-                            <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                               <ShieldCheck size={12} /> مؤمنة
-                            </div>
-                          )}
-                       </div>
-                       <div className="p-5 flex-1 flex flex-col">
-                          <div className="flex justify-between items-start mb-1">
-                             <h3 className="font-bold text-lg text-gray-900">{cycle.animalType}</h3>
-                             <Badge color="blue">{cycle.expectedDuration} يوم</Badge>
-                          </div>
-                          <p className="text-sm text-gray-500 mb-4 flex items-center gap-1">
-                             <MapPin size={14}/> {breeder?.governorate || 'مصر'} • {breeder?.name}
-                          </p>
-
-                          <div className="space-y-3 mb-6">
-                             <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                   <span className="text-gray-600">اكتمال التمويل</span>
-                                   <span className="font-bold text-primary">{percent}%</span>
-                                </div>
-                                <div className="w-full bg-gray-100 rounded-full h-2">
-                                   <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
-                                </div>
-                             </div>
-                             
-                             <div className="flex justify-between items-center bg-green-50 p-2 rounded-lg">
-                                <span className="text-xs text-green-700">المبلغ المطلوب للاكتمال</span>
-                                <span className="font-bold text-green-800">{remaining.toLocaleString()} ج.م</span>
-                             </div>
-                          </div>
-
-                          <Button onClick={() => openInvestModal(cycle.id, remaining)} className="w-full mt-auto">
-                             استثمر الآن
-                          </Button>
-                       </div>
-                    </Card>
-                  );
-                })}
-             </div>
-           )}
-        </div>
-
-        {/* My Portfolio Section */}
-        <div>
-           <h2 className="text-xl font-bold text-gray-800 mb-4">استثماراتي الحالية</h2>
-           {myInvestments.length === 0 ? (
-              <p className="text-gray-500 text-sm">لم تقم بأي استثمار بعد.</p>
-           ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {myInvestments.map(inv => {
-                    const cycle = cycles.find(c => c.id === inv.cycleId);
-                    return (
-                       <Card key={inv.id} className="p-4 flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                             <img src={cycle?.imageUrl} alt="" className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex-1">
-                             <h4 className="font-bold text-gray-800">{cycle?.animalType}</h4>
-                             <p className="text-sm text-gray-500 mb-1">تاريخ الاستثمار: {new Date(inv.date).toLocaleDateString('ar-EG')}</p>
-                             <div className="flex gap-2">
-                                <Badge color={inv.status === 'APPROVED' ? 'green' : 'yellow'}>
-                                   {inv.status === 'APPROVED' ? 'مقبول' : 'قيد المراجعة'}
-                                </Badge>
-                                {inv.hasAnimalInsurance && <Badge color="blue">مؤمن</Badge>}
-                             </div>
-                          </div>
-                          <div className="text-left">
-                             <p className="font-bold text-lg text-primary">{inv.amount.toLocaleString()}</p>
-                             <p className="text-xs text-gray-400">ج.م</p>
-                             <button 
-                               onClick={() => setDetailsModal({ isOpen: true, cycle: cycle || null })}
-                               className="text-xs text-blue-600 hover:underline mt-1 block"
-                             >
-                               تفاصيل الدورة
-                             </button>
-                          </div>
-                       </Card>
-                    );
-                 })}
-              </div>
-           )}
-        </div>
-      </div>
-    );
-  };
-
-  if (!currentUser) {
-    return <LoginScreen onLogin={setCurrentUser} users={users} setUsers={setUsers} />;
-  }
-
-  return (
-    <div className="flex min-h-screen bg-[#f8f9fa] font-sans text-right" dir="rtl">
-      {/* Sidebar - Mobile Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Success Modal */}
-      <Modal 
-        isOpen={successModal.isOpen} 
-        onClose={() => setSuccessModal({ ...successModal, isOpen: false })} 
-        title="تمت العملية بنجاح"
-      >
-        <div className="text-center py-6">
-           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={32} className="text-green-600" />
-           </div>
-           <p className="text-gray-700 whitespace-pre-line leading-relaxed">{successModal.message}</p>
-           <Button className="w-full mt-6" onClick={() => setSuccessModal({ ...successModal, isOpen: false })}>
-             حسناً
-           </Button>
-        </div>
-      </Modal>
-
-      {/* End Cycle / Sell Modal */}
-      <Modal 
-        isOpen={endCycleModal.isOpen} 
-        onClose={() => setEndCycleModal({ ...endCycleModal, isOpen: false })} 
-        title="إنهاء الدورة والبيع الفوري"
-      >
-        <div className="space-y-4">
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 flex items-start gap-3">
-                <Gavel size={24} className="text-orange-600 mt-1" />
-                <div>
-                    <h4 className="font-bold text-orange-800">تنبيه هام</h4>
-                    <p className="text-sm text-orange-700">هذا الإجراء نهائي. سيتم تحويل حالة الدورة إلى "مكتملة" ولن يتمكن المستثمرون من الاستثمار بها بعد الآن. سيتم اعتبار القطيع مباعاً بالكامل.</p>
-                </div>
-            </div>
-
-            <div>
-                <Input 
-                    label="سعر البيع النهائي للقطيع (ج.م)" 
-                    type="number"
-                    value={endCycleModal.salePrice}
-                    onChange={(e) => setEndCycleModal({...endCycleModal, salePrice: e.target.value})}
-                    placeholder="أدخل إجمالي المبلغ المحصل من البيع"
-                />
-            </div>
-
-            {endCycleModal.cycle && endCycleModal.salePrice && (
-                 <div className="bg-gray-100 p-3 rounded-lg text-sm space-y-2">
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">رأس المال المستثمر:</span>
-                        <span className="font-bold">{endCycleModal.cycle.currentFunding.toLocaleString()} ج.م</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">سعر البيع:</span>
-                        <span className="font-bold text-green-700">{parseFloat(endCycleModal.salePrice).toLocaleString()} ج.م</span>
-                    </div>
-                    <div className="border-t border-gray-300 pt-2 flex justify-between font-bold">
-                        <span>الربح/الخسارة الإجمالية:</span>
-                        <span className={parseFloat(endCycleModal.salePrice) >= endCycleModal.cycle.currentFunding ? 'text-green-600' : 'text-red-600'}>
-                             {(parseFloat(endCycleModal.salePrice) - endCycleModal.cycle.currentFunding).toLocaleString()} ج.م
-                        </span>
-                    </div>
-                 </div>
-            )}
-
-            <Button onClick={confirmEndCycle} className="w-full bg-orange-600 hover:bg-orange-700 text-white">
-                تأكيد البيع وإنهاء الدورة
-            </Button>
-        </div>
-      </Modal>
-
-      {/* Invest Confirmation Modal (With Receipt) */}
-      <Modal 
-        isOpen={investModal.isOpen} 
-        onClose={() => setInvestModal({ ...investModal, isOpen: false })} 
-        title="تأكيد الاستثمار"
-      >
-        <div className="space-y-4">
-           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-              <p className="font-bold mb-3 text-gray-800 border-b pb-2">تفاصيل الاستثمار</p>
-              
-              <div className="mb-4">
-                 <label className="block text-xs font-medium text-gray-700 mb-1">المبلغ المراد استثماره (ج.م)</label>
-                 <div className="relative">
-                    <input 
-                        type="number"
-                        min="1"
-                        value={investModal.amount}
-                        onChange={(e) => {
-                            const val = Number(e.target.value);
-                            const remaining = investModal.cycle ? investModal.cycle.fundingGoal - investModal.cycle.currentFunding : 0;
-                            if (val <= remaining) {
-                                setInvestModal({ ...investModal, amount: val });
-                            }
-                        }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-lg font-bold text-primary focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                 </div>
-                 <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>المبلغ المتاح:</span>
-                    <span className="font-bold">
-                        {investModal.cycle ? (investModal.cycle.fundingGoal - investModal.cycle.currentFunding).toLocaleString() : 0} ج.م
-                    </span>
-                 </div>
-              </div>
-
-              {/* Insurance Option for Investor (Only if Breeder hasn't insured it) */}
-              {investModal.cycle && !investModal.cycle.insurancePolicyNumber && (
-                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
-                    <div className="flex items-start gap-3">
-                       <input 
-                          type="checkbox" 
-                          id="investorInsurance"
-                          checked={investModal.wantsInsurance}
-                          onChange={(e) => setInvestModal({...investModal, wantsInsurance: e.target.checked})}
-                          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                       />
-                       <div>
-                          <label htmlFor="investorInsurance" className="font-bold text-gray-800 text-sm flex items-center gap-1 cursor-pointer">
-                             <Shield size={14} className="text-blue-600"/> تفعيل تأمين على الحياة (ضد النفوق)
-                          </label>
-                          <p className="text-xs text-gray-500 mt-1">
-                             يتم خصم <span className="font-bold text-red-500">{(investModal.amount * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span> (3%) من مبلغ التمويل لصالح وثيقة التأمين.
-                          </p>
-                       </div>
-                    </div>
-                 </div>
-              )}
-
-              {/* Calculation Summary (Invoice) */}
-              {investModal.amount > 0 && (
-                <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 mb-4 text-sm">
-                    <div className="flex justify-between mb-1">
-                        <span className="text-gray-600">المبلغ المدفوع:</span>
-                        <span className="font-bold">{investModal.amount.toLocaleString()} ج.م</span>
-                    </div>
-                    <div className="flex justify-between mb-1 text-red-600 text-xs">
-                        <span>- رسوم تشغيل المنصة (2.5%):</span>
-                        <span>{(investModal.amount * PLATFORM_FEE_PERCENT).toLocaleString()} ج.م</span>
-                    </div>
-                    {(investModal.wantsInsurance || investModal.cycle?.insurancePolicyNumber) && (
-                        <div className="flex justify-between mb-1 text-red-600 text-xs">
-                            <span>- رسوم التأمين (3%):</span>
-                            <span>{(investModal.amount * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
-                        </div>
-                    )}
-                    <div className="border-t border-gray-300 my-2 pt-2 flex justify-between font-bold text-green-700">
-                        <span>صافي الاستثمار (لشراء الرؤوس):</span>
-                        <span>
-                            {(
-                                investModal.amount - 
-                                (investModal.amount * PLATFORM_FEE_PERCENT) - 
-                                ((investModal.wantsInsurance || investModal.cycle?.insurancePolicyNumber) ? investModal.amount * INSURANCE_FEE_PERCENT : 0)
-                            ).toLocaleString()} ج.م
-                        </span>
-                    </div>
-                </div>
-              )}
-
-              <div className="bg-white p-3 rounded border border-gray-200">
-                  <p className="text-xs font-bold text-gray-500 mb-2">بيانات التحويل البنكي:</p>
-                  <div className="flex justify-between mb-1">
-                     <span>الحساب البنكي:</span>
-                     <span className="font-bold font-mono text-gray-800">EG12000200010005 (CIB)</span>
-                  </div>
-                  <div className="flex justify-between">
-                     <span>فودافون كاش:</span>
-                     <span className="font-bold font-mono text-gray-800">01000000000</span>
-                  </div>
-              </div>
-           </div>
-
-           <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">صورة إيصال التحويل</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors relative">
-                 <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleReceiptFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                 />
-                 {investModal.receiptFile ? (
-                    <div className="flex flex-col items-center text-green-600">
-                        <CheckCircle size={32} className="mb-2" />
-                        <span className="text-sm font-bold">{investModal.receiptFile.name}</span>
-                        <span className="text-xs mt-1">اضغط للتغيير</span>
-                    </div>
-                 ) : (
-                    <div className="flex flex-col items-center text-gray-400">
-                        <Upload size={32} className="mb-2" />
-                        <span className="text-sm">اضغط هنا لرفع الصورة</span>
-                        <span className="text-xs mt-1">JPG, PNG</span>
-                    </div>
-                 )}
-              </div>
-           </div>
-
-           <Button 
-             className="w-full mt-2" 
-             onClick={submitInvestment}
-             disabled={!investModal.receiptFile}
-           >
-             تأكيد الدفع وإتمام الاستثمار
-           </Button>
-        </div>
-      </Modal>
-
-      {/* Logs Modal (Breeder) */}
-      <Modal 
-        isOpen={logsModal.isOpen} 
-        onClose={() => setLogsModal({ ...logsModal, isOpen: false })} 
-        title="سجل المتابعة الدورية"
-      >
         <div className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><Plus size={18}/> إضافة تحديث جديد</h4>
-                <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                        <Input 
-                            label="الوزن الحالي (كجم)" 
-                            type="number" 
-                            value={logForm.weight}
-                            onChange={(e) => setLogForm({...logForm, weight: e.target.value})}
-                            className="bg-white"
-                        />
-                        <Input 
-                            label="تفاصيل العلف" 
-                            value={logForm.food}
-                            onChange={(e) => setLogForm({...logForm, food: e.target.value})}
-                            placeholder="مثال: 5ك علف + 2ك تبن"
-                            className="bg-white"
-                        />
-                    </div>
-                    <textarea 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
-                        placeholder="ملاحظات بيطرية أو عامة..."
-                        value={logForm.notes}
-                        onChange={(e) => setLogForm({...logForm, notes: e.target.value})}
-                    ></textarea>
-                    <Button onClick={handleSaveLog} className="w-full">حفظ التحديث</Button>
-                </div>
-            </div>
-
-            <div className="border-t pt-4">
-                <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2"><History size={18}/> السجل السابق</h4>
-                <div className="space-y-4">
-                    {logs.filter(l => l.cycleId === logsModal.cycle?.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(log => (
-                        <div key={log.id} className="relative pl-4 border-r-2 border-primary/20 pr-4 pb-4 last:pb-0">
-                            <div className="absolute -right-[9px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
-                            <div className="flex justify-between items-start mb-1">
-                                <span className="text-xs font-bold text-gray-500">{new Date(log.date).toLocaleDateString('ar-EG')}</span>
-                                {log.weight && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{log.weight} كجم</span>}
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-sm">
-                                <div className="flex items-start gap-2 mb-1">
-                                    <Utensils size={14} className="mt-0.5 text-gray-400"/>
-                                    <span className="text-gray-700">{log.foodDetails}</span>
+            <h2 className="text-2xl font-bold text-gray-800">فرص الاستثمار المتاحة</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {opportunities.map(cycle => {
+                    const breeder = users.find(u => u.id === cycle.breederId);
+                    const percent = Math.min(100, Math.round((cycle.currentFunding / cycle.fundingGoal) * 100));
+                    return (
+                        <Card key={cycle.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
+                            <div className="h-56 relative group">
+                                <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                <div className="absolute bottom-4 right-4 text-white">
+                                    <p className="font-bold text-lg">{cycle.animalType}</p>
+                                    <p className="text-sm opacity-90">{breeder?.name}</p>
                                 </div>
-                                {log.notes && (
-                                    <div className="flex items-start gap-2 text-gray-500">
-                                        <FileText size={14} className="mt-0.5"/>
-                                        <span>{log.notes}</span>
+                                {cycle.insurancePolicyNumber && (
+                                    <div className="absolute top-4 right-4 bg-blue-600 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg">
+                                        <ShieldCheck size={14} /> مؤمن
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    ))}
-                    {logs.filter(l => l.cycleId === logsModal.cycle?.id).length === 0 && (
-                        <p className="text-center text-gray-400 text-sm py-4">لا توجد سجلات سابقة لهذه الدورة.</p>
-                    )}
-                </div>
+                            <div className="p-5 flex-1 flex flex-col space-y-4">
+                                <div className="flex justify-between items-center text-sm">
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-500">مدة الدورة</span>
+                                        <span className="font-bold text-gray-800">{cycle.expectedDuration} يوم</span>
+                                    </div>
+                                    <div className="flex flex-col text-left">
+                                        <span className="text-gray-500">العائد المتوقع</span>
+                                        <span className="font-bold text-green-600">~15-20%</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-gray-600">تم جمع</span>
+                                        <span className="font-bold">{percent}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                        <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">المستهدف: {cycle.fundingGoal.toLocaleString()} ج.م</p>
+                                </div>
+
+                                <div className="mt-auto flex gap-2">
+                                  <Button 
+                                      className="flex-1" 
+                                      onClick={() => openInvestModal(cycle.id, 5000)} // Default amount for quick action, or open empty
+                                      disabled={percent >= 100}
+                                  >
+                                      {percent >= 100 ? 'اكتمل التمويل' : 'استثمر الآن'}
+                                  </Button>
+                                  <Button variant="outline" onClick={() => { setDetailsModal({isOpen: true, cycle}); setAiAnalysis(""); }}>
+                                      <Eye size={18} />
+                                  </Button>
+                                </div>
+                            </div>
+                        </Card>
+                    );
+                })}
             </div>
         </div>
-      </Modal>
+    );
+  };
+  
+  const renderInvestorPortfolio = () => {
+      const myInvestments = investments.filter(inv => inv.investorId === currentUser?.id);
+      return (
+          <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-800">محفظتي الاستثمارية</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <StatCard title="إجمالي الاستثمار" value={`${myInvestments.reduce((acc, i) => acc + i.amount, 0).toLocaleString()} ج.م`} icon={Wallet} color="primary" />
+                 <StatCard title="عدد العقود" value={myInvestments.length} icon={FileText} color="blue" />
+                 <StatCard title="الأرباح المتوقعة" value={`${(myInvestments.reduce((acc, i) => acc + i.amount, 0) * 0.15).toLocaleString()} ج.م`} icon={TrendingUp} color="secondary" />
+              </div>
 
-      {/* Details Modal (Breeder) */}
-      <Modal 
-        isOpen={detailsModal.isOpen} 
-        onClose={() => setDetailsModal({ ...detailsModal, isOpen: false })} 
-        title="تفاصيل الدورة"
-      >
-        {detailsModal.cycle && (
-            <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <img src={detailsModal.cycle.imageUrl} className="w-20 h-20 rounded-xl object-cover border border-gray-200" alt=""/>
-                    <div>
-                        <h3 className="font-bold text-lg">{detailsModal.cycle.animalType}</h3>
-                        <p className="text-sm text-gray-500">{detailsModal.cycle.description}</p>
-                        <div className="flex gap-2 mt-1">
-                            <Badge color={detailsModal.cycle.status === CycleStatus.ACTIVE ? 'green' : 'yellow'}>
-                                {detailsModal.cycle.status === CycleStatus.ACTIVE ? 'نشطة' : 'معلقة'}
-                            </Badge>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl text-sm">
-                    <div>
-                        <p className="text-gray-500 text-xs mb-1">تاريخ البدء</p>
-                        <p className="font-bold">{new Date(detailsModal.cycle.startDate).toLocaleDateString('ar-EG')}</p>
-                    </div>
-                    <div>
-                        <p className="text-gray-500 text-xs mb-1">مدة الدورة</p>
-                        <p className="font-bold">{detailsModal.cycle.expectedDuration} يوم</p>
-                    </div>
-                    <div>
-                        <p className="text-gray-500 text-xs mb-1">الوزن المبدئي</p>
-                        <p className="font-bold">{detailsModal.cycle.initialWeight} كجم</p>
-                    </div>
-                    <div>
-                        <p className="text-gray-500 text-xs mb-1">الوزن المستهدف</p>
-                        <p className="font-bold text-green-600">{detailsModal.cycle.targetWeight} كجم</p>
-                    </div>
-                    <div className="col-span-2 border-t pt-2 mt-1">
-                         <div className="flex justify-between items-center">
-                            <p className="text-gray-500 text-xs">نسبة التمويل</p>
-                            <p className="font-bold text-blue-600">{Math.round((detailsModal.cycle.currentFunding / detailsModal.cycle.fundingGoal) * 100)}%</p>
-                         </div>
-                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                             <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${(detailsModal.cycle.currentFunding / detailsModal.cycle.fundingGoal) * 100}%` }}></div>
-                         </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm"><ClipboardList size={16}/> خطة التسمين المعتمدة</h4>
-                    <FatteningPlanViewer planText={detailsModal.cycle.fatteningPlan || ''} />
-                </div>
-            </div>
-        )}
-      </Modal>
-
-      {/* Create Cycle Modal (Breeder) */}
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        title="إضافة دورة تسمين جديدة"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">نوع الحيوان</label>
-              <select 
-                className="w-full px-3 py-2 border rounded-lg bg-white"
-                value={breederForm.animalType}
-                onChange={(e) => setBreederForm({...breederForm, animalType: e.target.value as 'cows' | 'sheep' || 'cows'})}
-              >
-                <option value="cows">عجول تسمين</option>
-                <option value="sheep">خراف</option>
-              </select>
-            </div>
-            <Input 
-              label="مدة الدورة (يوم)" 
-              type="number" 
-              value={breederForm.expectedDuration} 
-              onChange={(e) => setBreederForm({...breederForm, expectedDuration: Number(e.target.value)})}
-            />
+              <Card>
+                  <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                          <tr>
+                              <th className="text-right p-4 text-sm text-gray-500">الدورة</th>
+                              <th className="text-right p-4 text-sm text-gray-500">المبلغ</th>
+                              <th className="text-right p-4 text-sm text-gray-500">التاريخ</th>
+                              <th className="text-right p-4 text-sm text-gray-500">الحالة</th>
+                              <th className="text-right p-4 text-sm text-gray-500">التأمين</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {myInvestments.map(inv => {
+                              const cycle = cycles.find(c => c.id === inv.cycleId);
+                              return (
+                                  <tr key={inv.id} className="border-b hover:bg-gray-50">
+                                      <td className="p-4 font-bold text-gray-800">{cycle?.animalType}</td>
+                                      <td className="p-4 font-bold text-green-700">{inv.amount.toLocaleString()} ج.م</td>
+                                      <td className="p-4 text-gray-500">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
+                                      <td className="p-4"><StatusBadge status={inv.status} /></td>
+                                      <td className="p-4">
+                                          {(inv.hasAnimalInsurance || cycle?.insurancePolicyNumber) ? (
+                                              <span className="text-blue-600 flex items-center gap-1 text-xs font-bold"><ShieldCheck size={14}/> مؤمن</span>
+                                          ) : (
+                                              <span className="text-gray-400 text-xs">غير مؤمن</span>
+                                          )}
+                                      </td>
+                                  </tr>
+                              );
+                          })}
+                      </tbody>
+                  </table>
+              </Card>
           </div>
+      )
+  }
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="الوزن الحالي (كجم)" 
-              type="number" 
-              value={breederForm.initialWeight} 
-              onChange={(e) => setBreederForm({...breederForm, initialWeight: Number(e.target.value)})}
-            />
-            <Input 
-              label="الوزن المستهدف (كجم)" 
-              type="number" 
-              value={breederForm.targetWeight} 
-              onChange={(e) => setBreederForm({...breederForm, targetWeight: Number(e.target.value)})}
-            />
-          </div>
+  if (!currentUser) {
+      return <LoginScreen onLogin={(user) => { setCurrentUser(user); setActiveTab('dashboard'); }} users={users} setUsers={setUsers} />;
+  }
 
-          <Input 
-            label="سعر الرأس / تكلفة البداية (ج.م)" 
-            type="number" 
-            value={breederForm.startPricePerHead} 
-            onChange={(e) => setBreederForm({...breederForm, startPricePerHead: Number(e.target.value)})}
-          />
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">وصف الدورة والسلالة</label>
-            <textarea 
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary h-24"
-              placeholder="اكتب تفاصيل عن السلالة، مصدر الشراء، والمميزات..."
-              value={breederForm.description}
-              onChange={(e) => setBreederForm({...breederForm, description: e.target.value})}
-            />
-            <button 
-                type="button" 
-                onClick={async () => {
-                    if (!breederForm.description) return;
-                    // Mock analysis or implement real call if needed, but for now simple alert or just placeholder
-                    alert("سيتم تحليل الوصف (محاكاة)");
-                }}
-                className="text-xs text-blue-600 hover:underline mt-1 flex items-center gap-1"
-            >
-                <Sprout size={12}/> تحليل الوصف بالذكاء الاصطناعي
-            </button>
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-             <div className="flex justify-between items-center mb-4">
-                <h4 className="font-bold text-gray-800 text-sm">خطة التغذية والبرنامج الوقائي</h4>
-                <Badge color="green">مساعد ذكي</Badge>
+  return (
+    <div className="flex min-h-screen bg-gray-50 font-sans text-right" dir="rtl">
+        {/* Sidebar */}
+        <aside className={`fixed inset-y-0 right-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} md:translate-x-0 md:static md:shadow-none border-l`}>
+             <div className="p-6 flex items-center gap-3 border-b border-gray-100">
+                <img src={LOGO_URL} alt="Logo" className="w-8 h-8 object-contain" />
+                <h1 className="text-xl font-bold text-green-800">منصة دواب</h1>
+                <button onClick={() => setSidebarOpen(false)} className="mr-auto md:hidden text-gray-500"><X size={20}/></button>
              </div>
              
-             {/* Use key to force re-render when animal type changes */}
-             <SimplePlanBuilder 
-               key={breederForm.animalType}
-               animalType={breederForm.animalType as 'cows' | 'sheep'}
-               onChange={handlePlanChange}
-             />
-          </div>
+             <div className="p-4 space-y-2">
+                <SidebarItem icon={LayoutDashboard} label="الرئيسية" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }} />
+                
+                {currentUser.role === UserRole.ADMIN && (
+                    <>
+                        <SidebarItem icon={Users} label="المستخدمين" active={activeTab === 'users'} onClick={() => { setActiveTab('users'); setSidebarOpen(false); }} />
+                        <SidebarItem icon={Sprout} label="الدورات" active={activeTab === 'cycles'} onClick={() => { setActiveTab('cycles'); setSidebarOpen(false); }} />
+                        <SidebarItem icon={Wallet} label="المالية" active={activeTab === 'financials'} onClick={() => { setActiveTab('financials'); setSidebarOpen(false); }} />
+                    </>
+                )}
 
-          <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3">
-             <input 
-                type="checkbox" 
-                id="cycleInsurance"
-                checked={breederForm.isInsured}
-                onChange={(e) => setBreederForm({...breederForm, isInsured: e.target.checked})}
-                className="mt-1 w-4 h-4 text-blue-600 rounded"
-             />
-             <div>
-                <label htmlFor="cycleInsurance" className="font-bold text-gray-800 text-sm cursor-pointer">
-                   طلب تأمين شامل على الدورة
-                </label>
-                <p className="text-xs text-gray-500">
-                   يغطي النفوق والأمراض الوبائية. سيتم خصم قسط التأمين من التمويل.
-                </p>
+                {currentUser.role === UserRole.BREEDER && (
+                     <SidebarItem icon={Sprout} label="دوراتي" active={activeTab === 'my-cycles'} onClick={() => { setActiveTab('my-cycles'); setSidebarOpen(false); }} />
+                )}
+
+                {currentUser.role === UserRole.INVESTOR && (
+                    <>
+                        <SidebarItem icon={TrendingUp} label="فرص الاستثمار" active={activeTab === 'opportunities'} onClick={() => { setActiveTab('opportunities'); setSidebarOpen(false); }} />
+                        <SidebarItem icon={PieChart} label="محفظتي" active={activeTab === 'portfolio'} onClick={() => { setActiveTab('portfolio'); setSidebarOpen(false); }} />
+                    </>
+                )}
+
+                <SidebarItem icon={UserCog} label="الملف الشخصي" active={activeTab === 'profile'} onClick={() => { setActiveTab('profile'); setSidebarOpen(false); }} />
+
+                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors mt-8">
+                    <LogOut size={20} />
+                    <span>تسجيل الخروج</span>
+                </button>
              </div>
-          </div>
+        </aside>
 
-          <Button onClick={handleBreederCreateCycle} className="w-full">
-            إرسال للمراجعة
-          </Button>
-        </div>
-      </Modal>
+        {/* Overlay */}
+        {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-20 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed md:sticky top-0 right-0 h-screen w-72 bg-white border-l border-gray-100 shadow-xl md:shadow-none z-30 transition-transform duration-300
-        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
-      `}>
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <Sprout size={24} />
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+             <header className="bg-white border-b p-4 flex justify-between items-center md:hidden">
+                <div className="flex items-center gap-2">
+                    <img src={LOGO_URL} alt="" className="w-8 h-8" />
+                    <span className="font-bold">دواب</span>
+                </div>
+                <button onClick={() => setSidebarOpen(true)} className="p-2 bg-gray-100 rounded-lg"><Menu size={24}/></button>
+             </header>
+
+             <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                  {activeTab === 'profile' ? (
+                      <ProfileView user={currentUser} onUpdate={handleUpdateProfile} />
+                  ) : (
+                      <>
+                        {currentUser.role === UserRole.ADMIN && (
+                            <>
+                                {activeTab === 'dashboard' && renderAdminDashboard()}
+                                {activeTab === 'users' && renderAdminUsers()}
+                                {activeTab === 'cycles' && renderAdminCycles()}
+                                {activeTab === 'financials' && renderAdminInvestments()}
+                            </>
+                        )}
+                        {currentUser.role === UserRole.BREEDER && (
+                            <>
+                                {activeTab === 'dashboard' && renderBreederDashboard()}
+                                {activeTab === 'my-cycles' && renderBreederDashboard()}
+                            </>
+                        )}
+                        {currentUser.role === UserRole.INVESTOR && (
+                            <>
+                                {activeTab === 'dashboard' && renderInvestorDashboard()}
+                                {activeTab === 'opportunities' && renderInvestorDashboard()}
+                                {activeTab === 'portfolio' && renderInvestorPortfolio()}
+                            </>
+                        )}
+                      </>
+                  )}
+             </div>
+        </main>
+
+        {/* --- Modals Section --- */}
+
+        {/* 1. Add User (Admin) */}
+        <Modal isOpen={isAddUserModalOpen} onClose={() => setAddUserModalOpen(false)} title="إضافة مستخدم جديد">
+            <div className="space-y-4">
+                <Input label="الاسم" value={newUserForm.name} onChange={e => setNewUserForm({...newUserForm, name: e.target.value})} placeholder="الاسم ثلاثي" />
+                <Input label="رقم الهاتف" value={newUserForm.phone} onChange={e => setNewUserForm({...newUserForm, phone: e.target.value})} placeholder="01xxxxxxxxx" maxLength={11} />
+                <Input label="كلمة المرور" type="password" value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">نوع الحساب</label>
+                    <select 
+                        className="w-full p-2 border rounded-lg bg-white"
+                        value={newUserForm.role}
+                        onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as UserRole})}
+                    >
+                        <option value={UserRole.INVESTOR}>مستثمر</option>
+                        <option value={UserRole.BREEDER}>مربي</option>
+                        <option value={UserRole.ADMIN}>مدير (Admin)</option>
+                    </select>
+                </div>
+
+                <Button onClick={handleAddUser} className="w-full mt-4">إضافة المستخدم</Button>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">دواب</h1>
-          </div>
-          <button className="md:hidden text-gray-500" onClick={() => setSidebarOpen(false)}>
-            <X size={24} />
-          </button>
-        </div>
+        </Modal>
 
-        <nav className="px-4 space-y-2 mt-4">
-          <SidebarItem 
-            icon={LayoutDashboard} 
-            label="الرئيسية" 
-            active={activeTab === 'dashboard'} 
-            onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }} 
-          />
-          
-          {currentUser.role === UserRole.ADMIN && (
-            <>
-              <SidebarItem 
-                icon={Users} 
-                label="المستخدمين" 
-                active={activeTab === 'users'} 
-                onClick={() => { setActiveTab('users'); setSidebarOpen(false); }} 
-              />
-              <SidebarItem 
-                icon={History} 
-                label="إدارة الدورات" 
-                active={activeTab === 'cycles'} 
-                onClick={() => { setActiveTab('cycles'); setSidebarOpen(false); }} 
-              />
-              <SidebarItem 
-                icon={Banknote} 
-                label="الإدارة المالية" 
-                active={activeTab === 'financials'} 
-                onClick={() => { setActiveTab('financials'); setSidebarOpen(false); }} 
-              />
-            </>
-          )}
+        {/* 2. Success Modal */}
+        <Modal isOpen={successModal.isOpen} onClose={() => setSuccessModal({...successModal, isOpen: false})} title="عملية ناجحة">
+            <div className="text-center py-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                    <CheckCircle size={32} />
+                </div>
+                <p className="text-gray-700 font-medium whitespace-pre-line leading-relaxed">{successModal.message}</p>
+                <Button onClick={() => setSuccessModal({...successModal, isOpen: false})} className="w-full mt-6">حسناً</Button>
+            </div>
+        </Modal>
 
-          <SidebarItem 
-            icon={Settings} 
-            label="الملف الشخصي" 
-            active={activeTab === 'profile'} 
-            onClick={() => { setActiveTab('profile'); setSidebarOpen(false); }} 
-          />
+        {/* 3. Create Cycle Modal (Breeder) */}
+        <Modal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} title="تسجيل دورة جديدة">
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">نوع الحيوان</label>
+                        <select 
+                            className="w-full border rounded-lg p-2"
+                            value={breederForm.animalType}
+                            onChange={(e) => setBreederForm({...breederForm, animalType: e.target.value as any})}
+                        >
+                            <option value="cows">عجول تسمين</option>
+                            <option value="sheep">أغنام (خراف)</option>
+                        </select>
+                    </div>
+                    <Input label="العدد (رؤوس)" value="1" disabled className="bg-gray-100" />
+                </div>
 
-          <div className="pt-8 mt-8 border-t border-gray-100">
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-            >
-              <LogOut size={20} />
-              <span className="font-medium">تسجيل الخروج</span>
-            </button>
-          </div>
-        </nav>
+                <div className="grid grid-cols-2 gap-4">
+                    <Input label="الوزن الحالي (كجم)" type="number" value={breederForm.initialWeight} onChange={e => setBreederForm({...breederForm, initialWeight: Number(e.target.value)})} />
+                    <Input label="الوزن المستهدف (كجم)" type="number" value={breederForm.targetWeight} onChange={e => setBreederForm({...breederForm, targetWeight: Number(e.target.value)})} />
+                </div>
 
-        {/* User Mini Profile in Sidebar */}
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-100 bg-white">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                <img src={currentUser.profilePictureUrl || `https://i.pravatar.cc/150?u=${currentUser.id}`} alt="" className="w-full h-full object-cover"/>
-             </div>
-             <div>
-                <p className="font-bold text-sm text-gray-800 truncate w-32">{currentUser.name}</p>
-                <p className="text-xs text-gray-500">{currentUser.role}</p>
-             </div>
-          </div>
-        </div>
-      </aside>
+                <div className="grid grid-cols-2 gap-4">
+                    <Input label="سعر البدء (شراء + مصاريف)" type="number" value={breederForm.startPricePerHead} onChange={e => setBreederForm({...breederForm, startPricePerHead: Number(e.target.value)})} />
+                    <Input label="مدة الدورة (يوم)" type="number" value={breederForm.expectedDuration} onChange={e => setBreederForm({...breederForm, expectedDuration: Number(e.target.value)})} />
+                </div>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-screen p-4 md:p-8">
-        <header className="md:hidden flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                <Sprout size={18} />
-             </div>
-             <span className="font-bold text-lg text-gray-800">دواب</span>
-          </div>
-          <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white rounded-lg shadow-sm border text-gray-600">
-            <Menu size={24} />
-          </button>
-        </header>
+                <Input label="وصف الدورة (السلالة، المصدر..)" value={breederForm.description} onChange={e => setBreederForm({...breederForm, description: e.target.value})} />
 
-        {activeTab === 'dashboard' && currentUser.role === UserRole.ADMIN && renderAdminDashboard()}
-        {activeTab === 'users' && currentUser.role === UserRole.ADMIN && renderAdminUsers()}
-        {activeTab === 'cycles' && currentUser.role === UserRole.ADMIN && renderAdminCycles()}
-        {activeTab === 'financials' && currentUser.role === UserRole.ADMIN && renderAdminInvestments()}
+                <div className="border rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-bold text-sm mb-3">خطة التغذية والرعاية</h4>
+                    <SimplePlanBuilder 
+                        key={breederForm.animalType} // Force reset when animal type changes
+                        animalType={breederForm.animalType as 'cows'|'sheep'}
+                        onChange={handlePlanChange}
+                    />
+                </div>
+
+                <div className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => setBreederForm(prev => ({...prev, isInsured: !prev.isInsured}))}>
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${breederForm.isInsured ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-400'}`}>
+                        {breederForm.isInsured && <Check size={14} className="text-white" />}
+                    </div>
+                    <span className="text-sm font-medium">طلب تأمين شامل على الدورة (يخصم من الأرباح)</span>
+                </div>
+
+                <Button onClick={handleBreederCreateCycle} className="w-full">إرسال للمراجعة</Button>
+            </div>
+        </Modal>
         
-        {activeTab === 'dashboard' && currentUser.role === UserRole.BREEDER && renderBreederDashboard()}
-        
-        {activeTab === 'dashboard' && currentUser.role === UserRole.INVESTOR && renderInvestorDashboard()}
-        
-        {activeTab === 'profile' && (
-          <ProfileView user={currentUser} onUpdate={handleUpdateProfile} />
-        )}
-      </main>
+        {/* 4. Cycle Details Modal */}
+        <Modal isOpen={detailsModal.isOpen} onClose={() => setDetailsModal({...detailsModal, isOpen: false})} title="تفاصيل الدورة">
+            {detailsModal.cycle && (
+                <div className="space-y-6">
+                    <div className="flex gap-4">
+                        <img src={detailsModal.cycle.imageUrl} className="w-24 h-24 rounded-lg object-cover" alt="" />
+                        <div>
+                            <h3 className="font-bold text-lg">{detailsModal.cycle.animalType}</h3>
+                            <p className="text-sm text-gray-500">{detailsModal.cycle.description}</p>
+                            <StatusBadge status={detailsModal.cycle.status} />
+                        </div>
+                    </div>
+
+                    {/* Gemini AI Analysis Section */}
+                    <div className="border-t pt-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-bold flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-purple-500"></div> تحليل الذكاء الاصطناعي (Gemini)</h4>
+                            <Button size="sm" variant="ghost" onClick={handleAnalyzeCycle} disabled={loadingAi}>
+                                {loadingAi ? 'جاري التحليل...' : 'طلب تحليل المخاطر'}
+                            </Button>
+                        </div>
+                        {aiAnalysis && (
+                            <div className="bg-purple-50 p-3 rounded-lg text-sm text-purple-900 leading-relaxed border border-purple-100">
+                                {aiAnalysis}
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div>
+                        <h4 className="font-bold border-b pb-2 mb-3">خطة التسمين</h4>
+                        <FatteningPlanViewer planText={detailsModal.cycle.fatteningPlan || ''} />
+                    </div>
+
+                    <div className="bg-gray-100 p-3 rounded-lg text-sm space-y-2">
+                        <div className="flex justify-between">
+                            <span>الوزن الابتدائي:</span>
+                            <span className="font-bold">{detailsModal.cycle.initialWeight} كجم</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span>الهدف:</span>
+                            <span className="font-bold">{detailsModal.cycle.targetWeight} كجم</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </Modal>
+
+        {/* 5. Logs Modal */}
+        <Modal isOpen={logsModal.isOpen} onClose={() => setLogsModal({...logsModal, isOpen: false})} title="سجل المتابعة الدورية">
+            <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg space-y-3 border">
+                    <h4 className="font-bold text-sm text-gray-700">إضافة تحديث جديد</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Input label="الوزن الحالي (كجم)" type="number" value={logForm.weight} onChange={e => setLogForm({...logForm, weight: e.target.value})} />
+                        <Input label="نوع العلف / الكمية" value={logForm.food} onChange={e => setLogForm({...logForm, food: e.target.value})} />
+                    </div>
+                    <Input label="ملاحظات صحية / عامة" value={logForm.notes} onChange={e => setLogForm({...logForm, notes: e.target.value})} />
+                    <Button size="sm" onClick={handleSaveLog}>حفظ التحديث</Button>
+                </div>
+
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {logs.filter(l => l.cycleId === logsModal.cycle?.id).map(log => (
+                        <div key={log.id} className="border-r-2 border-primary pr-3 mr-1 relative">
+                             <div className="absolute -right-[5px] top-0 w-2 h-2 rounded-full bg-primary"></div>
+                             <p className="text-xs text-gray-400">{new Date(log.date).toLocaleDateString('ar-EG')}</p>
+                             <p className="font-bold text-sm text-gray-800">الوزن: {log.weight} كجم</p>
+                             <p className="text-sm text-gray-600">{log.foodDetails}</p>
+                             {log.notes && <p className="text-xs text-gray-500 bg-yellow-50 p-1 rounded mt-1">{log.notes}</p>}
+                        </div>
+                    ))}
+                    {logs.filter(l => l.cycleId === logsModal.cycle?.id).length === 0 && <p className="text-center text-gray-400 text-sm">لا توجد سجلات سابقة</p>}
+                </div>
+            </div>
+        </Modal>
+
+        {/* 6. Invest Modal */}
+        <Modal isOpen={investModal.isOpen} onClose={() => setInvestModal({...investModal, isOpen: false})} title="تأكيد الاستثمار">
+            {investModal.cycle && (
+                <div className="space-y-4">
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <h4 className="font-bold text-blue-800 mb-2">ملخص الطلب</h4>
+                        <div className="flex justify-between text-sm mb-1">
+                            <span>الدورة:</span>
+                            <span className="font-bold">{investModal.cycle.animalType}</span>
+                        </div>
+                        <div className="flex justify-between text-sm mb-1">
+                            <span>قيمة الاستثمار:</span>
+                            <span className="font-bold">{investModal.amount.toLocaleString()} ج.م</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-red-600 mt-2 border-t border-blue-200 pt-2">
+                             <span>رسوم المنصة ({PLATFORM_FEE_PERCENT*100}%):</span>
+                             <span>-{(investModal.amount * PLATFORM_FEE_PERCENT).toLocaleString()} ج.م</span>
+                        </div>
+                        {(investModal.wantsInsurance || investModal.cycle.insurancePolicyNumber) && (
+                            <div className="flex justify-between text-sm text-red-600">
+                                <span>رسوم التأمين ({INSURANCE_FEE_PERCENT*100}%):</span>
+                                <span>-{(investModal.amount * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-blue-200 text-green-700">
+                             <span>الصافي المستثمر في الدورة:</span>
+                             <span>{(investModal.amount - (investModal.amount * PLATFORM_FEE_PERCENT) - ((investModal.wantsInsurance || investModal.cycle.insurancePolicyNumber) ? investModal.amount * INSURANCE_FEE_PERCENT : 0)).toLocaleString()} ج.م</span>
+                        </div>
+                    </div>
+
+                    {!investModal.cycle.insurancePolicyNumber && (
+                        <div 
+                            className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${investModal.wantsInsurance ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                            onClick={() => setInvestModal(prev => ({...prev, wantsInsurance: !prev.wantsInsurance}))}
+                        >
+                            <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center ${investModal.wantsInsurance ? 'bg-green-600 border-green-600' : 'bg-white border-gray-400'}`}>
+                                {investModal.wantsInsurance && <Check size={14} className="text-white"/>}
+                            </div>
+                            <div>
+                                <p className="font-bold text-sm text-gray-800 flex items-center gap-1"><ShieldCheck size={16}/> إضافة تأمين على الحياة (اختياري)</p>
+                                <p className="text-xs text-gray-500">يضمن لك استرداد رأس المال في حالة نفوق الحيوان لا قدر الله. (تكلفة 3%)</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium">إرفاق إيصال التحويل البنكي</label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors relative">
+                            <input type="file" accept="image/*" onChange={handleReceiptFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                            {investModal.receiptFile ? (
+                                <div className="text-green-600 flex flex-col items-center">
+                                    <CheckCircle size={32} className="mb-2"/>
+                                    <span className="text-sm font-bold">{investModal.receiptFile.name}</span>
+                                </div>
+                            ) : (
+                                <div className="text-gray-400 flex flex-col items-center">
+                                    <Upload size={32} className="mb-2"/>
+                                    <span className="text-sm">اضغط لرفع صورة الإيصال</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800 flex gap-2">
+                        <Info size={16} className="shrink-0" />
+                        <p>بإتمام هذه العملية، أنت توافق على شروط الاستثمار وسياسة المخاطر الخاصة بالمنصة.</p>
+                    </div>
+
+                    <Button onClick={submitInvestment} className="w-full" disabled={!investModal.receiptFile}>تأكيد وإرسال الطلب</Button>
+                </div>
+            )}
+        </Modal>
+
+        {/* 7. End Cycle Modal (Admin) */}
+        <Modal isOpen={endCycleModal.isOpen} onClose={() => setEndCycleModal({...endCycleModal, isOpen: false})} title="إنهاء الدورة وبيع القطيع">
+            <div className="space-y-4">
+                 <p className="text-gray-600 text-sm">أنت بصدد إنهاء الدورة <span className="font-bold text-black">{endCycleModal.cycle?.animalType}</span> وتسجيل عملية البيع النهائية.</p>
+                 <Input 
+                    label="سعر البيع النهائي (الإجمالي)" 
+                    type="number" 
+                    value={endCycleModal.salePrice} 
+                    onChange={e => setEndCycleModal({...endCycleModal, salePrice: e.target.value})} 
+                    placeholder="مثال: 45000"
+                 />
+                 <div className="bg-red-50 p-3 rounded-lg text-red-700 text-sm flex gap-2 items-center">
+                    <AlertTriangle size={18} />
+                    <span>لا يمكن التراجع عن هذه العملية بعد التأكيد.</span>
+                 </div>
+                 <Button variant="danger" onClick={confirmEndCycle} className="w-full">تأكيد البيع وإنهاء الدورة</Button>
+            </div>
+        </Modal>
+
     </div>
   );
 }

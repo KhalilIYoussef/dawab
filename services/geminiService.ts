@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { Cycle } from '../types';
 
@@ -25,8 +26,9 @@ export const analyzeCycleRisk = async (cycle: Cycle): Promise<string> => {
       اكتب تقريرًا قصيرًا بالعربية (لا يتجاوز 100 كلمة) يوضح النقاط الإيجابية والمخاطر المحتملة، مع مراعاة ظروف السوق المصري (أسعار الأعلاف، الأمراض الموسمية، الطلب في المواسم).
     `;
 
+    // Fix: Updated to gemini-3-pro-preview for complex reasoning task
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
     });
 

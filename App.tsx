@@ -80,7 +80,7 @@ const StatCard: React.FC<{
         </div>
         <div>
           <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
-          <p className={`text-xl md:text-2xl font-bold ${textColors[color] || 'text-gray-800'}`}>{value}</p>
+          <p className={`text-xl md:text-2xl font-bold ${textColors[color] || 'text-black'}`}>{value}</p>
         </div>
         {onClick && (
             <div className="absolute top-4 right-4 text-gray-300 group-hover:text-primary transition-colors">
@@ -231,7 +231,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
         {/* Form Side */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
           <div className="mb-8 text-center md:text-right">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-black mb-2">
               {isRegistering ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
             </h2>
             <p className="text-gray-500 text-sm">
@@ -300,9 +300,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
           <div className="mt-8 pt-6 border-t border-gray-100">
              <p className="text-xs text-center text-gray-400 mb-3">للتجربة السريعة (Demo Users)</p>
              <div className="flex justify-center gap-2 flex-wrap">
-                <button onClick={() => onLogin(users[0])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Admin</button>
-                <button onClick={() => onLogin(users[1])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Breeder</button>
-                <button onClick={() => onLogin(users[3])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Investor</button>
+                <button onClick={() => onLogin(users[0])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-black">Admin</button>
+                <button onClick={() => onLogin(users[1])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-black">Breeder</button>
+                <button onClick={() => onLogin(users[3])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-black">Investor</button>
              </div>
           </div>
         </div>
@@ -337,19 +337,19 @@ const ProfileView: React.FC<{
         <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-green-600 to-green-400"></div>
         <div className="relative flex flex-col md:flex-row items-center md:items-end gap-6 pt-12 px-4">
           <div className="relative group">
-             <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden flex items-center justify-center text-2xl font-bold text-gray-400">
+             <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden flex items-center justify-center text-2xl font-bold text-black">
                 {user.profilePictureUrl ? (
                   <img src={user.profilePictureUrl} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
                   user.name.charAt(0)
                 )}
              </div>
-             <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow border hover:bg-gray-50 text-gray-600">
+             <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow border hover:bg-gray-50 text-black">
                 <Camera size={16} />
              </button>
           </div>
           <div className="flex-1 text-center md:text-right mb-4 md:mb-0">
-             <h2 className="text-2xl font-bold text-gray-800">{user.name}</h2>
+             <h2 className="text-2xl font-bold text-black">{user.name}</h2>
              <p className="text-gray-500 flex items-center justify-center md:justify-start gap-2">
                 <MapPin size={16} /> {user.governorate || 'غير محدد'}
              </p>
@@ -363,27 +363,27 @@ const ProfileView: React.FC<{
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
          {/* Personal Info */}
          <Card className="p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><UserCog size={20}/> البيانات الشخصية</h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-black"><UserCog size={20}/> البيانات الشخصية</h3>
             <div className="space-y-4">
                <div>
                   <label className="text-sm text-gray-500">رقم الهاتف</label>
-                  <p className="font-medium text-gray-900">{user.phone}</p>
+                  <p className="font-medium text-black">{user.phone}</p>
                </div>
                <div>
                   <label className="text-sm text-gray-500">الرقم القومي</label>
-                  <p className="font-medium text-gray-900">{user.nationalId || 'غير مسجل'}</p>
+                  <p className="font-medium text-black">{user.nationalId || 'غير مسجل'}</p>
                </div>
                {user.role === UserRole.BREEDER && (
                  <>
                     <div>
                       <label className="text-sm text-gray-500">عنوان المزرعة</label>
-                      <p className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-black truncate">
                         {user.googleMapsUrl ? <a href={user.googleMapsUrl} target="_blank" className="text-blue-600 hover:underline flex items-center gap-1"><MapPin size={14}/> عرض على الخريطة</a> : 'غير محدد'}
                       </p>
                     </div>
                     <div>
                         <label className="text-sm text-gray-500">الطاقة الاستيعابية</label>
-                        <p className="font-medium text-gray-900">{user.spaceLimit} رأس</p>
+                        <p className="font-medium text-black">{user.spaceLimit} رأس</p>
                     </div>
                  </>
                )}
@@ -392,7 +392,7 @@ const ProfileView: React.FC<{
 
          {/* Verification & Documents */}
          <Card className="p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><ShieldCheck size={20}/> التوثيق والأوراق</h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-black"><ShieldCheck size={20}/> التوثيق والأوراق</h3>
             <div className="space-y-4">
                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -400,7 +400,7 @@ const ProfileView: React.FC<{
                         {user.documentsVerified ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
                      </div>
                      <div>
-                        <p className="font-medium text-sm">التوثيق الرقمي</p>
+                        <p className="font-medium text-sm text-black">التوثيق الرقمي</p>
                         <p className="text-xs text-gray-500">{user.documentsVerified ? 'تم التحقق من الهوية' : 'بانتظار رفع المستندات'}</p>
                      </div>
                   </div>
@@ -415,7 +415,7 @@ const ProfileView: React.FC<{
                         {user.physicalPapersVerified ? <FileCheck size={20} /> : <FileText size={20} />}
                      </div>
                      <div>
-                        <p className="font-medium text-sm">العقود الورقية</p>
+                        <p className="font-medium text-sm text-black">العقود الورقية</p>
                         <p className="text-xs text-gray-500">
                            {user.physicalPapersVerified ? 'تم استلام العقود' : user.physicalPapersSent ? 'تم الإرسال - قيد المراجعة' : 'لم يتم الإرسال'}
                         </p>
@@ -515,7 +515,7 @@ const AdminDashboard: React.FC<{
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab as any)}
-                        className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+                        className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-black opacity-60'}`}
                     >
                         {tab === 'overview' ? 'نظرة عامة' : tab === 'users' ? 'المستخدمين' : 'الدورات'}
                     </button>
@@ -529,20 +529,20 @@ const AdminDashboard: React.FC<{
                     <StatCard title="الدورات النشطة" value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} icon={Activity} color="primary" />
                     
                     <div className="md:col-span-3">
-                        <h3 className="font-bold text-gray-800 mb-4">طلبات تتطلب اتخاذ إجراء</h3>
+                        <h3 className="font-bold text-black mb-4">طلبات تتطلب اتخاذ إجراء</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Pending Users */}
                             <Card className="p-4">
-                                <h4 className="font-bold text-sm text-gray-600 mb-3 flex justify-between">
+                                <h4 className="font-bold text-sm text-black opacity-70 mb-3 flex justify-between">
                                     <span>مستخدمين جدد ({pendingUsers.length})</span>
                                     <span className="text-xs text-primary cursor-pointer" onClick={() => setActiveTab('users')}>عرض الكل</span>
                                 </h4>
                                 {pendingUsers.slice(0, 3).map(u => (
                                     <div key={u.id} className="flex items-center justify-between p-3 border-b last:border-0">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs">{u.name[0]}</div>
+                                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-black">{u.name[0]}</div>
                                             <div>
-                                                <p className="text-sm font-bold">{u.name}</p>
+                                                <p className="text-sm font-bold text-black">{u.name}</p>
                                                 <p className="text-xs text-gray-500">{u.role === UserRole.BREEDER ? 'مربي' : 'مستثمر'}</p>
                                             </div>
                                         </div>
@@ -552,16 +552,16 @@ const AdminDashboard: React.FC<{
                                         </div>
                                     </div>
                                 ))}
-                                {pendingUsers.length === 0 && <p className="text-sm text-gray-400 text-center py-4">لا يوجد طلبات معلقة</p>}
+                                {pendingUsers.length === 0 && <p className="text-sm text-gray-400 text-center py-4 text-black opacity-50">لا يوجد طلبات معلقة</p>}
                             </Card>
 
                             {/* Pending Cycles */}
                             <Card className="p-4">
-                                <h4 className="font-bold text-sm text-gray-600 mb-3">دورات بانتظار الموافقة ({pendingCycles.length})</h4>
+                                <h4 className="font-bold text-sm text-black opacity-70 mb-3">دورات بانتظار الموافقة ({pendingCycles.length})</h4>
                                 {pendingCycles.slice(0, 3).map(c => (
                                     <div key={c.id} className="flex items-center justify-between p-3 border-b last:border-0">
                                         <div>
-                                            <p className="text-sm font-bold">{c.animalType}</p>
+                                            <p className="text-sm font-bold text-black">{c.animalType}</p>
                                             <p className="text-xs text-gray-500">الهدف: {c.fundingGoal.toLocaleString()} ج.م</p>
                                         </div>
                                         <div className="flex gap-2">
@@ -570,7 +570,7 @@ const AdminDashboard: React.FC<{
                                         </div>
                                     </div>
                                 ))}
-                                {pendingCycles.length === 0 && <p className="text-sm text-gray-400 text-center py-4">لا يوجد دورات معلقة</p>}
+                                {pendingCycles.length === 0 && <p className="text-sm text-gray-400 text-center py-4 text-black opacity-50">لا يوجد دورات معلقة</p>}
                             </Card>
                         </div>
                     </div>
@@ -580,12 +580,12 @@ const AdminDashboard: React.FC<{
             {activeTab === 'users' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-lg">إدارة المستخدمين</h3>
+                        <h3 className="font-bold text-lg text-black">إدارة المستخدمين</h3>
                         <Button size="sm" onClick={() => setIsAddUserModalOpen(true)}><Plus size={16}/> إضافة مستخدم</Button>
                     </div>
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <table className="w-full text-right">
-                            <thead className="bg-gray-50 text-gray-600 text-sm">
+                            <thead className="bg-gray-50 text-black text-sm">
                                 <tr>
                                     <th className="p-4">الاسم</th>
                                     <th className="p-4">الدور</th>
@@ -597,7 +597,7 @@ const AdminDashboard: React.FC<{
                                 {users.map(u => (
                                     <tr key={u.id} className="hover:bg-gray-50">
                                         <td className="p-4">
-                                            <div className="font-bold">{u.name}</div>
+                                            <div className="font-bold text-black">{u.name}</div>
                                             <div className="text-xs text-gray-500">{u.phone}</div>
                                         </td>
                                         <td className="p-4">
@@ -624,10 +624,10 @@ const AdminDashboard: React.FC<{
 
             {activeTab === 'cycles' && (
                 <div>
-                    <h3 className="font-bold text-lg mb-4">إدارة الدورات الإنتاجية</h3>
+                    <h3 className="font-bold text-lg mb-4 text-black">إدارة الدورات الإنتاجية</h3>
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <table className="w-full text-right">
-                            <thead className="bg-gray-50 text-gray-600 text-sm">
+                            <thead className="bg-gray-50 text-black text-sm">
                                 <tr>
                                     <th className="p-4">صورة</th>
                                     <th className="p-4">المربي</th>
@@ -646,15 +646,15 @@ const AdminDashboard: React.FC<{
                                                 <img src={c.imageUrl} className="w-12 h-12 rounded-lg object-cover bg-gray-100" alt="" />
                                             </td>
                                             <td className="p-4">
-                                                <div className="font-bold text-gray-900">{breeder?.name || 'غير معروف'}</div>
+                                                <div className="font-bold text-black">{breeder?.name || 'غير معروف'}</div>
                                                 <div className="text-xs text-gray-500">{breeder?.phone}</div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="font-medium text-gray-900">{c.animalType}</div>
+                                                <div className="font-medium text-black">{c.animalType}</div>
                                                 <div className="text-xs text-gray-500">{c.totalHeads} رأس | {c.expectedDuration} يوم</div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="font-bold text-gray-900">{c.fundingGoal.toLocaleString()} ج.م</div>
+                                                <div className="font-bold text-black">{c.fundingGoal.toLocaleString()} ج.م</div>
                                                 <div className="text-xs text-gray-500">تم جمع: {c.currentFunding.toLocaleString()}</div>
                                                 {c.finalSalePrice && (
                                                     <div className="text-xs text-green-600 font-bold mt-1">
@@ -705,7 +705,7 @@ const AdminDashboard: React.FC<{
                                 })}
                                 {cycles.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="p-8 text-center text-gray-400">لا توجد دورات مسجلة</td>
+                                        <td colSpan={6} className="p-8 text-center text-gray-400 text-black opacity-50">لا توجد دورات مسجلة</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -727,9 +727,9 @@ const AdminDashboard: React.FC<{
                         onChange={(e) => setNewUserForm({...newUserForm, phone: e.target.value})}
                     />
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">نوع المستخدم</label>
+                        <label className="block text-sm font-medium text-black mb-1">نوع المستخدم</label>
                         <select 
-                            className="w-full p-2 border rounded-lg"
+                            className="w-full p-2 border rounded-lg text-black"
                             value={newUserForm.role}
                             onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as UserRole})}
                         >
@@ -752,12 +752,12 @@ const AdminDashboard: React.FC<{
                     {selectedCycleToSell && (
                         <div className="bg-gray-50 p-3 rounded-lg text-sm mb-4 space-y-1">
                             <div className="flex justify-between">
-                                <span>نوع الحيوان:</span>
-                                <span className="font-bold">{selectedCycleToSell.animalType}</span>
+                                <span className="text-black opacity-60">نوع الحيوان:</span>
+                                <span className="font-bold text-black">{selectedCycleToSell.animalType}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span>رأس المال المستثمر:</span>
-                                <span className="font-bold">{selectedCycleToSell.fundingGoal.toLocaleString()} ج.م</span>
+                                <span className="text-black opacity-60">رأس المال المستثمر:</span>
+                                <span className="font-bold text-black">{selectedCycleToSell.fundingGoal.toLocaleString()} ج.م</span>
                             </div>
                         </div>
                     )}
@@ -824,7 +824,7 @@ const BreederActiveCycles: React.FC<{
       // Detail View
       return (
           <div className="space-y-6">
-              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-gray-500 hover:text-gray-900">
+              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100">
                   <ArrowRight size={20}/> رجوع للقائمة
               </button>
               
@@ -833,11 +833,11 @@ const BreederActiveCycles: React.FC<{
                   <div className="flex gap-4">
                       <img src={selectedCycle.imageUrl} className="w-24 h-24 rounded-lg object-cover" />
                       <div>
-                          <h2 className="text-xl font-bold mb-1">{selectedCycle.animalType}</h2>
+                          <h2 className="text-xl font-bold mb-1 text-black">{selectedCycle.animalType}</h2>
                           <p className="text-gray-500 text-sm mb-2">تاريخ البدء: {selectedCycle.startDate}</p>
                           <div className="flex gap-4 text-sm">
-                              <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">الوزن الحالي: {cycleLogs[0]?.weight || selectedCycle.initialWeight} كجم</span>
-                              <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">الهدف: {selectedCycle.targetWeight} كجم</span>
+                              <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold">الوزن الحالي: {cycleLogs[0]?.weight || selectedCycle.initialWeight} كجم</span>
+                              <span className="bg-gray-100 text-black px-3 py-1 rounded-full opacity-70">الهدف: {selectedCycle.targetWeight} كجم</span>
                           </div>
                       </div>
                   </div>
@@ -846,32 +846,32 @@ const BreederActiveCycles: React.FC<{
 
               {/* Logs Timeline */}
               <div className="space-y-4">
-                  <h3 className="font-bold text-lg">سجل المتابعة اليومي</h3>
+                  <h3 className="font-bold text-lg text-black">سجل المتابعة اليومي</h3>
                   {cycleLogs.map(log => (
                       <div key={log.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
                           <div className="flex flex-col items-center min-w-[80px] border-l pl-4 border-gray-100">
-                              <span className="font-bold text-lg text-gray-800">{new Date(log.date).getDate()}</span>
+                              <span className="font-bold text-lg text-black">{new Date(log.date).getDate()}</span>
                               <span className="text-xs text-gray-500">{new Date(log.date).toLocaleString('default', { month: 'short' })}</span>
                           </div>
                           <div className="flex-1 space-y-2">
                                <div className="flex justify-between">
-                                  <span className="font-bold text-sm text-gray-900">تقرير المتابعة</span>
+                                  <span className="font-bold text-sm text-black">تقرير المتابعة</span>
                                   {log.weight && <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">وزن: {log.weight} كجم</span>}
                                </div>
-                               <p className="text-sm text-gray-600 flex items-center gap-2">
+                               <p className="text-sm text-black flex items-center gap-2">
                                   <Utensils size={14} className="text-orange-500"/> {log.foodDetails}
                                </p>
                                {log.notes && (
-                                   <p className="text-sm text-gray-500 bg-gray-50 p-2 rounded italic">"{log.notes}"</p>
+                                   <p className="text-sm text-gray-500 bg-gray-50 p-2 rounded italic text-black">"{log.notes}"</p>
                                )}
                           </div>
                       </div>
                   ))}
-                  {cycleLogs.length === 0 && <p className="text-center text-gray-400 py-8">لا توجد سجلات متابعة بعد.</p>}
+                  {cycleLogs.length === 0 && <p className="text-center text-gray-400 py-8 text-black opacity-50">لا توجد سجلات متابعة بعد.</p>}
               </div>
 
               <Modal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} title="تسجيل تحديث يومي">
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-black">
                       <Input label="تفاصيل العلف والماء" value={newLogData.food} onChange={(e) => setNewLogData({...newLogData, food: e.target.value})} placeholder="مثال: 5 كجم علف مركز + 20 لتر ماء" />
                       <Input label="الوزن الحالي (اختياري - كجم)" type="number" value={newLogData.weight} onChange={(e) => setNewLogData({...newLogData, weight: e.target.value})} />
                       <Input label="ملاحظات أخرى (صحة، نشاط...)" value={newLogData.notes} onChange={(e) => setNewLogData({...newLogData, notes: e.target.value})} />
@@ -884,7 +884,7 @@ const BreederActiveCycles: React.FC<{
 
   return (
       <div className="space-y-6">
-          <h2 className="text-xl font-bold mb-4">الدورات النشطة (متابعة يومية)</h2>
+          <h2 className="text-xl font-bold mb-4 text-black">الدورات النشطة (متابعة يومية)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeCycles.map(cycle => {
                   const latestLog = logs.filter(l => l.cycleId === cycle.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
@@ -895,7 +895,7 @@ const BreederActiveCycles: React.FC<{
                           <div className="flex items-start gap-4">
                               <img src={cycle.imageUrl} className="w-20 h-20 rounded-lg object-cover bg-gray-100" />
                               <div>
-                                  <h3 className="font-bold">{cycle.animalType}</h3>
+                                  <h3 className="font-bold text-black">{cycle.animalType}</h3>
                                   <p className="text-xs text-gray-500 mb-2">تاريخ البدء: {cycle.startDate}</p>
                                   <div className="flex gap-2">
                                       <Badge color="green">نشطة</Badge>
@@ -905,13 +905,13 @@ const BreederActiveCycles: React.FC<{
                           </div>
                           
                           <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
-                              <span className="text-xs text-gray-400">آخر تحديث: {latestLog ? latestLog.date : 'لا يوجد'}</span>
+                              <span className="text-xs text-gray-400 text-black opacity-50">آخر تحديث: {latestLog ? latestLog.date : 'لا يوجد'}</span>
                               <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)}>عرض ومتابعة</Button>
                           </div>
                       </Card>
                   )
               })}
-              {activeCycles.length === 0 && <p className="col-span-2 text-center text-gray-400 py-10">لا توجد دورات نشطة حالياً.</p>}
+              {activeCycles.length === 0 && <p className="col-span-2 text-center text-gray-400 py-10 text-black opacity-50">لا توجد دورات نشطة حالياً.</p>}
           </div>
       </div>
   );
@@ -959,7 +959,7 @@ const BreederDashboard: React.FC<{
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">دوراتي الإنتاجية</h2>
+            <h2 className="text-xl font-bold text-black">دوراتي الإنتاجية</h2>
             <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button>
         </div>
 
@@ -973,15 +973,15 @@ const BreederDashboard: React.FC<{
                         </div>
                     </div>
                     <div className="p-4">
-                        <h3 className="font-bold text-lg mb-1">{cycle.animalType}</h3>
-                        <p className="text-sm text-gray-500 mb-3">{cycle.description}</p>
+                        <h3 className="font-bold text-lg mb-1 text-black">{cycle.animalType}</h3>
+                        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{cycle.description}</p>
                         <div className="flex justify-between text-sm mb-2">
-                            <span className="text-gray-600">التمويل المطلوب:</span>
-                            <span className="font-bold">{cycle.fundingGoal.toLocaleString()} ج.م</span>
+                            <span className="text-black opacity-60">التمويل المطلوب:</span>
+                            <span className="font-bold text-black">{cycle.fundingGoal.toLocaleString()} ج.م</span>
                         </div>
                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">الوزن الحالي:</span>
-                            <span className="font-bold">{cycle.initialWeight} كجم</span>
+                            <span className="text-black opacity-60">الوزن الحالي:</span>
+                            <span className="font-bold text-black">{cycle.initialWeight} كجم</span>
                         </div>
                     </div>
                 </Card>
@@ -989,7 +989,7 @@ const BreederDashboard: React.FC<{
         </div>
 
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة جديدة">
-            <div className="space-y-4">
+            <div className="space-y-4 text-black">
                 <Input label="نوع الحيوان" value={newCycle.animalType} onChange={(e) => setNewCycle({...newCycle, animalType: e.target.value})} />
                 <div className="grid grid-cols-2 gap-4">
                     <Input label="الوزن الحالي (كجم)" type="number" value={newCycle.initialWeight} onChange={(e) => setNewCycle({...newCycle, initialWeight: Number(e.target.value)})} />
@@ -1044,7 +1044,7 @@ const InvestorPortfolio: React.FC<{
                 </Card>
             </div>
 
-            <h2 className="text-xl font-bold">استثماراتي</h2>
+            <h2 className="text-xl font-bold text-black">استثماراتي</h2>
             <div className="space-y-4">
                 {myInvestments.map(inv => {
                     const cycle = cycles.find(c => c.id === inv.cycleId);
@@ -1068,7 +1068,7 @@ const InvestorPortfolio: React.FC<{
                             <div className="flex-1 space-y-2 w-full">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="font-bold text-lg">{cycle.animalType}</h3>
+                                        <h3 className="font-bold text-lg text-black">{cycle.animalType}</h3>
                                         <p className="text-xs text-gray-500 flex items-center gap-1">
                                             <Clock size={12}/> تاريخ الاستثمار: {new Date(inv.date).toLocaleDateString('ar-EG')}
                                         </p>
@@ -1079,11 +1079,11 @@ const InvestorPortfolio: React.FC<{
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-3 rounded-lg text-sm">
                                     <div>
                                         <span className="block text-gray-500 text-xs">مبلغ الاستثمار</span>
-                                        <span className="font-bold text-gray-800">{inv.amount.toLocaleString()} ج.م</span>
+                                        <span className="font-bold text-black">{inv.amount.toLocaleString()} ج.م</span>
                                     </div>
                                     <div>
                                         <span className="block text-gray-500 text-xs">تاريخ البدء</span>
-                                        <span className="font-medium text-gray-800">{cycle.startDate}</span>
+                                        <span className="font-medium text-black">{cycle.startDate}</span>
                                     </div>
                                     
                                     {isCompleted ? (
@@ -1119,9 +1119,8 @@ const InvestorPortfolio: React.FC<{
                         <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-3">
                             <Sprout size={32} />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-700">لم تقم بأي استثمار بعد</h3>
+                        <h3 className="text-lg font-bold text-black">لم تقم بأي استثمار بعد</h3>
                         <p className="text-gray-500 mb-4">ابدأ استثمارك الأول في الثروة الحيوانية الآن.</p>
-                        {/* Note: We can navigate to market, but simple text is fine here */}
                     </div>
                 )}
             </div>
@@ -1222,14 +1221,14 @@ const InvestorDashboard: React.FC<{
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-bold mb-4">فرص الاستثمار المتاحة</h2>
+            <h2 className="text-xl font-bold mb-4 text-black">فرص الاستثمار المتاحة</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {availableCycles.map(cycle => (
                     <Card key={cycle.id} className="overflow-hidden flex flex-col hover:shadow-md transition-shadow">
                         <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-48 object-cover" />
                         <div className="p-4 flex-1 flex flex-col">
                             <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-bold text-lg">{cycle.animalType}</h3>
+                                <h3 className="font-bold text-lg text-black">{cycle.animalType}</h3>
                                 <Badge color="green">متاح</Badge>
                             </div>
                             <p className="text-sm text-gray-500 mb-4 line-clamp-2">{cycle.description}</p>
@@ -1237,36 +1236,36 @@ const InvestorDashboard: React.FC<{
                             <div className="mt-auto space-y-3">
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-xs text-gray-500">
-                                        <span>نسبة التغطية</span>
-                                        <span>{Math.round((cycle.currentFunding / cycle.fundingGoal) * 100)}%</span>
+                                        <span className="text-black opacity-60">نسبة التغطية</span>
+                                        <span className="text-black">{Math.round((cycle.currentFunding / cycle.fundingGoal) * 100)}%</span>
                                     </div>
                                     <div className="w-full bg-gray-100 rounded-full h-2">
                                         <div className="bg-primary h-2 rounded-full" style={{ width: `${(cycle.currentFunding / cycle.fundingGoal) * 100}%` }}></div>
                                     </div>
                                 </div>
                                 <div className="flex justify-between text-sm font-medium">
-                                    <span>{cycle.currentFunding.toLocaleString()} ج.م</span>
-                                    <span className="text-gray-500">من {cycle.fundingGoal.toLocaleString()}</span>
+                                    <span className="text-black font-bold">{cycle.currentFunding.toLocaleString()} ج.م</span>
+                                    <span className="text-black opacity-50">من {cycle.fundingGoal.toLocaleString()}</span>
                                 </div>
                                 <Button className="w-full" onClick={() => handleOpenInvestModal(cycle)}>استثمار الآن</Button>
                             </div>
                         </div>
                     </Card>
                 ))}
-                {availableCycles.length === 0 && <p className="col-span-3 text-center text-gray-500 py-10">لا توجد فرص استثمارية متاحة حالياً.</p>}
+                {availableCycles.length === 0 && <p className="col-span-3 text-center text-gray-500 py-10 text-black opacity-50">لا توجد فرص استثمارية متاحة حالياً.</p>}
             </div>
 
             <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="استثمار جديد">
-                <div className="space-y-4">
+                <div className="space-y-4 text-black">
                     {selectedCycle && (
                         <>
                             <div className="bg-gray-50 p-4 rounded-lg text-sm mb-2 space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">الدورة:</span>
+                                    <span className="opacity-60">الدورة:</span>
                                     <span className="font-bold">{selectedCycle.animalType}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">التمويل المطلوب:</span>
+                                    <span className="opacity-60">التمويل المطلوب:</span>
                                     <span>{selectedCycle.fundingGoal.toLocaleString()} ج.م</span>
                                 </div>
                                 <div className="flex justify-between text-primary font-bold">
@@ -1276,11 +1275,11 @@ const InvestorDashboard: React.FC<{
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">مبلغ الاستثمار (ج.م)</label>
+                                <label className="block text-sm font-medium">مبلغ الاستثمار (ج.م)</label>
                                 <div className="flex gap-2">
                                     <input 
                                         type="number"
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none text-black"
                                         value={investAmount}
                                         onChange={(e) => {
                                             setInvestAmount(e.target.value);
@@ -1298,7 +1297,7 @@ const InvestorDashboard: React.FC<{
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">صورة إيصال التحويل</label>
+                                <label className="block text-sm font-medium">صورة إيصال التحويل</label>
                                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors relative">
                                     <input 
                                         type="file" 
@@ -1320,7 +1319,7 @@ const InvestorDashboard: React.FC<{
                                 </div>
                             </div>
 
-                            {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+                            {error && <p className="text-red-500 text-xs mt-1 font-bold">{error}</p>}
 
                             <Button className="w-full mt-4" onClick={handleConfirmInvest}>تأكيد ودفع</Button>
                         </>
@@ -1402,7 +1401,7 @@ function App() {
                       alt="Logo" 
                       className="w-8 h-8 object-contain" 
                     />
-                    <h1 className="text-xl font-bold text-gray-800">دواب</h1>
+                    <h1 className="text-xl font-bold text-black">دواب</h1>
                 </div>
                 <button className="md:hidden text-gray-500" onClick={() => setIsMobileMenuOpen(false)}>
                     <X size={24} />
@@ -1461,7 +1460,7 @@ function App() {
                 <button onClick={() => setIsMobileMenuOpen(true)} className="text-gray-600">
                     <Menu size={24} />
                 </button>
-                <span className="font-bold text-lg">دواب</span>
+                <span className="font-bold text-lg text-black">دواب</span>
                 <div className="w-8"></div> {/* Spacer */}
             </header>
 

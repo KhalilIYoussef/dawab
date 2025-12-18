@@ -1,15 +1,14 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { Cycle } from '../types';
 
-// Ensure API key is present before initialization.
-// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const analyzeCycleRisk = async (cycle: Cycle): Promise<string> => {
-  if (!process.env.API_KEY) {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
     return "خدمة التحليل بالذكاء الاصطناعي غير متاحة حالياً (مفتاح API مفقود).";
   }
+
+  // Fix: Initializing client inside the function to ensure up-to-date API key access
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const prompt = `
@@ -26,7 +25,7 @@ export const analyzeCycleRisk = async (cycle: Cycle): Promise<string> => {
       اكتب تقريرًا قصيرًا بالعربية (لا يتجاوز 100 كلمة) يوضح النقاط الإيجابية والمخاطر المحتملة، مع مراعاة ظروف السوق المصري (أسعار الأعلاف، الأمراض الموسمية، الطلب في المواسم).
     `;
 
-    // Fix: Updated to gemini-3-pro-preview for complex reasoning task
+    // Fix: Updated to gemini-3-pro-preview for complex reasoning task as per latest guidelines
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,

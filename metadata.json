@@ -1,5 +1,7 @@
 {
   "name": "Dawab (دواب)",
   "description": "منصة دواب للاستثمار في الثروة الحيوانية، تربط المستثمرين بمربي الماشية بعقود موثقة وإشراف بيطري.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

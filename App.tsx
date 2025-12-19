@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, Sprout, LayoutDashboard, Wallet, TrendingUp, History, 
@@ -315,6 +316,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
               {isRegistering ? 'لدي حساب بالفعل؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد'}
             </button>
           </div>
+          
+          <div className="mt-10 pt-6 border-t border-gray-100">
+            <p className="text-center text-xs text-gray-400 mb-4 font-bold uppercase tracking-widest">الدخول السريع (للتجربة)</p>
+            <div className="flex justify-center gap-3">
+              <button 
+                onClick={() => onLogin(INITIAL_USERS[0])}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ShieldCheck size={18} />
+                </div>
+                <span className="text-[10px] font-bold text-gray-500">أدمن</span>
+              </button>
+              <button 
+                onClick={() => onLogin(INITIAL_USERS[1])}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Tractor size={18} />
+                </div>
+                <span className="text-[10px] font-bold text-gray-500">مربي</span>
+              </button>
+              <button 
+                onClick={() => onLogin(INITIAL_USERS[3])}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Wallet size={18} />
+                </div>
+                <span className="text-[10px] font-bold text-gray-500">مستثمر</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -569,6 +603,88 @@ const AdminDashboard: React.FC<{
     );
 };
 
+// --- Specialized UI Components for Daily Logs ---
+
+const QuantityControl: React.FC<{ value: number, onChange: (val: number) => void, unit: string, step?: number }> = ({ value, onChange, unit, step = 1 }) => (
+    <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
+        <button 
+            onClick={() => onChange(Math.max(0, value - step))}
+            className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
+        >
+            <Minus size={16} />
+        </button>
+        <div className="flex-1 flex items-center justify-center gap-1 min-w-[60px]">
+            <input 
+                type="number" 
+                value={value || ''} 
+                onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+                className="w-full text-center font-bold text-black bg-transparent focus:outline-none"
+                placeholder="0"
+                inputMode="decimal"
+            />
+            <span className="text-[10px] text-gray-400 font-medium">{unit}</span>
+        </div>
+        <button 
+            onClick={() => onChange(value + step)}
+            className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary hover:bg-green-50 transition-colors"
+        >
+            <Plus size={16} />
+        </button>
+    </div>
+);
+
+const CollapsibleSection: React.FC<{ title: string, icon: string, children: React.ReactNode, defaultOpen?: boolean }> = ({ title, icon, children, defaultOpen = true }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+    return (
+        <div className="space-y-3">
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between p-3 bg-gray-100/50 rounded-xl hover:bg-gray-200/50 transition-colors"
+            >
+                <div className="flex items-center gap-2 font-bold text-black">
+                    <span className="text-xl">{icon}</span>
+                    <span>{title}</span>
+                </div>
+                {isOpen ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+            </button>
+            {isOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ItemCard: React.FC<{ icon: string, name: string, unit: string, value: number, onChange: (v: number) => void, warning?: boolean }> = ({ icon, name, unit, value, onChange, warning }) => (
+    <Card className={`p-3 relative overflow-hidden transition-all duration-200 ${warning ? 'border-red-200 bg-red-50/30' : 'hover:border-primary/30'}`}>
+        {warning && <div className="absolute top-1 right-1"><AlertTriangle size={12} className="text-red-500" /></div>}
+        <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-2xl">{icon}</div>
+            <div className="flex-1">
+                <h4 className="font-bold text-sm text-black leading-tight">{name}</h4>
+                <p className="text-[10px] text-gray-400">الوحدة: {unit}</p>
+            </div>
+        </div>
+        <QuantityControl value={value} onChange={onChange} unit={unit} step={unit === 'لتر' ? 10 : 1} />
+    </Card>
+);
+
+const VetCard: React.FC<{ icon: string, name: string, type: 'vaccine' | 'treatment', onApply: () => void }> = ({ icon, name, type, onApply }) => (
+    <Card className={`p-4 flex items-center gap-4 hover:shadow-md transition-all ${type === 'vaccine' ? 'bg-blue-50/50 border-blue-100' : 'bg-orange-50/50 border-orange-100'}`}>
+        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl">{icon}</div>
+        <div className="flex-1">
+            <h4 className="font-bold text-black">{name}</h4>
+            <p className="text-xs text-gray-500">{type === 'vaccine' ? 'تحصين وقائي' : 'علاج طارئ'}</p>
+        </div>
+        <div className="flex gap-2">
+            <Button size="sm" variant={type === 'vaccine' ? 'primary' : 'secondary'} onClick={onApply}>
+                {type === 'vaccine' ? 'تسجيل تحصين' : 'تسجيل علاج'}
+            </Button>
+        </div>
+    </Card>
+);
+
 const BreederActiveCycles: React.FC<{
   user: User;
   cycles: Cycle[];
@@ -577,7 +693,12 @@ const BreederActiveCycles: React.FC<{
 }> = ({ user, cycles, logs, setLogs }) => {
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [activeLogTab, setActiveLogTab] = useState<'feed' | 'health'>('feed');
   const [currentWeight, setCurrentWeight] = useState<string>('');
+  
+  // States for feed items
+  const [feedItems, setFeedItems] = useState<Record<string, number>>({});
+  const [vetItems, setVetItems] = useState<Array<{ name: string, date: string, type: string, note?: string }>>([]);
   const [notes, setNotes] = useState('');
 
   const activeCycles = cycles.filter(c => c.breederId === user.id && c.status === CycleStatus.ACTIVE);
@@ -586,28 +707,202 @@ const BreederActiveCycles: React.FC<{
 
   const handleAddLog = () => {
     if (!selectedCycleId) return;
-    const newLog: CycleLog = { id: Math.random().toString(), cycleId: selectedCycleId, date: new Date().toISOString().split('T')[0], weight: currentWeight ? parseFloat(currentWeight) : undefined, foodDetails: "تغذية روتينية", notes };
+    
+    const feedLines = Object.entries(feedItems)
+        .filter(([_, val]) => val > 0)
+        .map(([name, val]) => `${name}: ${val}`)
+        .join(', ');
+
+    const vetLines = vetItems.map(v => `[${v.type}] ${v.name}`).join(' | ');
+
+    const newLog: CycleLog = { 
+        id: Math.random().toString(36).substr(2, 9), 
+        cycleId: selectedCycleId, 
+        date: new Date().toISOString().split('T')[0], 
+        weight: currentWeight ? parseFloat(currentWeight) : undefined, 
+        foodDetails: feedLines || "تغذية روتينية", 
+        notes: [notes, vetLines].filter(Boolean).join(' | ')
+    };
+    
     setLogs([newLog, ...logs]);
     setIsLogModalOpen(false);
-    setCurrentWeight(''); setNotes('');
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFeedItems({});
+    setVetItems([]);
+    setCurrentWeight('');
+    setNotes('');
+    setActiveLogTab('feed');
+  };
+
+  const handleUpdateFeed = (name: string, val: number) => {
+    setFeedItems(prev => ({ ...prev, [name]: val }));
+  };
+
+  const handleApplyVet = (name: string, type: 'vaccine' | 'treatment') => {
+    const note = prompt(`ملاحظات إضافية لـ ${name}:`, "");
+    setVetItems(prev => [...prev, {
+        name,
+        type,
+        date: new Date().toISOString().split('T')[0],
+        note: note || undefined
+    }]);
+    alert(`تم تسجيل ${type === 'vaccine' ? 'تحصين' : 'علاج'}: ${name}`);
   };
 
   if (selectedCycle) {
       return (
           <div className="space-y-6">
-              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-black opacity-60"> <ArrowRight size={20}/> رجوع </button>
-              <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
-                  <h2 className="text-2xl font-bold text-black">{selectedCycle.animalType}</h2>
-                  <Button onClick={() => setIsLogModalOpen(true)}> <Plus size={20}/> تحديث يومي </Button>
+              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع للقائمة </button>
+              
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
+                  <div className="flex gap-4 items-center">
+                    <div className="relative">
+                        <img src={selectedCycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-gray-50" />
+                        <div className="absolute -bottom-2 -right-2 bg-primary text-white p-1 rounded-lg shadow-lg">
+                            <Activity size={14} />
+                        </div>
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold mb-1 text-black">{selectedCycle.animalType}</h2>
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <span className="text-gray-400 text-xs flex items-center gap-1"><Calendar size={12}/> البدء: {selectedCycle.startDate}</span>
+                            <Badge color="blue">الوزن الحالي: {cycleLogs[0]?.weight || selectedCycle.initialWeight} كجم</Badge>
+                        </div>
+                    </div>
+                  </div>
+                  <Button size="lg" onClick={() => setIsLogModalOpen(true)} className="w-full md:w-auto shadow-lg shadow-primary/20"> 
+                    <Plus size={20}/> تسجيل تحديث يومي 
+                  </Button>
               </div>
+
               <div className="space-y-4">
-                  {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
+                  <h3 className="font-bold text-lg text-black flex items-center gap-2">
+                    <History size={20} className="text-primary" /> سجل المتابعة اليومي
+                  </h3>
+                  <div className="space-y-2">
+                    {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
+                    {cycleLogs.length === 0 && (
+                        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+                            <Clock size={40} className="mx-auto text-gray-200 mb-3" />
+                            <p className="text-gray-400">لا توجد سجلات متابعة بعد.</p>
+                        </div>
+                    )}
+                  </div>
               </div>
-              <Modal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} title="تحديث يومي">
-                  <div className="space-y-4">
-                      <Input label="الوزن الحالي (كجم)" type="number" value={currentWeight} onChange={(e) => setCurrentWeight(e.target.value)} />
-                      <textarea placeholder="ملاحظات..." value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full p-3 border rounded-xl h-24 text-black"></textarea>
-                      <Button onClick={handleAddLog} className="w-full">حفظ</Button>
+
+              <Modal isOpen={isLogModalOpen} onClose={() => {setIsLogModalOpen(false); resetForm();}} title="تحديث يومي جديد">
+                  <div className="space-y-6">
+                      {/* Weight Card - Unified Experience */}
+                      <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                        <label className="block text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+                            <Scale size={18} /> الوزن الحالي للرأس (كجم)
+                        </label>
+                        <input 
+                            type="number" 
+                            value={currentWeight} 
+                            onChange={(e) => setCurrentWeight(e.target.value)} 
+                            className="w-full bg-white border-none rounded-xl p-3 text-lg font-bold text-blue-700 shadow-inner focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            placeholder="مثال: 255"
+                        />
+                      </div>
+
+                      {/* Tabs */}
+                      <div className="flex p-1 bg-gray-100 rounded-2xl">
+                        <button 
+                            onClick={() => setActiveLogTab('feed')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeLogTab === 'feed' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <Wheat size={18} /> التغذية
+                        </button>
+                        <button 
+                            onClick={() => setActiveLogTab('health')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeLogTab === 'health' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <Syringe size={18} /> الصحة
+                        </button>
+                      </div>
+
+                      {/* Content Area */}
+                      <div className="max-h-[50vh] overflow-y-auto px-1 space-y-6">
+                        {activeLogTab === 'feed' ? (
+                            <div className="space-y-6 pb-4">
+                                <CollapsibleSection title="مركزات الطاقة والبروتين" icon="🌽">
+                                    <ItemCard icon="🌽" name="ذرة صفراء مجروشة" unit="كجم" value={feedItems["ذرة صفراء"] || 0} onChange={(v) => handleUpdateFeed("ذرة صفراء", v)} />
+                                    <ItemCard icon="🌾" name="شعير" unit="كجم" value={feedItems["شعير"] || 0} onChange={(v) => handleUpdateFeed("شعير", v)} />
+                                    <ItemCard icon="🌱" name="فول صويا (كُسب)" unit="كجم" value={feedItems["فول صويا"] || 0} onChange={(v) => handleUpdateFeed("فول صويا", v)} />
+                                    <ItemCard icon="🍚" name="ردة (نخالة)" unit="كجم" value={feedItems["ردة"] || 0} onChange={(v) => handleUpdateFeed("ردة", v)} />
+                                    <ItemCard icon="🍂" name="نخالة قمح (خشنة)" unit="كجم" value={feedItems["نخالة قمح"] || 0} onChange={(v) => handleUpdateFeed("نخالة قمح", v)} />
+                                    <ItemCard icon="⚫" name="بذور قطن" unit="كجم" value={feedItems["بذور قطن"] || 0} onChange={(v) => handleUpdateFeed("بذور قطن", v)} />
+                                    <ItemCard icon="🏭" name="علف مركز (جاهز)" unit="كجم" value={feedItems["علف مركز"] || 0} onChange={(v) => handleUpdateFeed("علف مركز", v)} />
+                                </CollapsibleSection>
+
+                                <CollapsibleSection title="الأعلاف الخشنة والخضراء" icon="🌿">
+                                    <ItemCard icon="🌿" name="علف أخضر برسيم" unit="كجم" value={feedItems["برسيم"] || 0} onChange={(v) => handleUpdateFeed("برسيم", v)} />
+                                    <ItemCard icon="🌽📦" name="علف أخضر سيلاج ذرة" unit="طن" value={feedItems["سيلاج"] || 0} onChange={(v) => handleUpdateFeed("سيلاج", v)} />
+                                    <ItemCard icon="🌾🟫" name="علف خشن دريس" unit="كجم" value={feedItems["دريس"] || 0} onChange={(v) => handleUpdateFeed("دريس", v)} />
+                                    <ItemCard icon="🌾🟡" name="تبن قمح" unit="كجم" value={feedItems["تبن"] || 0} onChange={(v) => handleUpdateFeed("تبن", v)} />
+                                    <ItemCard icon="🌾⚪" name="قش أرز" unit="كجم" value={feedItems["قش"] || 0} onChange={(v) => handleUpdateFeed("قش", v)} />
+                                </CollapsibleSection>
+
+                                <CollapsibleSection title="الإضافات والمياه" icon="🧂">
+                                    <ItemCard icon="🧂" name="ملح طعام" unit="كجم" value={feedItems["ملح"] || 0} onChange={(v) => handleUpdateFeed("ملح", v)} />
+                                    {/* Fix: Removed duplicate 'icon' attribute */}
+                                    <ItemCard icon="🦴" name="كالسيوم (حجر جيري)" unit="كجم" value={feedItems["كالسيوم"] || 0} onChange={(v) => handleUpdateFeed("كالسيوم", v)} />
+                                    <ItemCard icon="🧪" name="بيكاربونات صوديوم" unit="كجم" value={feedItems["بيكاربونات"] || 0} onChange={(v) => handleUpdateFeed("بيكاربونات", v)} />
+                                    <ItemCard icon="🍞" name="خميرة حية" unit="جرام" value={feedItems["خميرة"] || 0} onChange={(v) => handleUpdateFeed("خميرة", v)} />
+                                    <ItemCard icon="💎" name="أملاح معدنية" unit="كجم" value={feedItems["أملاح"] || 0} onChange={(v) => handleUpdateFeed("أملاح", v)} />
+                                    <ItemCard icon="🍊" name="فيتامينات (AD3E)" unit="لتر" value={feedItems["فيتامينات"] || 0} onChange={(v) => handleUpdateFeed("فيتامينات", v)} />
+                                    <ItemCard icon="💧" name="مياه الشرب" unit="لتر" value={feedItems["مياه"] || 0} onChange={(v) => handleUpdateFeed("مياه", v)} />
+                                </CollapsibleSection>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 pb-4">
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-black flex items-center gap-2 px-1 text-sm">
+                                        <ShieldCheck size={18} className="text-blue-500" /> التحصينات الدورية
+                                    </h4>
+                                    <VetCard icon="🦠" name="حمى قلاعية (FMD)" type="vaccine" onApply={() => handleApplyVet("حمى قلاعية", "vaccine")} />
+                                    <VetCard icon="🦟" name="حمى الوادى المتصدع" type="vaccine" onApply={() => handleApplyVet("حمى الوادى المتصدع", "vaccine")} />
+                                    <VetCard icon="🐮🔴" name="جلد عقدى (LSD)" type="vaccine" onApply={() => handleApplyVet("جلد عقدى", "vaccine")} />
+                                    <VetCard icon="🩸💀" name="تسمم دموى" type="vaccine" onApply={() => handleApplyVet("تسمم دموى", "vaccine")} />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-black flex items-center gap-2 px-1 text-sm">
+                                        <Stethoscope size={18} className="text-orange-500" /> العلاجات والطوارئ
+                                    </h4>
+                                    <VetCard icon="🫁" name="التهاب رئوى (علاج)" type="treatment" onApply={() => handleApplyVet("التهاب رئوى", "treatment")} />
+                                    <VetCard icon="🪱" name="مضاد للديدان" type="treatment" onApply={() => handleApplyVet("مضاد للديدان", "treatment")} />
+                                    <VetCard icon="🕷️" name="قراد (رش/تغطيس)" type="treatment" onApply={() => handleApplyVet("مكافحة طفيليات خارجية", "treatment")} />
+                                    <VetCard icon="🐕" name="جرب (حقن/دهان)" type="treatment" onApply={() => handleApplyVet("علاج جرب", "treatment")} />
+                                    <VetCard icon="🛢️" name="زيت برافين (للانتفاخ)" type="treatment" onApply={() => handleApplyVet("زيت برافين", "treatment")} />
+                                    <VetCard icon="🥤⚡" name="محلول جفاف" type="treatment" onApply={() => handleApplyVet("محلول جفاف", "treatment")} />
+                                </div>
+                            </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-2">ملاحظات إضافية</label>
+                            <textarea 
+                                value={notes} 
+                                onChange={(e) => setNotes(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none h-20 resize-none text-black"
+                                placeholder="أي تفاصيل أخرى تود ذكرها عن حالة الحيوانات اليوم..."
+                            />
+                        </div>
+                        <Button 
+                            onClick={handleAddLog} 
+                            className="w-full py-4 text-lg shadow-xl shadow-primary/20"
+                            disabled={Object.values(feedItems).every(v => v === 0) && vetItems.length === 0 && !currentWeight}
+                        >
+                            حفظ وإرسال التقرير
+                        </Button>
+                      </div>
                   </div>
               </Modal>
           </div>
@@ -619,17 +914,23 @@ const BreederActiveCycles: React.FC<{
           <h2 className="text-xl font-bold mb-4 text-black">الدورات النشطة (متابعة)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeCycles.map(cycle => (
-                  <Card key={cycle.id} className="p-4 flex flex-col gap-4">
+                  <Card key={cycle.id} className="p-4 flex flex-col gap-4 hover:shadow-lg transition-all border-transparent hover:border-primary/10">
                       <div className="flex items-start gap-4"> 
-                        <img src={cycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover" /> 
+                        <img src={cycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover bg-gray-100 shadow-sm" /> 
                         <div className="flex-1"> 
                           <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
-                          <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">متابعة الدورة</Button>
+                          <p className="text-xs text-gray-400 mb-2 flex items-center gap-1"><Clock size={12}/> البدء: {cycle.startDate}</p>
+                          <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">عرض ومتابعة الدورة</Button>
                         </div> 
                       </div>
                   </Card>
               ))}
-              {activeCycles.length === 0 && <p className="text-gray-500 text-center py-10">لا توجد دورات نشطة حالياً. الدورات تظهر هنا بعد اكتمال تمويلها وتنشيطها من الإدارة.</p>}
+              {activeCycles.length === 0 && (
+                <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                    <Tractor size={48} className="mx-auto text-gray-100 mb-4" />
+                    <p className="text-gray-400 font-medium">لا توجد دورات نشطة حالياً.</p>
+                </div>
+              )}
           </div>
       </div>
   );
@@ -824,21 +1125,45 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex" dir="rtl">
-        <aside className={`fixed md:sticky top-0 right-0 h-screen w-64 bg-white border-l z-50 transition-transform ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+        {isMobileMenuOpen && (
+            <div 
+                className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+                onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+        )}
+        <aside className={`fixed md:sticky top-0 right-0 h-screen w-64 bg-white border-l z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
             <div className="p-6 border-b flex justify-between items-center">
-                <h1 className="text-xl font-bold text-black">منصة دواب</h1>
-                <button className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}><X size={20}/></button>
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-primary rounded-lg text-white">
+                        <Tractor size={20} />
+                    </div>
+                    <h1 className="text-xl font-bold text-black">منصة دواب</h1>
+                </div>
+                <button className="md:hidden text-gray-500 hover:bg-gray-100 p-1 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                    <X size={20}/>
+                </button>
             </div>
             <div className="p-4 space-y-2">
                 <SidebarItem icon={LayoutDashboard} label="لوحة التحكم" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }} />
                 {currentUser.role === UserRole.INVESTOR && <SidebarItem icon={PieChart} label="محفظتي" active={activeTab === 'investments'} onClick={() => { setActiveTab('investments'); setIsMobileMenuOpen(false); }} />}
                 {currentUser.role === UserRole.BREEDER && <SidebarItem icon={Activity} label="الدورات النشطة" active={activeTab === 'active_cycles'} onClick={() => { setActiveTab('active_cycles'); setIsMobileMenuOpen(false); }} />}
                 <SidebarItem icon={UserCog} label="الملف الشخصي" active={activeTab === 'profile'} onClick={() => { setActiveTab('profile'); setIsMobileMenuOpen(false); }} />
-                <button onClick={() => setCurrentUser(null)} className="w-full flex gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl"> <LogOut size={20} /> <span>خروج</span> </button>
+                <div className="pt-4 border-t border-gray-100">
+                    <button onClick={() => setCurrentUser(null)} className="w-full flex gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"> 
+                        <LogOut size={20} /> 
+                        <span className="font-medium">تسجيل خروج</span> 
+                    </button>
+                </div>
             </div>
         </aside>
-        <main className="flex-1">
-            <header className="bg-white border-b p-4 md:hidden"> <button onClick={() => setIsMobileMenuOpen(true)}><Menu size={24} /></button> </header>
+        <main className="flex-1 min-w-0">
+            <header className="bg-white border-b p-4 md:hidden flex justify-between items-center sticky top-0 z-30"> 
+                <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg">
+                    <Menu size={24} className="text-gray-600" />
+                </button> 
+                <span className="font-bold text-black">منصة دواب</span>
+                <div className="w-8"></div>
+            </header>
             <div className="p-4 md:p-8 max-w-7xl mx-auto">{renderContent()}</div>
         </main>
     </div>

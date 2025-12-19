@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, Sprout, LayoutDashboard, Wallet, TrendingUp, History, 
@@ -225,7 +224,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
     const user = users.find(u => u.phone === formData.phone);
     if (user) {
       if (user.password && user.password !== formData.password) {
-          setError('كلمة المرور غير صحيحة.');
+          setError('كلمة مورور غير صحيحة.');
           return;
       }
       if (user.status === UserStatus.PENDING) {
@@ -421,6 +420,12 @@ const AdminDashboard: React.FC<{
     const [selectedCycleToSell, setSelectedCycleToSell] = useState<Cycle | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
 
+    const roleLabels = {
+        [UserRole.ADMIN]: 'مدير النظام',
+        [UserRole.BREEDER]: 'مربي',
+        [UserRole.INVESTOR]: 'مستثمر'
+    };
+
     const handleUserAction = (id: string, action: 'approve' | 'reject') => {
         setUsers(users.map(u => u.id === id ? { ...u, status: action === 'approve' ? UserStatus.ACTIVE : UserStatus.REJECTED } : u));
     };
@@ -471,25 +476,112 @@ const AdminDashboard: React.FC<{
         <div className="space-y-6">
             <div className="flex gap-4 border-b overflow-x-auto pb-2">
                 {['overview', 'users', 'cycles', 'investments'].map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-black opacity-60'}`}>
+                    <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-4 py-2 font-medium whitespace-nowrap transition-all ${activeTab === tab ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-black'}`}>
                         {tab === 'overview' ? 'نظرة عامة' : tab === 'users' ? 'المستخدمين' : tab === 'cycles' ? 'الدورات' : 'الاستثمارات'}
                     </button>
                 ))}
             </div>
             
+            {activeTab === 'overview' && (
+                <div className="animate-in fade-in duration-500">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <StatCard 
+                            title="إجمالي المستخدمين" 
+                            value={users.length} 
+                            icon={Users} 
+                            color="primary" 
+                        />
+                        <StatCard 
+                            title="الدورات النشطة" 
+                            value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} 
+                            icon={Activity} 
+                            color="blue" 
+                        />
+                        <StatCard 
+                            title="إجمالي الاستثمارات" 
+                            value={`${investments.filter(i => i.status === 'APPROVED').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} ج.م`} 
+                            icon={Banknote} 
+                            color="purple" 
+                        />
+                        <StatCard 
+                            title="طلبات معلقة" 
+                            value={users.filter(u => u.status === UserStatus.PENDING).length + investments.filter(i => i.status === 'PENDING_APPROVAL').length} 
+                            icon={AlertTriangle} 
+                            color="secondary" 
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Card className="p-6">
+                            <h3 className="font-bold text-black mb-4 flex items-center gap-2">
+                                <History size={20} className="text-primary" /> نشاط النظام الأخير
+                            </h3>
+                            <div className="space-y-4">
+                                {cycles.slice(-3).reverse().map(c => (
+                                    <div key={c.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                                            <Tractor size={18} className="text-gray-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-black">إضافة دورة: {c.animalType}</p>
+                                            <p className="text-xs text-gray-500">{new Date(c.startDate).toLocaleDateString('ar-EG')}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {users.filter(u => u.status === UserStatus.PENDING).slice(0, 2).map(u => (
+                                    <div key={u.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-100">
+                                        <div className="flex items-center gap-3">
+                                            <UserPlus size={18} className="text-orange-500" />
+                                            <div>
+                                                <p className="text-sm font-bold text-black">مستخدم جديد: {u.name}</p>
+                                                <p className="text-xs text-gray-500">بانتظار التفعيل</p>
+                                            </div>
+                                        </div>
+                                        <Button size="sm" variant="outline" onClick={() => setActiveTab('users')}>عرض</Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                        <Card className="p-6">
+                            <h3 className="font-bold text-black mb-4 flex items-center gap-2">
+                                <TrendingUp size={20} className="text-blue-600" /> حالة التمويل
+                            </h3>
+                            <div className="space-y-6">
+                                {cycles.filter(c => c.status === CycleStatus.PENDING).slice(0, 3).map(c => {
+                                    const percent = Math.floor((c.currentFunding/c.fundingGoal)*100);
+                                    return (
+                                        <div key={c.id}>
+                                            <div className="flex justify-between text-xs mb-1">
+                                                <span className="font-bold text-black">{c.animalType}</span>
+                                                <span className="text-gray-500">{percent}%</span>
+                                            </div>
+                                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                                <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {cycles.filter(c => c.status === CycleStatus.PENDING).length === 0 && (
+                                    <p className="text-center py-10 text-gray-400 italic">لا توجد دورات قيد التمويل حالياً</p>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            )}
+            
             {activeTab === 'users' && (
-                <div>
+                <div className="animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex justify-between items-center mb-4"> <h3 className="font-bold text-lg text-black">إدارة المستخدمين</h3> <Button size="sm" onClick={() => setIsAddUserModalOpen(true)}><Plus size={16}/> إضافة مستخدم</Button> </div>
-                    <div className="bg-white rounded-xl shadow overflow-hidden">
+                    <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
                         <table className="w-full text-right">
                             <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">الاسم</th> <th className="p-4">الدور</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {users.map(u => (
-                                    <tr key={u.id} className="hover:bg-gray-50">
+                                    <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="p-4"> <div className="font-bold text-black">{u.name}</div> <div className="text-xs text-gray-500">{u.phone}</div> </td>
-                                        <td className="p-4"> <span className="text-xs">{u.role}</span> </td>
+                                        <td className="p-4"> <span className="text-xs font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-md">{roleLabels[u.role] || u.role}</span> </td>
                                         <td className="p-4"><StatusBadge status={u.status} type="user" /></td>
-                                        <td className="p-4"> {u.status === UserStatus.PENDING && ( <div className="flex gap-2"> <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleUserAction(u.id, 'approve')}>قبول</Button> <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleUserAction(u.id, 'reject')}>رفض</Button> </div> )} </td>
+                                        <td className="p-4"> {u.status === UserStatus.PENDING && ( <div className="flex gap-2"> <Button size="sm" variant="outline" className="text-green-600 border-green-200" onClick={() => handleUserAction(u.id, 'approve')}>قبول</Button> <Button size="sm" variant="outline" className="text-red-600 border-red-200" onClick={() => handleUserAction(u.id, 'reject')}>رفض</Button> </div> )} </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -499,9 +591,9 @@ const AdminDashboard: React.FC<{
             )}
 
             {activeTab === 'cycles' && (
-                <div>
+                <div className="animate-in fade-in slide-in-from-bottom-2">
                     <h3 className="font-bold text-lg mb-4 text-black">إدارة الدورات الإنتاجية</h3>
-                    <div className="bg-white rounded-xl shadow overflow-hidden">
+                    <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
                         <table className="w-full text-right">
                             <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">الدورة</th> <th className="p-4">التمويل والمشاركين</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -558,29 +650,64 @@ const AdminDashboard: React.FC<{
             )}
 
             {activeTab === 'investments' && (
-                <div>
-                    <h3 className="font-bold text-lg mb-4 text-black">تأكيد تحويلات المستثمرين</h3>
-                    <div className="bg-white rounded-xl shadow overflow-hidden">
-                        <table className="w-full text-right">
-                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">المستثمر</th> <th className="p-4">المبلغ</th> <th className="p-4">الإيصال</th> <th className="p-4">الإجراء</th> </tr> </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {investments.filter(i => i.status === 'PENDING_APPROVAL').map(inv => {
-                                    const investor = users.find(u => u.id === inv.investorId);
-                                    return (
-                                        <tr key={inv.id} className="hover:bg-gray-50">
-                                            <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> </td>
-                                            <td className="p-4 font-bold text-primary">{inv.amount.toLocaleString()} ج.م</td>
-                                            <td className="p-4"> {inv.transferReceiptUrl && <button onClick={() => window.open(inv.transferReceiptUrl)} className="text-blue-600 text-xs">عرض الإيصال</button>} </td>
-                                            <td className="p-4 flex gap-2">
-                                                <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve')} className="bg-green-600">قبول</Button>
-                                                <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'reject')} className="bg-red-600">رفض</Button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8">
+                    <section>
+                        <h3 className="font-bold text-lg mb-4 text-black flex items-center gap-2">
+                            <Clock size={20} className="text-yellow-600" /> تأكيد تحويلات المستثمرين (بانتظار الموافقة)
+                        </h3>
+                        <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+                            <table className="w-full text-right">
+                                <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">المستثمر</th> <th className="p-4">المبلغ</th> <th className="p-4">الإيصال</th> <th className="p-4">الإجراء</th> </tr> </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {investments.filter(i => i.status === 'PENDING_APPROVAL').map(inv => {
+                                        const investor = users.find(u => u.id === inv.investorId);
+                                        return (
+                                            <tr key={inv.id} className="hover:bg-gray-50">
+                                                <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> </td>
+                                                <td className="p-4 font-bold text-primary">{inv.amount.toLocaleString()} ج.م</td>
+                                                <td className="p-4"> {inv.transferReceiptUrl && <button onClick={() => window.open(inv.transferReceiptUrl)} className="text-blue-600 text-xs hover:underline">عرض الإيصال</button>} </td>
+                                                <td className="p-4 flex gap-2">
+                                                    <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve')} className="bg-green-600">قبول</Button>
+                                                    <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'reject')} className="bg-red-600">رفض</Button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {investments.filter(i => i.status === 'PENDING_APPROVAL').length === 0 && (
+                                        <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">لا توجد تحويلات بانتظار الموافقة حالياً</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 className="font-bold text-lg mb-4 text-black flex items-center gap-2">
+                            <CheckCircle size={20} className="text-green-600" /> التحويلات المؤكدة (تاريخ العمليات)
+                        </h3>
+                        <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+                            <table className="w-full text-right">
+                                <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">التاريخ</th> <th className="p-4">المستثمر</th> <th className="p-4">المبلغ</th> <th className="p-4">الحالة</th> </tr> </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {investments.filter(i => i.status !== 'PENDING_APPROVAL').reverse().map(inv => {
+                                        const investor = users.find(u => u.id === inv.investorId);
+                                        return (
+                                            <tr key={inv.id} className="hover:bg-gray-50">
+                                                <td className="p-4 text-xs text-gray-500">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
+                                                <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> </td>
+                                                <td className="p-4 font-bold text-gray-700">{inv.amount.toLocaleString()} ج.م</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${inv.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                        {inv.status === 'APPROVED' ? 'مقبول' : 'مرفوض'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
             )}
 
@@ -849,7 +976,6 @@ const BreederActiveCycles: React.FC<{
 
                                 <CollapsibleSection title="الإضافات والمياه" icon="🧂">
                                     <ItemCard icon="🧂" name="ملح طعام" unit="كجم" value={feedItems["ملح"] || 0} onChange={(v) => handleUpdateFeed("ملح", v)} />
-                                    {/* Fix: Removed duplicate 'icon' attribute */}
                                     <ItemCard icon="🦴" name="كالسيوم (حجر جيري)" unit="كجم" value={feedItems["كالسيوم"] || 0} onChange={(v) => handleUpdateFeed("كالسيوم", v)} />
                                     <ItemCard icon="🧪" name="بيكاربونات صوديوم" unit="كجم" value={feedItems["بيكاربونات"] || 0} onChange={(v) => handleUpdateFeed("بيكاربونات", v)} />
                                     <ItemCard icon="🍞" name="خميرة حية" unit="جرام" value={feedItems["خميرة"] || 0} onChange={(v) => handleUpdateFeed("خميرة", v)} />

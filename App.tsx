@@ -36,65 +36,149 @@ const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
 // --- Shared Log Components ---
 
 const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
+    // Helper to categorize feed items based on keywords
+    const categorizeFeed = (foodDetails: string) => {
+        if (!foodDetails || foodDetails === "تغذية روتينية") return null;
+        
+        const items = foodDetails.split(',').map(i => i.trim());
+        const result = {
+            energy: [] as string[],
+            rough: [] as string[],
+            additives: [] as string[]
+        };
+
+        const energyKeywords = ["ذرة", "شعير", "صويا", "ردة", "نخالة", "قطن", "مركز"];
+        const roughKeywords = ["برسيم", "سيلاج", "دريس", "تبن", "قش"];
+
+        items.forEach(item => {
+            if (energyKeywords.some(k => item.includes(k))) result.energy.push(item);
+            else if (roughKeywords.some(k => item.includes(k))) result.rough.push(item);
+            else result.additives.push(item);
+        });
+
+        return result;
+    };
+
+    const feedData = categorizeFeed(log.foodDetails);
+    const notesArray = log.notes ? log.notes.split('|').map(n => n.trim()) : [];
+    const vaccines = notesArray.filter(n => n.includes('[vaccine]')).map(n => n.replace('[vaccine]', '').trim());
+    const treatments = notesArray.filter(n => n.includes('[treatment]')).map(n => n.replace('[treatment]', '').trim());
+    const generalNotes = notesArray.filter(n => !n.includes('[vaccine]') && !n.includes('[treatment]'));
+
     return (
-        <div className="relative pl-8 pb-8 last:pb-0">
+        <div className="relative pl-8 pb-8 last:pb-0 group">
             {/* Timeline Line */}
             <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200 group-last:bg-transparent"></div>
             
             {/* Timeline Dot */}
             <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-primary shadow-sm z-10"></div>
             
-            <Card className="p-4 shadow-sm border-gray-100 hover:shadow-md transition-all">
-                <div className="flex justify-between items-center mb-3">
+            <Card className="p-0 shadow-sm border-gray-100 hover:shadow-md transition-all overflow-hidden">
+                <div className="bg-gray-50/50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <Calendar size={14} className="text-gray-400" />
-                        <span className="font-bold text-black text-sm">
-                            {new Date(log.date).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        <span className="font-bold text-black text-xs">
+                            {new Date(log.date).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </span>
                     </div>
                     {log.weight && (
-                        <Badge color="blue">
-                            <div className="flex items-center gap-1">
-                                <Scale size={12} />
-                                <span>{log.weight} كجم</span>
-                            </div>
-                        </Badge>
+                        <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100">
+                            <Scale size={12} />
+                            <span className="font-bold text-[11px]">{log.weight} كجم</span>
+                        </div>
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                <div className="p-4 space-y-4">
+                    {/* Nutrition Section */}
+                    <div className="space-y-3">
                         <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
-                            <Wheat size={12} /> التغذية والمخزون
+                            <Wheat size={12} /> التغذية اليومية
                         </h4>
-                        <div className="bg-green-50/50 p-2.5 rounded-lg border border-green-100/50">
-                            <p className="text-sm text-black leading-relaxed">
-                                {log.foodDetails || "تغذية روتينية متوازنة حسب الخطة"}
-                            </p>
-                        </div>
+                        
+                        {!feedData ? (
+                            <p className="text-xs text-gray-500 italic">تغذية روتينية متوازنة حسب الخطة</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {feedData.energy.length > 0 && (
+                                    <div className="bg-white border border-gray-100 rounded-xl p-2.5">
+                                        <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-gray-50">
+                                            <span className="text-sm">🌽</span>
+                                            <span className="text-[10px] font-bold text-gray-600">مركزات طاقة</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {feedData.energy.map((item, idx) => (
+                                                <span key={idx} className="bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-orange-100">{item}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {feedData.rough.length > 0 && (
+                                    <div className="bg-white border border-gray-100 rounded-xl p-2.5">
+                                        <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-gray-50">
+                                            <span className="text-sm">🌿</span>
+                                            <span className="text-[10px] font-bold text-gray-600">أعلاف خضراء</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {feedData.rough.map((item, idx) => (
+                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-green-100">{item}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {feedData.additives.length > 0 && (
+                                    <div className="bg-white border border-gray-100 rounded-xl p-2.5">
+                                        <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-gray-50">
+                                            <span className="text-sm">🧂</span>
+                                            <span className="text-[10px] font-bold text-gray-600">إضافات ومياه</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {feedData.additives.map((item, idx) => (
+                                                <span key={idx} className="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-blue-100">{item}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    <div className="space-y-2">
-                        <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
-                            <HeartPulse size={12} /> الحالة الصحية والملاحظات
-                        </h4>
-                        <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200/50">
-                            {log.notes ? (
-                                <div className="space-y-1">
-                                    {log.notes.split('|').map((note, idx) => (
-                                        <div key={idx} className="text-sm text-black flex items-start gap-2">
-                                            {note.includes('[vaccine]') ? <Syringe size={14} className="text-blue-500 mt-0.5 shrink-0" /> : 
-                                             note.includes('[treatment]') ? <Stethoscope size={14} className="text-orange-500 mt-0.5 shrink-0" /> :
-                                             <Info size={14} className="text-gray-400 mt-0.5 shrink-0" />}
-                                            <span>{note.replace(/\[vaccine\]|\[treatment\]/g, '').trim()}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-xs text-gray-400 italic">لا توجد ملاحظات خاصة لهذا اليوم.</p>
-                            )}
+                    {/* Health Section */}
+                    {(vaccines.length > 0 || treatments.length > 0) && (
+                        <div className="space-y-2">
+                            <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
+                                <HeartPulse size={12} /> الحالة الصحية
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {vaccines.map((v, idx) => (
+                                    <div key={idx} className="bg-blue-50/50 border border-blue-100 rounded-xl p-2.5 flex items-center gap-3">
+                                        <div className="bg-white p-1.5 rounded-lg text-blue-500 shadow-sm"><Syringe size={14} /></div>
+                                        <span className="text-xs font-bold text-blue-800">{v}</span>
+                                    </div>
+                                ))}
+                                {treatments.map((t, idx) => (
+                                    <div key={idx} className="bg-red-50/50 border border-red-100 rounded-xl p-2.5 flex items-center gap-3">
+                                        <div className="bg-white p-1.5 rounded-lg text-red-500 shadow-sm"><Stethoscope size={14} /></div>
+                                        <span className="text-xs font-bold text-red-800">{t}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* General Notes */}
+                    {generalNotes.length > 0 && (
+                        <div className="pt-2">
+                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                {generalNotes.map((note, idx) => (
+                                    <div key={idx} className="flex items-start gap-2">
+                                        <Info size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                                        <p className="text-sm text-gray-700 leading-relaxed">{note}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Card>
         </div>
@@ -1122,10 +1206,27 @@ const InvestorPortfolio: React.FC<{
         const cycleLogs = logs.filter(l => l.cycleId === selectedCycleForLogs.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         return (
             <div className="space-y-6">
-                <button onClick={() => setSelectedCycleForLogs(null)} className="flex items-center gap-2 text-black opacity-60"> <ArrowRight size={20}/> رجوع </button>
-                <h2 className="text-2xl font-bold text-black">{selectedCycleForLogs.animalType}</h2>
+                <button onClick={() => setSelectedCycleForLogs(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع للمحفظة </button>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <img src={selectedCycleForLogs.imageUrl} className="w-16 h-16 rounded-xl object-cover" />
+                    <div>
+                        <h2 className="text-xl font-bold text-black">{selectedCycleForLogs.animalType}</h2>
+                        <p className="text-xs text-gray-500">متابعة النمو والحالة اليومية</p>
+                    </div>
+                </div>
                 <div className="space-y-4">
-                    {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
+                    <h3 className="font-bold text-lg text-black flex items-center gap-2">
+                        <Activity size={20} className="text-primary" /> سجل المتابعة والنمو
+                    </h3>
+                    <div className="space-y-2">
+                        {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
+                        {cycleLogs.length === 0 && (
+                            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                                <Clock size={40} className="mx-auto text-gray-200 mb-3" />
+                                <p className="text-gray-400 font-medium">بانتظار التقارير اليومية من المربي...</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -1146,14 +1247,20 @@ const InvestorPortfolio: React.FC<{
                                 <p className="text-xs text-gray-500">مبلغ الاستثمار: {inv.amount.toLocaleString()} ج.م</p>
                                 <div className="mt-2 flex gap-2">
                                   <StatusBadge status={inv.status} />
-                                  {inv.status === 'APPROVED' && cycle.status === CycleStatus.ACTIVE && (
-                                    <Button size="sm" variant="outline" onClick={() => setSelectedCycleForLogs(cycle)}>متابعة</Button>
+                                  {inv.status === 'APPROVED' && (cycle.status === CycleStatus.ACTIVE || cycle.status === CycleStatus.COMPLETED) && (
+                                    <Button size="sm" variant="outline" onClick={() => setSelectedCycleForLogs(cycle)}>متابعة الدورة</Button>
                                   )}
                                 </div>
                             </div>
                         </Card>
                     );
                 })}
+                {myInvestments.length === 0 && (
+                    <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                        <Wallet size={40} className="mx-auto text-gray-200 mb-3" />
+                        <p className="text-gray-400 font-medium">لم تقم بأي استثمارات بعد.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

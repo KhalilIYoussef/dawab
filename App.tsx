@@ -7,7 +7,8 @@ import {
   Upload, Camera, Utensils, Menu, X, Tractor, ShieldCheck, Ban, Trash2, Eye,
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
   Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
-  Calculator, ArrowDown, ShoppingBag, Gavel, UserCog, Calendar, ChevronDown, ChevronUp, Syringe, Pill, Stethoscope, Droplets, Minus, HeartPulse
+  Calculator, ArrowDown, ShoppingBag, Gavel, UserCog, Calendar, ChevronDown, ChevronUp, Syringe, Pill, Stethoscope, Droplets, Minus, HeartPulse,
+  Play
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -35,10 +36,6 @@ const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
 // --- Shared Log Components ---
 
 const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
-    // Parse structured data from the string if possible, or display as-is
-    const hasNutrition = log.foodDetails && log.foodDetails !== "تغذية روتينية";
-    const hasHealth = log.notes?.includes('[vaccine]') || log.notes?.includes('[treatment]');
-    
     return (
         <div className="relative pl-8 pb-8 last:pb-0">
             {/* Timeline Line */}
@@ -66,7 +63,6 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Nutrition Section */}
                     <div className="space-y-2">
                         <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
                             <Wheat size={12} /> التغذية والمخزون
@@ -78,7 +74,6 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                         </div>
                     </div>
 
-                    {/* Health & Status Section */}
                     <div className="space-y-2">
                         <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
                             <HeartPulse size={12} /> الحالة الصحية والملاحظات
@@ -177,8 +172,8 @@ const StatusBadge: React.FC<{ status: string; type?: 'user' | 'cycle' }> = ({ st
   };
 
   const labels: {[key: string]: string} = {
-    'ACTIVE': type === 'cycle' ? 'نشطة' : 'نشط',
-    'PENDING': type === 'user' ? 'معلق' : 'قيد المراجعة',
+    'ACTIVE': type === 'cycle' ? 'نشطة (قيد التسمين)' : 'نشط',
+    'PENDING': type === 'cycle' ? 'تحتاج تمويل' : (type === 'user' ? 'معلق' : 'قيد المراجعة'),
     'COMPLETED': 'مباعة',
     'REJECTED': 'مرفوضة',
     'APPROVED': 'مقبول',
@@ -320,14 +315,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
               {isRegistering ? 'لدي حساب بالفعل؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد'}
             </button>
           </div>
-          <div className="mt-8 pt-6 border-t border-gray-100">
-             <p className="text-xs text-center text-gray-400 mb-3">للتجربة السريعة (Demo Users)</p>
-             <div className="flex justify-center gap-2 flex-wrap">
-                <button onClick={() => onLogin(INITIAL_USERS[0])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-black">Admin</button>
-                <button onClick={() => onLogin(INITIAL_USERS[1])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-black">Breeder</button>
-                <button onClick={() => onLogin(INITIAL_USERS[3])} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-black">Investor</button>
-             </div>
-          </div>
         </div>
       </div>
     </div>
@@ -343,11 +330,6 @@ const ProfileView: React.FC<{
     alert("تم رفع الملف بنجاح (محاكاة)");
     onUpdate({ ...user, [field]: 'uploaded_url' });
   };
-  const handlePhysicalPaperConfirm = () => {
-    if (confirm("هل أنت متأكد من أنك قمت بإرسال الأوراق الأصلية عبر البريد المسجل؟")) {
-      onUpdate({ ...user, physicalPapersSent: true });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -358,7 +340,6 @@ const ProfileView: React.FC<{
              <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-100 shadow-md overflow-hidden flex items-center justify-center text-2xl font-bold text-black">
                 {user.profilePictureUrl ? <img src={user.profilePictureUrl} alt={user.name} className="w-full h-full object-cover" /> : user.name.charAt(0)}
              </div>
-             <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow border hover:bg-gray-50 text-black"> <Camera size={16} /> </button>
           </div>
           <div className="flex-1 text-center md:text-right mb-4 md:mb-0">
              <h2 className="text-2xl font-bold text-black">{user.name}</h2>
@@ -373,12 +354,6 @@ const ProfileView: React.FC<{
             <div className="space-y-4">
                <div> <label className="text-sm text-gray-500">رقم الهاتف</label> <p className="font-medium text-black">{user.phone}</p> </div>
                <div> <label className="text-sm text-gray-500">الرقم القومي</label> <p className="font-medium text-black">{user.nationalId || 'غير مسجل'}</p> </div>
-               {user.role === UserRole.BREEDER && (
-                 <>
-                    <div> <label className="text-sm text-gray-500">عنوان المزرعة</label> <p className="font-medium text-black truncate"> {user.googleMapsUrl ? <a href={user.googleMapsUrl} target="_blank" className="text-blue-600 hover:underline flex items-center gap-1"><MapPin size={14}/> عرض على الخريطة</a> : 'غير محدد'} </p> </div>
-                    <div> <label className="text-sm text-gray-500">الطاقة الاستيعابية</label> <p className="font-medium text-black">{user.spaceLimit} رأس</p> </div>
-                 </>
-               )}
             </div>
          </Card>
          <Card className="p-6">
@@ -387,16 +362,9 @@ const ProfileView: React.FC<{
                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                      <div className={`p-2 rounded-full ${user.documentsVerified ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}> {user.documentsVerified ? <CheckCircle size={20} /> : <AlertTriangle size={20} />} </div>
-                     <div> <p className="font-medium text-sm text-black">التوثيق الرقمي</p> <p className="text-xs text-gray-500">{user.documentsVerified ? 'تم التحقق من الهوية' : 'بانتظار رفع المستندات'}</p> </div>
+                     <div> <p className="font-medium text-sm text-black">التوثيق الرقمي</p> <p className="text-xs text-gray-500">{user.documentsVerified ? 'تم التحقق' : 'بانتظار الرفع'}</p> </div>
                   </div>
-                  {!user.documentsVerified && <Button size="sm" variant="outline" onClick={() => handleFileUpload('idCardFrontUrl')}>رفع الهوية</Button>}
-               </div>
-               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                     <div className={`p-2 rounded-full ${user.physicalPapersVerified ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}> {user.physicalPapersVerified ? <FileCheck size={20} /> : <FileText size={20} />} </div>
-                     <div> <p className="font-medium text-sm text-black">العقود الورقية</p> <p className="text-xs text-gray-500"> {user.physicalPapersVerified ? 'تم استلام العقود' : user.physicalPapersSent ? 'تم الإرسال - قيد المراجعة' : 'لم يتم الإرسال'} </p> </div>
-                  </div>
-                  {!user.physicalPapersVerified && !user.physicalPapersSent && <Button size="sm" variant="secondary" onClick={handlePhysicalPaperConfirm}>تأكيد الإرسال</Button>}
+                  {!user.documentsVerified && <Button size="sm" variant="outline" onClick={() => handleFileUpload('idCardFrontUrl')}>رفع</Button>}
                </div>
             </div>
          </Card>
@@ -419,54 +387,50 @@ const AdminDashboard: React.FC<{
     const [selectedCycleToSell, setSelectedCycleToSell] = useState<Cycle | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
 
-    const pendingUsers = users.filter(u => u.status === UserStatus.PENDING);
-    const pendingCycles = cycles.filter(c => c.status === CycleStatus.PENDING);
-    const pendingInvestments = investments.filter(i => i.status === 'PENDING_APPROVAL');
-
     const handleUserAction = (id: string, action: 'approve' | 'reject') => {
         setUsers(users.map(u => u.id === id ? { ...u, status: action === 'approve' ? UserStatus.ACTIVE : UserStatus.REJECTED } : u));
     };
 
     const handleCycleAction = (id: string, action: 'approve' | 'reject') => {
+        const cycle = cycles.find(c => c.id === id);
+        if (action === 'approve') {
+          if (cycle && cycle.currentFunding < cycle.fundingGoal) {
+            if (!confirm(`تنبيه: التمويل لم يكتمل بعد (${Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100)}%). هل أنت متأكد من تنشيط الدورة وبدء مرحلة التسمين يدوياً الآن؟`)) {
+              return;
+            }
+          }
+        }
         setCycles(cycles.map(c => c.id === id ? { ...c, status: action === 'approve' ? CycleStatus.ACTIVE : CycleStatus.REJECTED } : c));
     };
 
-    const handleInvestmentAction = (id: string, action: 'approve' | 'reject', addInsurance: boolean) => {
-        setInvestments(investments.map(i => {
-            if (i.id === id) {
-                return { 
-                    ...i, 
-                    status: action === 'approve' ? 'APPROVED' : 'REJECTED',
-                    hasAnimalInsurance: addInsurance,
-                    animalInsuranceFee: addInsurance ? i.amount * INSURANCE_FEE_PERCENT : 0
-                };
-            }
-            return i;
-        }));
+    const handleInvestmentAction = (id: string, action: 'approve' | 'reject') => {
+        const inv = investments.find(i => i.id === id);
+        if (!inv) return;
+        
+        setInvestments(investments.map(i => i.id === id ? { ...i, status: action === 'approve' ? 'APPROVED' : 'REJECTED' } : i));
+        
+        if (action === 'approve') {
+          setCycles(cycles.map(c => c.id === inv.cycleId ? { ...c, currentFunding: c.currentFunding + inv.amount } : c));
+        }
     };
 
     const handleCreateUser = () => {
         const newUser: User = { id: Math.random().toString(36).substr(2, 9), name: newUserForm.name, phone: newUserForm.phone, password: newUserForm.password, role: newUserForm.role, status: UserStatus.ACTIVE, documentsVerified: true };
         setUsers([...users, newUser]);
         setIsAddUserModalOpen(false);
-        setNewUserForm({ name: '', phone: '', password: '123', role: UserRole.INVESTOR });
     };
 
     const openSellModal = (cycle: Cycle) => {
         setSelectedCycleToSell(cycle);
-        setSalePrice((cycle.fundingGoal * 1.25).toString());
+        setSalePrice((cycle.fundingGoal * 1.2).toString());
         setIsSellModalOpen(true);
     };
 
     const handleConfirmSale = () => {
         if (!selectedCycleToSell) return;
         const price = parseFloat(salePrice);
-        if (isNaN(price) || price <= 0) { alert("يرجى إدخال سعر بيع صحيح"); return; }
-        const updatedCycles = cycles.map(c => c.id === selectedCycleToSell.id ? { ...c, status: CycleStatus.COMPLETED, finalSalePrice: price, actualEndDate: new Date().toISOString().split('T')[0] } : c);
-        setCycles(updatedCycles as Cycle[]);
+        setCycles(cycles.map(c => c.id === selectedCycleToSell.id ? { ...c, status: CycleStatus.COMPLETED, finalSalePrice: price, actualEndDate: new Date().toISOString().split('T')[0] } : c));
         setIsSellModalOpen(false);
-        setSelectedCycleToSell(null);
-        setSalePrice('');
     };
 
     return (
@@ -478,13 +442,7 @@ const AdminDashboard: React.FC<{
                     </button>
                 ))}
             </div>
-            {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard title="إجمالي المستخدمين" value={users.length} icon={Users} color="blue" />
-                    <StatCard title="تحويلات بانتظار التأكيد" value={pendingInvestments.length} icon={Banknote} color="secondary" />
-                    <StatCard title="الدورات النشطة" value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} icon={Activity} color="primary" />
-                </div>
-            )}
+            
             {activeTab === 'users' && (
                 <div>
                     <div className="flex justify-between items-center mb-4"> <h3 className="font-bold text-lg text-black">إدارة المستخدمين</h3> <Button size="sm" onClick={() => setIsAddUserModalOpen(true)}><Plus size={16}/> إضافة مستخدم</Button> </div>
@@ -495,9 +453,9 @@ const AdminDashboard: React.FC<{
                                 {users.map(u => (
                                     <tr key={u.id} className="hover:bg-gray-50">
                                         <td className="p-4"> <div className="font-bold text-black">{u.name}</div> <div className="text-xs text-gray-500">{u.phone}</div> </td>
-                                        <td className="p-4"> <span className={`text-xs px-2 py-1 rounded ${u.role === UserRole.BREEDER ? 'bg-purple-100 text-purple-700' : u.role === UserRole.ADMIN ? 'bg-gray-800 text-white' : 'bg-blue-50 text-blue-600'}`}> {u.role} </span> </td>
+                                        <td className="p-4"> <span className="text-xs">{u.role}</span> </td>
                                         <td className="p-4"><StatusBadge status={u.status} type="user" /></td>
-                                        <td className="p-4"> {u.status === UserStatus.PENDING && ( <div className="flex gap-2"> <Button size="sm" variant="outline" className="text-green-600 border-green-200" onClick={() => handleUserAction(u.id, 'approve')}>قبول</Button> <Button size="sm" variant="outline" className="text-red-600 border-red-200" onClick={() => handleUserAction(u.id, 'reject')}>رفض</Button> </div> )} </td>
+                                        <td className="p-4"> {u.status === UserStatus.PENDING && ( <div className="flex gap-2"> <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleUserAction(u.id, 'approve')}>قبول</Button> <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleUserAction(u.id, 'reject')}>رفض</Button> </div> )} </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -505,52 +463,56 @@ const AdminDashboard: React.FC<{
                     </div>
                 </div>
             )}
+
             {activeTab === 'cycles' && (
                 <div>
                     <h3 className="font-bold text-lg mb-4 text-black">إدارة الدورات الإنتاجية</h3>
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <table className="w-full text-right">
-                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">صورة</th> <th className="p-4">المربي</th> <th className="p-4">تفاصيل الدورة</th> <th className="p-4">التمويل</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
+                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">الدورة</th> <th className="p-4">التمويل والمشاركين</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {cycles.map(c => {
-                                    const breeder = users.find(u => u.id === c.breederId);
-                                    // Get approved participants for this cycle
-                                    const participants = investments
-                                      .filter(inv => inv.cycleId === c.id && inv.status === 'APPROVED')
-                                      .map(inv => {
-                                        const investor = users.find(u => u.id === inv.investorId);
-                                        const share = ((inv.amount / c.fundingGoal) * 100).toFixed(1);
-                                        return { name: investor?.name || 'مستثمر', share };
-                                      });
+                                    const cycleInvestments = investments.filter(inv => inv.cycleId === c.id && inv.status === 'APPROVED');
+                                    const participants = cycleInvestments.map(inv => {
+                                      const investor = users.find(u => u.id === inv.investorId);
+                                      const share = ((inv.amount / c.fundingGoal) * 100).toFixed(1);
+                                      return { name: investor?.name || "مستثمر", share };
+                                    });
+                                    const fundPercent = Math.floor((c.currentFunding/c.fundingGoal)*100);
 
                                     return (
                                         <tr key={c.id} className="hover:bg-gray-50">
-                                            <td className="p-4"> <img src={c.imageUrl} className="w-12 h-12 rounded-lg object-cover bg-gray-100" alt="" /> </td>
-                                            <td className="p-4"> <div className="font-bold text-black">{breeder?.name || 'غير معروف'}</div> <div className="text-xs text-gray-500">{breeder?.phone}</div> </td>
-                                            <td className="p-4"> <div className="font-medium text-black">{c.animalType}</div> <div className="text-xs text-gray-500">{c.totalHeads} رأس | {c.expectedDuration} يوم</div> </td>
-                                            <td className="p-4"> 
-                                                <div className="font-bold text-black">{c.fundingGoal.toLocaleString()} ج.م</div> 
-                                                <div className="text-xs text-gray-500 mb-2">تم جمع: {c.currentFunding.toLocaleString()}</div>
-                                                {/* Participants List */}
-                                                {participants.length > 0 && (
-                                                  <div className="space-y-1 border-t pt-1">
-                                                    <p className="text-[9px] font-bold text-gray-400 uppercase">المشتركين:</p>
-                                                    {participants.map((p, idx) => (
-                                                      <div key={idx} className="flex justify-between items-center bg-gray-50 px-1.5 py-0.5 rounded text-[10px]">
-                                                        <span className="text-gray-600 truncate max-w-[70px]">{p.name}</span>
-                                                        <span className="text-primary font-bold">{p.share}%</span>
-                                                      </div>
-                                                    ))}
-                                                  </div>
-                                                )}
+                                            <td className="p-4"> <div className="font-bold text-black">{c.animalType}</div> <div className="text-xs text-gray-500">الهدف: {c.fundingGoal.toLocaleString()} ج.م</div> </td>
+                                            <td className="p-4">
+                                                <div className="text-xs font-bold text-primary mb-1">تم جمع: {c.currentFunding.toLocaleString()} ({fundPercent}%)</div>
+                                                <div className="w-24 bg-gray-100 h-1 rounded-full mb-2 overflow-hidden">
+                                                    <div className="bg-primary h-full" style={{ width: `${fundPercent}%` }}></div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                  {participants.map((p, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center bg-gray-50 px-2 py-0.5 rounded text-[10px]">
+                                                      <span className="text-gray-600 truncate max-w-[80px]">{p.name}</span>
+                                                      <span className="font-bold text-primary">{p.share}%</span>
+                                                    </div>
+                                                  ))}
+                                                </div>
                                             </td>
                                             <td className="p-4"><StatusBadge status={c.status} type="cycle" /></td>
                                             <td className="p-4">
-                                                {c.status === CycleStatus.PENDING ? (
-                                                    <div className="flex gap-2"> <Button size="sm" onClick={() => handleCycleAction(c.id, 'approve')} className="bg-green-600 hover:bg-green-700 text-white">قبول</Button> <Button size="sm" onClick={() => handleCycleAction(c.id, 'reject')} className="bg-red-600 hover:bg-red-700 text-white">رفض</Button> </div>
-                                                ) : c.status === CycleStatus.ACTIVE ? (
-                                                    <div className="flex gap-2"> <Button size="sm" onClick={() => openSellModal(c)} className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1" title="تسجيل بيع الدورة"> <DollarSign size={16} /> بيع </Button> <button onClick={() => { if(confirm('هل أنت متأكد من حذف هذه الدورة؟')) { setCycles(cycles.filter(cycle => cycle.id !== c.id)); } }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"> <Trash2 size={18} /> </button> </div>
-                                                ) : ( <div className="flex gap-2"> <span className="text-xs text-gray-400 font-medium px-2">مكتملة</span> <button onClick={() => { if(confirm('هل أنت متأكد من حذف هذه الدورة؟')) { setCycles(cycles.filter(cycle => cycle.id !== c.id)); } }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"> <Trash2 size={18} /> </button> </div> )}
+                                                {c.status === CycleStatus.PENDING && (
+                                                    <div className="flex gap-2">
+                                                        <Button size="sm" onClick={() => handleCycleAction(c.id, 'approve')} className="bg-green-600 flex items-center gap-1">
+                                                          <Play size={14} /> تنشيط
+                                                        </Button>
+                                                        <Button size="sm" variant="danger" onClick={() => handleCycleAction(c.id, 'reject')}>رفض</Button>
+                                                    </div>
+                                                )}
+                                                {c.status === CycleStatus.ACTIVE && (
+                                                  <div className="flex gap-2">
+                                                    <Button size="sm" onClick={() => openSellModal(c)} className="bg-orange-500">تسجيل بيع</Button>
+                                                    <Button size="sm" variant="outline" className="text-red-500 border-red-200" onClick={() => { if(confirm('تنبيه: هل أنت متأكد من رغبتك في إيقاف هذه الدورة وإعادتها لحالة "تحتاج تمويل"؟')) { setCycles(cycles.map(item => item.id === c.id ? {...item, status: CycleStatus.PENDING} : item)); } }}>إيقاف</Button>
+                                                  </div>
+                                                )}
                                             </td>
                                         </tr>
                                     );
@@ -560,91 +522,52 @@ const AdminDashboard: React.FC<{
                     </div>
                 </div>
             )}
+
             {activeTab === 'investments' && (
                 <div>
                     <h3 className="font-bold text-lg mb-4 text-black">تأكيد تحويلات المستثمرين</h3>
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <table className="w-full text-right">
-                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">المستثمر</th> <th className="p-4">الدورة</th> <th className="p-4">المبلغ</th> <th className="p-4">الإيصال</th> <th className="p-4">الإجراء</th> </tr> </thead>
+                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">المستثمر</th> <th className="p-4">المبلغ</th> <th className="p-4">الإيصال</th> <th className="p-4">الإجراء</th> </tr> </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {pendingInvestments.map(inv => {
+                                {investments.filter(i => i.status === 'PENDING_APPROVAL').map(inv => {
                                     const investor = users.find(u => u.id === inv.investorId);
-                                    const cycle = cycles.find(c => c.id === inv.cycleId);
                                     return (
                                         <tr key={inv.id} className="hover:bg-gray-50">
-                                            <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> <div className="text-xs text-gray-500">{investor?.phone}</div> </td>
-                                            <td className="p-4"> <div className="text-sm text-black">{cycle?.animalType}</div> </td>
+                                            <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> </td>
                                             <td className="p-4 font-bold text-primary">{inv.amount.toLocaleString()} ج.م</td>
-                                            <td className="p-4"> {inv.transferReceiptUrl && <button onClick={() => window.open(inv.transferReceiptUrl)} className="text-blue-600 hover:underline flex items-center gap-1 text-xs"> <ImageIcon size={14}/> عرض </button>} </td>
-                                            <td className="p-4">
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex gap-2">
-                                                        <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve', false)} className="bg-green-600">قبول</Button>
-                                                        <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve', true)} className="bg-blue-600 text-[10px]">قبول + تأمين</Button>
-                                                        <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'reject', false)} className="bg-red-600">رفض</Button>
-                                                    </div>
-                                                </div>
+                                            <td className="p-4"> {inv.transferReceiptUrl && <button onClick={() => window.open(inv.transferReceiptUrl)} className="text-blue-600 text-xs">عرض الإيصال</button>} </td>
+                                            <td className="p-4 flex gap-2">
+                                                <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve')} className="bg-green-600">قبول</Button>
+                                                <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'reject')} className="bg-red-600">رفض</Button>
                                             </td>
                                         </tr>
                                     );
                                 })}
-                                {pendingInvestments.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-gray-400">لا توجد تحويلات معلقة</td></tr>}
                             </tbody>
                         </table>
                     </div>
                 </div>
             )}
-            <Modal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} title="إضافة مستخدم جديد">
+
+            <Modal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} title="إضافة مستخدم">
                 <div className="space-y-4">
                     <Input label="الاسم" value={newUserForm.name} onChange={(e) => setNewUserForm({...newUserForm, name: e.target.value})} />
                     <Input label="رقم الهاتف" value={newUserForm.phone} onChange={(e) => setNewUserForm({...newUserForm, phone: e.target.value})} />
                     <Input label="كلمة المرور" type="password" value={newUserForm.password} onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})} />
-                    <div> <label className="block text-sm font-medium text-black mb-1">نوع المستخدم</label> <select className="w-full p-2 border rounded-lg text-black" value={newUserForm.role} onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as UserRole})}> <option value={UserRole.INVESTOR}>مستثمر</option> <option value={UserRole.BREEDER}>مربي</option> <option value={UserRole.ADMIN}>مشرف (Admin)</option> </select> </div>
-                    <Button className="w-full mt-4" onClick={handleCreateUser}>إضافة</Button>
+                    <Button className="w-full" onClick={handleCreateUser}>إضافة</Button>
+                </div>
+            </Modal>
+
+            <Modal isOpen={isSellModalOpen} onClose={() => setIsSellModalOpen(false)} title="تسجيل بيع الدورة">
+                <div className="space-y-4">
+                    <Input label="سعر البيع النهائي (ج.م)" type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
+                    <Button className="w-full" onClick={handleConfirmSale}>تأكيد البيع وتوزيع الأرباح</Button>
                 </div>
             </Modal>
         </div>
     );
 };
-
-// --- Log Entry Components ---
-
-const QuantityControl: React.FC<{ value: number, onChange: (val: number) => void, unit: string, step?: number }> = ({ value, onChange, unit, step = 1 }) => (
-    <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
-        <button onClick={() => onChange(Math.max(0, value - step))} className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"> <Minus size={16} /> </button>
-        <div className="flex-1 flex items-center justify-center gap-1 min-w-[60px]"> <input type="number" value={value || ''} onChange={(e) => onChange(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-black bg-transparent focus:outline-none" placeholder="0" /> <span className="text-[10px] text-gray-400 font-medium">{unit}</span> </div>
-        <button onClick={() => onChange(value + step)} className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary hover:bg-green-50 transition-colors"> <Plus size={16} /> </button>
-    </div>
-);
-
-const CollapsibleSection: React.FC<{ title: string, icon: string, children: React.ReactNode, defaultOpen?: boolean }> = ({ title, icon, children, defaultOpen = true }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-    return (
-        <div className="space-y-3">
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-3 bg-gray-100/50 rounded-xl hover:bg-gray-200/50 transition-colors"> <div className="flex items-center gap-2 font-bold text-black"> <span className="text-xl">{icon}</span> <span>{title}</span> </div> {isOpen ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />} </button>
-            {isOpen && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">{children}</div>}
-        </div>
-    );
-};
-
-const ItemCard: React.FC<{ icon: string, name: string, unit: string, value: number, onChange: (v: number) => void, warning?: boolean }> = ({ icon, name, unit, value, onChange, warning }) => (
-    <Card className={`p-3 relative overflow-hidden transition-all duration-200 ${warning ? 'border-red-200 bg-red-50/30' : 'hover:border-primary/30'}`}>
-        {warning && <div className="absolute top-1 right-1"><AlertTriangle size={12} className="text-red-500" /></div>}
-        <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-2xl">{icon}</div>
-            <div className="flex-1"> <h4 className="font-bold text-sm text-black leading-tight">{name}</h4> <p className="text-[10px] text-gray-400">الوحدة: {unit}</p> </div>
-        </div>
-        <QuantityControl value={value} onChange={onChange} unit={unit} step={unit === 'لتر' ? 10 : 1} />
-    </Card>
-);
-
-const VetCard: React.FC<{ icon: string, name: string, type: 'vaccine' | 'treatment', onApply: () => void }> = ({ icon, name, type, onApply }) => (
-    <Card className={`p-4 flex items-center gap-4 hover:shadow-md transition-all ${type === 'vaccine' ? 'bg-blue-50/50 border-blue-100' : 'bg-orange-50/50 border-orange-100'}`}>
-        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl">{icon}</div>
-        <div className="flex-1"> <h4 className="font-bold text-black">{name}</h4> <p className="text-xs text-gray-500">{type === 'vaccine' ? 'تحصين وقائي' : 'علاج طارئ'}</p> </div>
-        <div className="flex gap-2"> <Button size="sm" variant={type === 'vaccine' ? 'primary' : 'secondary'} onClick={onApply}> {type === 'vaccine' ? 'تسجيل تحصين' : 'تسجيل علاج'} </Button> </div>
-    </Card>
-);
 
 const BreederActiveCycles: React.FC<{
   user: User;
@@ -654,10 +577,7 @@ const BreederActiveCycles: React.FC<{
 }> = ({ user, cycles, logs, setLogs }) => {
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [activeLogTab, setActiveLogTab] = useState<'feed' | 'health'>('feed');
   const [currentWeight, setCurrentWeight] = useState<string>('');
-  const [feedItems, setFeedItems] = useState<Record<string, number>>({});
-  const [vetItems, setVetItems] = useState<Array<{ name: string, date: string, type: string, note?: string }>>([]);
   const [notes, setNotes] = useState('');
 
   const activeCycles = cycles.filter(c => c.breederId === user.id && c.status === CycleStatus.ACTIVE);
@@ -666,94 +586,28 @@ const BreederActiveCycles: React.FC<{
 
   const handleAddLog = () => {
     if (!selectedCycleId) return;
-    // Fix: Added explicit type cast to number for val to avoid comparison error with unknown
-    const feedLines = Object.entries(feedItems).filter(([_, val]) => (val as number) > 0).map(([name, val]) => `${name}: ${val}`).join(', ');
-    const vetLines = vetItems.map(v => `[${v.type}] ${v.name}`).join(' | ');
-    const newLog: CycleLog = { id: Math.random().toString(36).substr(2, 9), cycleId: selectedCycleId, date: new Date().toISOString().split('T')[0], weight: currentWeight ? parseFloat(currentWeight) : undefined, foodDetails: feedLines || "تغذية روتينية", notes: [notes, vetLines].filter(Boolean).join(' | ') };
+    const newLog: CycleLog = { id: Math.random().toString(), cycleId: selectedCycleId, date: new Date().toISOString().split('T')[0], weight: currentWeight ? parseFloat(currentWeight) : undefined, foodDetails: "تغذية روتينية", notes };
     setLogs([newLog, ...logs]);
     setIsLogModalOpen(false);
-    resetForm();
+    setCurrentWeight(''); setNotes('');
   };
-
-  const resetForm = () => { setFeedItems({}); setVetItems([]); setCurrentWeight(''); setNotes(''); setActiveLogTab('feed'); };
-  const handleUpdateFeed = (name: string, val: number) => { setFeedItems(prev => ({ ...prev, [name]: val })); };
-  const handleApplyVet = (name: string, type: 'vaccine' | 'treatment') => { const note = prompt(`ملاحظات إضافية لـ ${name}:`, ""); setVetItems(prev => [...prev, { name, type, date: new Date().toISOString().split('T')[0], note: note || undefined }]); alert(`تم تسجيل ${type === 'vaccine' ? 'تحصين' : 'علاج'}: ${name}`); };
 
   if (selectedCycle) {
       return (
           <div className="space-y-6">
-              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع للقائمة </button>
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
-                  <div className="flex gap-4 items-center">
-                      <div className="relative"> <img src={selectedCycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-gray-50" /> <div className="absolute -bottom-2 -right-2 bg-primary text-white p-1 rounded-lg shadow-lg"><Activity size={14}/></div> </div>
-                      <div> <h2 className="text-2xl font-bold mb-1 text-black">{selectedCycle.animalType}</h2> <div className="flex flex-wrap gap-2 items-center"> <span className="text-gray-400 text-xs flex items-center gap-1"><Calendar size={12}/> البدء: {selectedCycle.startDate}</span> <Badge color="blue">الوزن الحالي: {cycleLogs[0]?.weight || selectedCycle.initialWeight} كجم</Badge> </div> </div>
-                  </div>
-                  <Button size="lg" onClick={() => setIsLogModalOpen(true)} className="w-full md:w-auto shadow-lg shadow-primary/20"> <Plus size={20}/> تسجيل تحديث يومي </Button>
+              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-black opacity-60"> <ArrowRight size={20}/> رجوع </button>
+              <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
+                  <h2 className="text-2xl font-bold text-black">{selectedCycle.animalType}</h2>
+                  <Button onClick={() => setIsLogModalOpen(true)}> <Plus size={20}/> تحديث يومي </Button>
               </div>
-
               <div className="space-y-4">
-                  <h3 className="font-bold text-lg text-black flex items-center gap-2"> <History size={20} className="text-primary"/> سجل المتابعة اليومي </h3>
-                  <div className="space-y-2">
-                    {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
-                    {cycleLogs.length === 0 && <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200"> <Clock size={40} className="mx-auto text-gray-200 mb-3"/> <p className="text-gray-400">لا توجد سجلات متابعة بعد.</p> </div>}
-                  </div>
+                  {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
               </div>
-
-              <Modal isOpen={isLogModalOpen} onClose={() => {setIsLogModalOpen(false); resetForm();}} title="تحديث يومي جديد">
-                  <div className="space-y-6">
-                      <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100"> <label className="block text-sm font-bold text-blue-900 mb-2 flex items-center gap-2"> <Scale size={18}/> الوزن الحالي للرأس (كجم) </label> <input type="number" value={currentWeight} onChange={(e) => setCurrentWeight(e.target.value)} className="w-full bg-white border-none rounded-xl p-3 text-lg font-bold text-blue-700 shadow-inner focus:ring-2 focus:ring-blue-400 focus:outline-none" placeholder="مثال: 255" /> </div>
-                      <div className="flex p-1 bg-gray-100 rounded-2xl"> <button onClick={() => setActiveLogTab('feed')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeLogTab === 'feed' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}> <Wheat size={18}/> التغذية </button> <button onClick={() => setActiveLogTab('health')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeLogTab === 'health' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}> <Syringe size={18}/> الصحة </button> </div>
-                      <div className="max-h-[50vh] overflow-y-auto px-1 space-y-6">
-                          {activeLogTab === 'feed' ? (
-                              <div className="space-y-6 pb-4">
-                                  <CollapsibleSection title="مركزات الطاقة والبروتين" icon="🌽">
-                                      <ItemCard icon="🌽" name="ذرة صفراء مجروشة" unit="كجم" value={feedItems["ذرة صفراء"] || 0} onChange={(v) => handleUpdateFeed("ذرة صفراء", v)} />
-                                      <ItemCard icon="🌾" name="شعير" unit="كجم" value={feedItems["شعير"] || 0} onChange={(v) => handleUpdateFeed("شعير", v)} />
-                                      <ItemCard icon="🌱" name="فول صويا (كُسب)" unit="كجم" value={feedItems["فول صويا"] || 0} onChange={(v) => handleUpdateFeed("فول صويا", v)} />
-                                      <ItemCard icon="🍚" name="ردة (نخالة)" unit="كجم" value={feedItems["ردة"] || 0} onChange={(v) => handleUpdateFeed("ردة", v)} />
-                                      <ItemCard icon="🍂" name="نخالة قمح (خشنة)" unit="كجم" value={feedItems["نخالة قمح"] || 0} onChange={(v) => handleUpdateFeed("نخالة قمح", v)} />
-                                      <ItemCard icon="⚫" name="بذور قطن" unit="كجم" value={feedItems["بذور قطن"] || 0} onChange={(v) => handleUpdateFeed("بذور قطن", v)} />
-                                      <ItemCard icon="🏭" name="علف مركز (جاهز)" unit="كجم" value={feedItems["علف مركز"] || 0} onChange={(v) => handleUpdateFeed("علف مركز", v)} />
-                                  </CollapsibleSection>
-                                  <CollapsibleSection title="الأعلاف الخشنة والخضراء" icon="🌿">
-                                      <ItemCard icon="🌿" name="علف أخضر برسيم" unit="كجم" value={feedItems["برسيم"] || 0} onChange={(v) => handleUpdateFeed("برسيم", v)} />
-                                      <ItemCard icon="🌽📦" name="علف أخضر سيلاج ذرة" unit="طن" value={feedItems["سيلاج"] || 0} onChange={(v) => handleUpdateFeed("سيلاج", v)} />
-                                      <ItemCard icon="🌾🟫" name="علف خشن دريس" unit="كجم" value={feedItems["دريس"] || 0} onChange={(v) => handleUpdateFeed("دريس", v)} />
-                                      <ItemCard icon="🌾🟡" name="تبن قمح" unit="كجم" value={feedItems["تبن"] || 0} onChange={(v) => handleUpdateFeed("تبن", v)} />
-                                      <ItemCard icon="🌾⚪" name="قش أرز" unit="كجم" value={feedItems["قش"] || 0} onChange={(v) => handleUpdateFeed("قش", v)} />
-                                  </CollapsibleSection>
-                                  <CollapsibleSection title="الإضافات والمياه" icon="🧂">
-                                      <ItemCard icon="🧂" name="ملح طعام" unit="كجم" value={feedItems["ملح"] || 0} onChange={(v) => handleUpdateFeed("ملح", v)} />
-                                      <ItemCard icon="🦴" name="كالسيوم (حجر جيري)" unit="كجم" value={feedItems["كالسيوم"] || 0} onChange={(v) => handleUpdateFeed("كالسيوم", v)} />
-                                      <ItemCard icon="🧪" name="بيكاربونات صوديوم" unit="كجم" value={feedItems["بيكاربونات"] || 0} onChange={(v) => handleUpdateFeed("بيكاربونات", v)} />
-                                      <ItemCard icon="🍞" name="خميرة حية" unit="جرام" value={feedItems["خميرة"] || 0} onChange={(v) => handleUpdateFeed("خميرة", v)} />
-                                      <ItemCard icon="💎" name="أملاح معدنية" unit="كجم" value={feedItems["أملاح"] || 0} onChange={(v) => handleUpdateFeed("أملاح", v)} />
-                                      <ItemCard icon="🍊" name="فيتامينات (AD3E)" unit="لتر" value={feedItems["فيتامينات"] || 0} onChange={(v) => handleUpdateFeed("فيتامينات", v)} />
-                                      <ItemCard icon="💧" name="مياه الشرب" unit="لتر" value={feedItems["مياه"] || 0} onChange={(v) => handleUpdateFeed("مياه", v)} />
-                                  </CollapsibleSection>
-                              </div>
-                          ) : (
-                              <div className="space-y-6 pb-4">
-                                  <div className="space-y-3">
-                                      <h4 className="font-bold text-black flex items-center gap-2 px-1 text-sm"> <ShieldCheck size={18} className="text-blue-500"/> التحصينات الدورية </h4>
-                                      <VetCard icon="🦠" name="حمى قلاعية (FMD)" type="vaccine" onApply={() => handleApplyVet("حمى قلاعية", "vaccine")} />
-                                      <VetCard icon="🦟" name="حمى الوادى المتصدع" type="vaccine" onApply={() => handleApplyVet("حمى الوادى المتصدع", "vaccine")} />
-                                      <VetCard icon="🐮🔴" name="جلد عقدى (LSD)" type="vaccine" onApply={() => handleApplyVet("جلد عقدى", "vaccine")} />
-                                      <VetCard icon="🩸💀" name="تسمم دموى" type="vaccine" onApply={() => handleApplyVet("تسمم دموى", "vaccine")} />
-                                  </div>
-                                  <div className="space-y-3">
-                                      <h4 className="font-bold text-black flex items-center gap-2 px-1 text-sm"> <Stethoscope size={18} className="text-orange-500"/> العلاجات والطوارئ </h4>
-                                      <VetCard icon="🫁" name="التهاب رئوى (علاج)" type="treatment" onApply={() => handleApplyVet("التهاب رئوى", "treatment")} />
-                                      <VetCard icon="🪱" name="مضاد للديدان" type="treatment" onApply={() => handleApplyVet("مضاد للديدان", "treatment")} />
-                                      <VetCard icon="🕷️" name="قراد (رش/تغطيس)" type="treatment" onApply={() => handleApplyVet("مكافحة طفيليات خارجية", "treatment")} />
-                                      <VetCard icon="🐕" name="جرب (حقن/دهان)" type="treatment" onApply={() => handleApplyVet("علاج جرب", "treatment")} />
-                                      <VetCard icon="🛢️" name="زيت برافين (للانتفاخ)" type="treatment" onApply={() => handleApplyVet("زيت برافين", "treatment")} />
-                                      <VetCard icon="🥤⚡" name="محلول جفاف" type="treatment" onApply={() => handleApplyVet("محلول جفاف", "treatment")} />
-                                  </div>
-                              </div>
-                          )}
-                      </div>
-                      <div className="space-y-4 pt-4 border-t border-gray-100"> <div> <label className="block text-xs font-bold text-gray-500 mb-2">ملاحظات إضافية</label> <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none h-20 resize-none text-black" placeholder="أي تفاصيل أخرى تود ذكرها عن حالة الحيوانات اليوم..." /> </div> <Button onClick={handleAddLog} className="w-full py-4 text-lg shadow-xl shadow-primary/20" disabled={Object.values(feedItems).every(v => v === 0) && vetItems.length === 0 && !currentWeight}> حفظ وإرسال التقرير </Button> </div>
+              <Modal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} title="تحديث يومي">
+                  <div className="space-y-4">
+                      <Input label="الوزن الحالي (كجم)" type="number" value={currentWeight} onChange={(e) => setCurrentWeight(e.target.value)} />
+                      <textarea placeholder="ملاحظات..." value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full p-3 border rounded-xl h-24 text-black"></textarea>
+                      <Button onClick={handleAddLog} className="w-full">حفظ</Button>
                   </div>
               </Modal>
           </div>
@@ -762,17 +616,20 @@ const BreederActiveCycles: React.FC<{
 
   return (
       <div className="space-y-6">
-          <h2 className="text-xl font-bold mb-4 text-black">الدورات النشطة (متابعة يومية)</h2>
+          <h2 className="text-xl font-bold mb-4 text-black">الدورات النشطة (متابعة)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeCycles.map(cycle => {
-                  const latestLog = logs.filter(l => l.cycleId === cycle.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-                  return (
-                      <Card key={cycle.id} className="p-4 flex flex-col gap-4 hover:shadow-lg transition-all border-transparent hover:border-primary/10">
-                          <div className="flex items-start gap-4"> <img src={cycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover bg-gray-100 shadow-sm" /> <div className="flex-1"> <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> <p className="text-xs text-gray-400 mb-2 flex items-center gap-1"><Clock size={12}/> البدء: {cycle.startDate}</p> <div className="flex gap-2"> <Badge color="green">نشطة</Badge> <Badge color="blue">{latestLog?.weight || cycle.initialWeight} كجم</Badge> </div> </div> </div>
-                          <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center"> <span className="text-[10px] text-gray-400 font-bold uppercase"> {latestLog ? `آخر تحديث: ${latestLog.date}` : 'بانتظار التحديث الأول'} </span> <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">عرض ومتابعة</Button> </div>
-                      </Card>
-                  )
-              })}
+              {activeCycles.map(cycle => (
+                  <Card key={cycle.id} className="p-4 flex flex-col gap-4">
+                      <div className="flex items-start gap-4"> 
+                        <img src={cycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover" /> 
+                        <div className="flex-1"> 
+                          <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
+                          <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">متابعة الدورة</Button>
+                        </div> 
+                      </div>
+                  </Card>
+              ))}
+              {activeCycles.length === 0 && <p className="text-gray-500 text-center py-10">لا توجد دورات نشطة حالياً. الدورات تظهر هنا بعد اكتمال تمويلها وتنشيطها من الإدارة.</p>}
           </div>
       </div>
   );
@@ -781,112 +638,44 @@ const BreederActiveCycles: React.FC<{
 const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; }> = ({ user, cycles, setCycles }) => {
   const myCycles = cycles.filter(c => c.breederId === user.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ animalType: '', initialWeight: 0, targetWeight: 0, fundingGoal: 0, expectedDuration: 180, description: '' });
-  const [animalImage, setAnimalImage] = useState<string | null>(null);
-  const [error, setError] = useState<string>('');
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAnimalImage(reader.result as string);
-        setError('');
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ animalType: '', fundingGoal: 0, expectedDuration: 180, description: '' });
 
   const handleAddCycle = () => {
-    if (!newCycle.animalType || !newCycle.fundingGoal || !newCycle.expectedDuration || newCycle.expectedDuration <= 0) {
-      setError('يرجى ملء جميع الحقول المطلوبة بشكل صحيح.');
-      return;
-    }
-    if (!animalImage) {
-      setError('يجب رفع صورة للحيوان لإتمام إنشاء الدورة.');
-      return;
-    }
     const cycle: Cycle = { 
       id: Math.random().toString(36).substr(2, 9), 
       breederId: user.id, 
       status: CycleStatus.PENDING, 
       startDate: new Date().toISOString().split('T')[0], 
-      totalHeads: 1, 
-      availableHeads: 1, 
-      currentFunding: 0, 
-      imageUrl: animalImage, 
-      healthCertUrl: "#", 
-      startPricePerHead: 0, 
+      totalHeads: 1, availableHeads: 1, currentFunding: 0, 
+      imageUrl: 'https://images.unsplash.com/photo-1546445317-29f4545e9d53?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80', 
+      healthCertUrl: "#", startPricePerHead: 0, initialWeight: 200, targetWeight: 450,
       ...newCycle as any 
     };
     setCycles([...cycles, cycle]); 
     setIsModalOpen(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setNewCycle({ animalType: '', initialWeight: 0, targetWeight: 0, fundingGoal: 0, expectedDuration: 180, description: '' });
-    setAnimalImage(null);
-    setError('');
   };
 
   return (
     <div className="space-y-6">
-        <div className="flex justify-between items-center"> <h2 className="text-xl font-bold text-black">دوراتي الإنتاجية</h2> <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button> </div>
+        <div className="flex justify-between items-center"> <h2 className="text-xl font-bold text-black">دوراتي</h2> <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button> </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCycles.map(cycle => (
                 <Card key={cycle.id} className="overflow-hidden">
-                    <div className="h-40 bg-gray-200 relative"> <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover" /> <div className="absolute top-2 right-2"> <StatusBadge status={cycle.status} type="cycle" /> </div> </div>
-                    <div className="p-4"> <h3 className="font-bold text-lg mb-1 text-black">{cycle.animalType}</h3> <p className="text-sm text-gray-500 mb-3 line-clamp-2">{cycle.description}</p> <div className="flex justify-between text-sm mb-2"> <span className="text-black opacity-60">التمويل المطلوب:</span> <span className="font-bold text-black">{cycle.fundingGoal.toLocaleString()} ج.م</span> </div> <div className="flex justify-between text-sm mb-2"> <span className="text-black opacity-60">الوزن الحالي:</span> <span className="font-bold text-black">{cycle.initialWeight} كجم</span> </div> <div className="flex justify-between text-sm"> <span className="text-black opacity-60">المدة:</span> <span className="font-bold text-black">{cycle.expectedDuration} يوم</span> </div> </div>
+                    <img src={cycle.imageUrl} className="w-full h-40 object-cover" />
+                    <div className="p-4"> 
+                      <h3 className="font-bold text-black">{cycle.animalType}</h3> 
+                      <div className="flex justify-between text-xs mt-2"> <span>التمويل المطلوب:</span> <b>{cycle.fundingGoal.toLocaleString()} ج.م</b> </div>
+                      <div className="mt-2"><StatusBadge status={cycle.status} type="cycle" /></div>
+                    </div>
                 </Card>
             ))}
         </div>
-        <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); resetForm(); }} title="إضافة دورة جديدة">
-            <div className="space-y-4 text-black">
-                <Input label="نوع الحيوان" value={newCycle.animalType} onChange={(e) => { setNewCycle({...newCycle, animalType: e.target.value}); setError(''); }} placeholder="مثال: عجل تسمين بلدي" />
-                
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">صورة الحيوان (إجباري)</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors relative">
-                      <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageChange} />
-                      {animalImage ? (
-                          <div className="relative h-48 w-full">
-                              <img src={animalImage} alt="Animal" className="h-full w-full object-contain mx-auto" />
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs opacity-0 hover:opacity-100 transition-opacity rounded-lg">تغيير الصورة</div>
-                          </div>
-                      ) : (
-                          <div className="flex flex-col items-center justify-center text-gray-500 py-4">
-                              <Camera size={40} className="mb-2 opacity-50" />
-                              <span className="text-sm font-medium">اضغط لرفع صورة الحيوان</span>
-                              <span className="text-[10px] opacity-70 mt-1">يجب أن تكون الصورة واضحة للحيوان</span>
-                          </div>
-                      )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4"> 
-                  <Input label="الوزن الحالي (كجم)" type="number" value={newCycle.initialWeight || ''} onChange={(e) => setNewCycle({...newCycle, initialWeight: Number(e.target.value)})} /> 
-                  <Input label="الوزن المستهدف (كجم)" type="number" value={newCycle.targetWeight || ''} onChange={(e) => setNewCycle({...newCycle, targetWeight: Number(e.target.value)})} /> 
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <Input label="مبلغ التمويل المطلوب (ج.م)" type="number" value={newCycle.fundingGoal || ''} onChange={(e) => { setNewCycle({...newCycle, fundingGoal: Number(e.target.value)}); setError(''); }} />
-                  <Input label="مدة الدورة (بالأيام)" type="number" value={newCycle.expectedDuration || ''} onChange={(e) => { setNewCycle({...newCycle, expectedDuration: Number(e.target.value)}); setError(''); }} />
-                </div>
-                
-                <div>
-                   <label className="block text-sm font-medium text-black mb-1">الوصف</label>
-                   <textarea 
-                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none min-h-[80px] text-sm"
-                     value={newCycle.description} 
-                     onChange={(e) => setNewCycle({...newCycle, description: e.target.value})}
-                     placeholder="أدخل تفاصيل الدورة، نوع العلف، السلالة، الخ..."
-                   />
-                </div>
-
-                {error && <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-xs font-bold flex items-center gap-2"> <AlertTriangle size={14}/> {error} </div>}
-                
-                <Button className="w-full mt-2" onClick={handleAddCycle}>حفظ وإرسال للمراجعة</Button>
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة جديدة">
+            <div className="space-y-4">
+                <Input label="نوع الحيوان" value={newCycle.animalType} onChange={(e) => setNewCycle({...newCycle, animalType: e.target.value})} />
+                <Input label="مبلغ التمويل المطلوب (ج.م)" type="number" value={newCycle.fundingGoal} onChange={(e) => setNewCycle({...newCycle, fundingGoal: Number(e.target.value)})} />
+                <Input label="مدة الدورة (بالأيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
+                <Button className="w-full" onClick={handleAddCycle}>حفظ وإرسال للمراجعة</Button>
             </div>
         </Modal>
     </div>
@@ -901,30 +690,15 @@ const InvestorPortfolio: React.FC<{
 }> = ({ user, cycles, investments, logs }) => {
     const [selectedCycleForLogs, setSelectedCycleForLogs] = useState<Cycle | null>(null);
     const myInvestments = investments.filter(inv => inv.investorId === user.id);
-    const totalInvested = myInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-    const activeInvestmentCount = myInvestments.filter(inv => {
-        const cycle = cycles.find(c => c.id === inv.cycleId);
-        return cycle && cycle.status === CycleStatus.ACTIVE;
-    }).length;
 
     if (selectedCycleForLogs) {
         const cycleLogs = logs.filter(l => l.cycleId === selectedCycleForLogs.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         return (
             <div className="space-y-6">
-                <button onClick={() => setSelectedCycleForLogs(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع للمحفظة </button>
-                <Card className="p-6 bg-white flex flex-col md:flex-row gap-6 items-center">
-                    <img src={selectedCycleForLogs.imageUrl} className="w-24 h-24 rounded-xl object-cover" />
-                    <div className="flex-1 text-center md:text-right">
-                        <h2 className="text-2xl font-bold text-black">{selectedCycleForLogs.animalType}</h2>
-                        <p className="text-gray-500">متابعة يومية شفافة لاستثمارك</p>
-                    </div>
-                </Card>
+                <button onClick={() => setSelectedCycleForLogs(null)} className="flex items-center gap-2 text-black opacity-60"> <ArrowRight size={20}/> رجوع </button>
+                <h2 className="text-2xl font-bold text-black">{selectedCycleForLogs.animalType}</h2>
                 <div className="space-y-4">
-                    <h3 className="font-bold text-lg text-black flex items-center gap-2"> <Activity size={20} className="text-primary"/> سجل المتابعة المباشر </h3>
-                    <div className="space-y-2">
-                        {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
-                        {cycleLogs.length === 0 && <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400"> <Clock size={40} className="mx-auto mb-3 opacity-20"/> <p>بانتظار التقارير الأولى من المربي.</p> </div>}
-                    </div>
+                    {cycleLogs.map(log => <DailyLogTimelineItem key={log.id} log={log} />)}
                 </div>
             </div>
         );
@@ -932,183 +706,95 @@ const InvestorPortfolio: React.FC<{
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-4 flex items-center gap-4 bg-blue-50 border-blue-100"> <div className="p-3 bg-blue-100 text-blue-600 rounded-full"><Wallet size={24}/></div> <div> <p className="text-sm text-gray-500">إجمالي الاستثمارات</p> <p className="text-xl font-bold text-blue-700">{totalInvested.toLocaleString()} ج.م</p> </div> </Card>
-                <Card className="p-4 flex items-center gap-4 bg-green-50 border-green-100"> <div className="p-3 bg-green-100 text-green-600 rounded-full"><Activity size={24}/></div> <div> <p className="text-sm text-gray-500">دورات نشطة</p> <p className="text-xl font-bold text-blue-700">{activeInvestmentCount}</p> </div> </Card>
-                <Card className="p-4 flex items-center gap-4 bg-purple-50 border-purple-100"> <div className="p-3 bg-purple-100 text-purple-600 rounded-full"><CheckCircle size={24}/></div> <div> <p className="text-sm text-gray-500">دورات مكتملة</p> <p className="text-xl font-bold text-purple-700">{myInvestments.length - activeInvestmentCount}</p> </div> </Card>
-            </div>
-            <h2 className="text-xl font-bold text-black">استثماراتي</h2>
+            <h2 className="text-xl font-bold text-black">محفظتي الاستثمارية</h2>
             <div className="space-y-4">
                 {myInvestments.map(inv => {
                     const cycle = cycles.find(c => c.id === inv.cycleId);
                     if (!cycle) return null;
-                    const isCompleted = cycle.status === CycleStatus.COMPLETED;
-                    let profit = 0; let roi = 0;
-                    // Fix: Added explicit cast to number for cycle.finalSalePrice to resolve 'unknown' comparison error
-                    if (isCompleted && typeof cycle.finalSalePrice === 'number' && (cycle.finalSalePrice as number) > 0) {
-                        const shareRatio = inv.amount / cycle.fundingGoal;
-                        const finalValue = cycle.finalSalePrice * shareRatio;
-                        profit = finalValue - inv.amount; roi = (profit / inv.amount) * 100;
-                    }
                     return (
-                        <Card key={inv.id} className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center">
-                            <img src={cycle.imageUrl} className="w-full md:w-32 h-32 object-cover rounded-lg" alt="" />
-                            <div className="flex-1 space-y-2 w-full">
-                                <div className="flex justify-between items-start"> <div> <h3 className="font-bold text-lg text-black">{cycle.animalType}</h3> <p className="text-xs text-gray-500 flex items-center gap-1"> <Clock size={12}/> تاريخ الاستثمار: {new Date(inv.date).toLocaleDateString('ar-EG')} </p> </div> <div className="flex flex-col items-end gap-1"> <StatusBadge status={inv.status} /> {inv.hasAnimalInsurance && <Badge color="green"> <div className="flex items-center gap-1"> <Shield size={10}/> مؤمن </div> </Badge>} </div> </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-3 rounded-lg text-sm">
-                                    <div> <span className="block text-gray-500 text-xs">مبلغ الاستثمار</span> <span className="font-bold text-black">{inv.amount.toLocaleString()} ج.م</span> </div>
-                                    <div> <span className="block text-gray-500 text-xs">تاريخ البدء</span> <span className="font-medium text-black">{cycle.startDate}</span> </div>
-                                    {isCompleted ? (
-                                        <> <div> <span className="block text-gray-500 text-xs">العائد النهائي</span> <span className="font-bold text-green-700">{(inv.amount + profit).toLocaleString()} ج.م</span> </div> <div> <span className="block text-gray-500 text-xs">صافي الربح</span> <span className="font-bold text-green-600"> +{profit.toLocaleString()} <span className="text-xs">({roi.toFixed(1)}%)</span> </span> </div> </>
-                                    ) : ( <div className="col-span-1"> <span className="block text-gray-500 text-xs mb-1">الحالة</span> <span className="text-primary font-bold">جاري التسمين</span> </div> )}
-                                    {!isCompleted && inv.status === 'APPROVED' && (
-                                        <div className="flex items-end justify-end">
-                                            <Button size="sm" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white" onClick={() => setSelectedCycleForLogs(cycle)}>
-                                                <Eye size={14} /> سجل المتابعة
-                                            </Button>
-                                        </div>
-                                    )}
+                        <Card key={inv.id} className="p-4 flex gap-4 items-center">
+                            <img src={cycle.imageUrl} className="w-20 h-20 object-cover rounded-lg" />
+                            <div className="flex-1">
+                                <h3 className="font-bold text-black">{cycle.animalType}</h3>
+                                <p className="text-xs text-gray-500">مبلغ الاستثمار: {inv.amount.toLocaleString()} ج.م</p>
+                                <div className="mt-2 flex gap-2">
+                                  <StatusBadge status={inv.status} />
+                                  {inv.status === 'APPROVED' && cycle.status === CycleStatus.ACTIVE && (
+                                    <Button size="sm" variant="outline" onClick={() => setSelectedCycleForLogs(cycle)}>متابعة</Button>
+                                  )}
                                 </div>
                             </div>
                         </Card>
                     );
                 })}
-                {myInvestments.length === 0 && <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300"> <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-3"> <Sprout size={32} /> </div> <h3 className="text-lg font-bold text-black">لم تقم بأي استثمار بعد</h3> <p className="text-gray-500 mb-4">ابدأ استثمارك الأول في الثروة الحيوانية الآن.</p> </div>}
             </div>
         </div>
     );
 };
 
-const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; investments: Investment[]; setInvestments: (inv: Investment[]) => void; onInvestSuccess: () => void; }> = ({ user, cycles, setCycles, investments, setInvestments, onInvestSuccess }) => {
+const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; investments: Investment[]; setInvestments: (inv: Investment[]) => void; }> = ({ user, cycles, setCycles, investments, setInvestments }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    // Investors can see PENDING cycles to fund them
     const availableCycles = cycles.filter(c => 
-      c.status === CycleStatus.ACTIVE && 
+      c.status === CycleStatus.PENDING && 
       c.currentFunding < c.fundingGoal &&
       (c.animalType.toLowerCase().includes(searchQuery.toLowerCase()) || 
        c.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+    
     const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
     const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(null);
     const [investAmount, setInvestAmount] = useState<string>('');
-    const [error, setError] = useState<string>('');
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
-    const handleOpenInvestModal = (cycle: Cycle) => { setSelectedCycle(cycle); setInvestAmount(''); setError(''); setReceiptImage(null); setIsInvestModalOpen(true); };
+
+    const handleOpenInvestModal = (cycle: Cycle) => { setSelectedCycle(cycle); setInvestAmount(''); setReceiptImage(null); setIsInvestModalOpen(true); };
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files && e.target.files[0]) { const file = e.target.files[0]; const reader = new FileReader(); reader.onloadend = () => { setReceiptImage(reader.result as string); }; reader.readAsDataURL(file); } };
+    
     const handleConfirmInvest = () => {
         if (!selectedCycle) return;
         const amount = parseFloat(investAmount);
-        const remainingNeeded = selectedCycle.fundingGoal - selectedCycle.currentFunding;
-        if (isNaN(amount) || amount <= 0) { setError("يرجى إدخل مبلغ صحيح أكبر من صفر."); return; }
-        if (amount > remainingNeeded) { setError(`المبلغ المدخل يتجاوز المبلغ المتبقي المطلوب (${remainingNeeded.toLocaleString()} ج.م)`); return; }
-        if (!receiptImage) { setError("يرجى إرفاق صورة إيصال التحويل البنكي."); return; }
-        const newInv: Investment = { id: Math.random().toString(), investorId: user.id, cycleId: selectedCycle.id, amount: amount, date: new Date().toISOString(), status: 'PENDING_APPROVAL', headsCount: 1, contractCodes: ['DEMO-CONTRACT'], transferReceiptUrl: receiptImage };
+        const newInv: Investment = { id: Math.random().toString(), investorId: user.id, cycleId: selectedCycle.id, amount, date: new Date().toISOString(), status: 'PENDING_APPROVAL', headsCount: 1, contractCodes: ['DW-DEMO'], transferReceiptUrl: receiptImage || undefined };
         setInvestments([...investments, newInv]);
-        // Do not update cycle funding until admin approves
-        setIsInvestModalOpen(false); setSelectedCycle(null); setInvestAmount(''); setReceiptImage(null);
-        alert("تم إرسال طلب الاستثمار بنجاح! سيظهر في محفظتك بعد تأكيد المسؤول للتحويل."); onInvestSuccess();
+        setIsInvestModalOpen(false);
+        alert("تم إرسال طلب الاستثمار بنجاح! سيظهر في محفظتك بعد تأكيد المسؤول.");
     };
+
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-xl font-bold text-black">فرص الاستثمار المتاحة</h2>
                 <div className="relative w-full md:w-80">
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <Search size={18} className="text-gray-400" />
-                    </div>
-                    <input 
-                      type="text" 
-                      placeholder="ابحث عن دورة (عجول، خراف...)" 
-                      className="w-full pr-10 pl-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent focus:outline-none text-sm text-black"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center"> <Search size={18} className="text-gray-400" /> </div>
+                    <input type="text" placeholder="ابحث..." className="w-full pr-10 pl-4 py-2 border rounded-xl text-black" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 </div>
             </div>
-            
-            {availableCycles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {availableCycles.map(cycle => (
-                        <CycleCard 
-                          key={cycle.id} 
-                          cycle={cycle} 
-                          onInvest={() => handleOpenInvestModal(cycle)}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-                    <Search size={48} className="mx-auto text-gray-200 mb-4" />
-                    <p className="text-gray-500 font-medium">لا توجد دورات متاحة تطابق بحثك حالياً.</p>
-                    {searchQuery && <button onClick={() => setSearchQuery('')} className="mt-2 text-primary font-bold hover:underline">إلغاء البحث</button>}
-                </div>
-            )}
-            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {availableCycles.map(cycle => (
+                    <Card key={cycle.id} className="overflow-hidden">
+                        <img src={cycle.imageUrl} className="h-40 w-full object-cover" />
+                        <div className="p-4 space-y-3">
+                            <h3 className="font-bold text-black">{cycle.animalType}</h3>
+                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                              <div className="bg-primary h-full" style={{ width: `${(cycle.currentFunding/cycle.fundingGoal)*100}%` }}></div>
+                            </div>
+                            <div className="flex justify-between text-xs"> <span>المجمع: {cycle.currentFunding.toLocaleString()}</span> <span>الهدف: {cycle.fundingGoal.toLocaleString()}</span> </div>
+                            <Button className="w-full" onClick={() => handleOpenInvestModal(cycle)}>استثمر الآن</Button>
+                        </div>
+                    </Card>
+                ))}
+            </div>
             <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="استثمار جديد">
-                <div className="space-y-4 text-black">
-                    {selectedCycle && ( <> <div className="bg-gray-50 p-4 rounded-lg text-sm mb-2 space-y-2"> <div className="flex justify-between"> <span className="opacity-60">الدورة:</span> <span className="font-bold">{selectedCycle.animalType}</span> </div> <div className="flex justify-between"> <span className="opacity-60">التمويل المطلوب:</span> <span>{selectedCycle.fundingGoal.toLocaleString()} ج.م</span> </div> <div className="flex justify-between text-primary font-bold"> <span>المبلغ المتبقي:</span> <span>{(selectedCycle.fundingGoal - selectedCycle.currentFunding).toLocaleString()} ج.م</span> </div> </div> <div className="space-y-2"> <label className="block text-sm font-medium">مبلغ الاستثمار (ج.م)</label> <div className="flex gap-2"> <input type="number" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none text-black" value={investAmount} onChange={(e) => { setInvestAmount(e.target.value); setError(''); }} placeholder="أدخل المبلغ" /> <button className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors" onClick={() => setInvestAmount((selectedCycle.fundingGoal - selectedCycle.currentFunding).toString())}> كامل المبلغ </button> </div> </div> <div className="space-y-2"> <label className="block text-sm font-medium">صورة إيصال التحويل</label> <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors relative"> <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageChange} /> {receiptImage ? ( <div className="relative h-32 w-full"> <img src={receiptImage} alt="Receipt" className="h-full w-full object-contain mx-auto" /> <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs opacity-0 hover:opacity-100 transition-opacity rounded-lg">تغيير الصورة</div> </div> ) : ( <div className="flex flex-col items-center justify-center text-gray-500"> <Upload size={24} className="mb-2" /> <span className="text-xs">اضغط لرفع صورة الإيصال</span> </div> )} </div> </div> {error && <p className="text-red-500 text-xs mt-1 font-bold">{error}</p>} <Button className="w-full mt-4" onClick={handleConfirmInvest}>تأكيد ودفع</Button> </> )}
+                <div className="space-y-4">
+                    <Input label="مبلغ الاستثمار (ج.م)" type="number" value={investAmount} onChange={(e) => setInvestAmount(e.target.value)} />
+                    <div className="border-2 border-dashed p-4 text-center rounded-xl">
+                      <input type="file" onChange={handleImageChange} className="hidden" id="receipt-upload" />
+                      <label htmlFor="receipt-upload" className="cursor-pointer text-gray-500"> {receiptImage ? <img src={receiptImage} className="h-20 mx-auto" /> : "اضغط لرفع إيصال التحويل"} </label>
+                    </div>
+                    <Button className="w-full" onClick={handleConfirmInvest}>تأكيد</Button>
                 </div>
             </Modal>
         </div>
     );
-};
-
-const CycleCard = ({ cycle, onInvest }: { cycle: Cycle, onInvest: () => void }) => {
-  const percentage = Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100);
-  
-  return (
-    <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-      <div className="relative h-48">
-        <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover" />
-        <div className="absolute top-2 right-2">
-          <StatusBadge status={cycle.status} />
-        </div>
-        {cycle.insurancePolicyNumber && (
-          <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-[10px] px-2 py-1 rounded flex items-center gap-1 shadow-sm">
-            <ShieldCheck size={12} /> مؤمن + تحصينات
-          </div>
-        )}
-      </div>
-      
-      <div className="p-4 flex-1 flex flex-col">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-bold text-gray-800">{cycle.animalType}</h3>
-          <span className="text-xs bg-gray-100 px-2 py-1 rounded">{cycle.initialWeight} كجم</span>
-        </div>
-        
-        <p className="text-xs text-gray-500 mb-4 line-clamp-2">{cycle.description}</p>
-        
-        <div className="mt-auto">
-          {/* Progress Section Redesign */}
-          <div className="flex justify-between items-center mb-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
-             <span className="text-gray-500 text-sm font-bold">تمويل:</span>
-             <span className="text-xl font-black text-primary">{percentage}%</span>
-          </div>
-
-          <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-1" dir="rtl">
-             <div 
-               className="h-full bg-primary transition-all duration-1000 ease-out relative"
-               style={{ width: `${percentage}%` }}
-             >
-                {/* Shine effect */}
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/20 to-transparent"></div>
-             </div>
-          </div>
-          
-          <div className="flex justify-between text-[10px] text-gray-400 font-medium mb-4">
-             <span>المجمع: {cycle.currentFunding.toLocaleString('ar-EG')}</span>
-             <span>الهدف: {cycle.fundingGoal.toLocaleString('ar-EG')}</span>
-          </div>
-          
-          <div className="flex justify-between items-center text-xs text-gray-400 mb-3 border-t pt-2">
-             <span className="flex items-center gap-1"><Calendar size={12}/> البدء: {new Date(cycle.startDate).toLocaleDateString('ar-EG')}</span>
-             <span className="flex items-center gap-1"><Clock size={12}/> {cycle.expectedDuration} يوم</span>
-          </div>
-
-          <Button className="w-full" onClick={onInvest}>استثمر الآن</Button>
-        </div>
-      </div>
-    </Card>
-  );
 };
 
 // --- Main App Component ---
@@ -1122,46 +808,37 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const renderContent = () => {
-    if (activeTab === 'settings' || activeTab === 'profile') {
-        return <ProfileView user={currentUser!} onUpdate={(u) => { setUsers(users.map(user => user.id === u.id ? u : user)); setCurrentUser(u); }} />;
-    }
-    if (activeTab === 'investments') {
-        return <InvestorPortfolio user={currentUser!} cycles={cycles} investments={investments} logs={logs} />;
-    }
-    if (activeTab === 'active_cycles') {
-        return <BreederActiveCycles user={currentUser!} cycles={cycles} logs={logs} setLogs={setLogs} />;
-    }
+    if (activeTab === 'profile') return <ProfileView user={currentUser!} onUpdate={(u) => { setUsers(users.map(user => user.id === u.id ? u : user)); setCurrentUser(u); }} />;
+    if (activeTab === 'investments') return <InvestorPortfolio user={currentUser!} cycles={cycles} investments={investments} logs={logs} />;
+    if (activeTab === 'active_cycles') return <BreederActiveCycles user={currentUser!} cycles={cycles} logs={logs} setLogs={setLogs} />;
+    
     switch (currentUser?.role) {
         case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
         case UserRole.BREEDER: return <BreederDashboard user={currentUser} cycles={cycles} setCycles={setCycles} />;
-        case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} onInvestSuccess={() => setActiveTab('investments')} />;
-        default: return <div>Unknown Role</div>;
+        case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
+        default: return null;
     }
   };
 
-  if (!currentUser) { return <LoginScreen onLogin={setCurrentUser} users={users} setUsers={setUsers} />; }
+  if (!currentUser) return <LoginScreen onLogin={setCurrentUser} users={users} setUsers={setUsers} />;
 
   return (
     <div className="min-h-screen bg-gray-50 flex" dir="rtl">
-        {isMobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>}
-        <aside className={`fixed md:sticky top-0 right-0 h-screen w-64 bg-white border-l border-gray-200 z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3"> <img src={APP_LOGO} onError={handleLogoError} alt="Logo" className="w-8 h-8 object-contain" /> <h1 className="text-xl font-bold text-black">دواب</h1> </div>
-                <button className="md:hidden text-gray-500" onClick={() => setIsMobileMenuOpen(false)}> <X size={24} /> </button>
+        <aside className={`fixed md:sticky top-0 right-0 h-screen w-64 bg-white border-l z-50 transition-transform ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+            <div className="p-6 border-b flex justify-between items-center">
+                <h1 className="text-xl font-bold text-black">منصة دواب</h1>
+                <button className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}><X size={20}/></button>
             </div>
             <div className="p-4 space-y-2">
                 <SidebarItem icon={LayoutDashboard} label="لوحة التحكم" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }} />
-                {currentUser?.role === UserRole.INVESTOR && <SidebarItem icon={PieChart} label="استثماراتي" active={activeTab === 'investments'} onClick={() => { setActiveTab('investments'); setIsMobileMenuOpen(false); }} />}
-                {currentUser?.role === UserRole.BREEDER && <SidebarItem icon={Activity} label="الدورات النشطة" active={activeTab === 'active_cycles'} onClick={() => { setActiveTab('active_cycles'); setIsMobileMenuOpen(false); }} />}
+                {currentUser.role === UserRole.INVESTOR && <SidebarItem icon={PieChart} label="محفظتي" active={activeTab === 'investments'} onClick={() => { setActiveTab('investments'); setIsMobileMenuOpen(false); }} />}
+                {currentUser.role === UserRole.BREEDER && <SidebarItem icon={Activity} label="الدورات النشطة" active={activeTab === 'active_cycles'} onClick={() => { setActiveTab('active_cycles'); setIsMobileMenuOpen(false); }} />}
                 <SidebarItem icon={UserCog} label="الملف الشخصي" active={activeTab === 'profile'} onClick={() => { setActiveTab('profile'); setIsMobileMenuOpen(false); }} />
-                <div className="pt-4 mt-4 border-t border-gray-100"> <button onClick={() => setCurrentUser(null)} className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"> <LogOut size={20} /> <span className="font-medium">تسجيل خروج</span> </button> </div>
+                <button onClick={() => setCurrentUser(null)} className="w-full flex gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl"> <LogOut size={20} /> <span>خروج</span> </button>
             </div>
         </aside>
-        <main className="flex-1 min-w-0">
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3 flex items-center justify-between md:hidden">
-                <button onClick={() => setIsMobileMenuOpen(true)} className="text-gray-600"> <Menu size={24} /> </button>
-                <span className="font-bold text-lg text-black">دواب</span> <div className="w-8"></div>
-            </header>
+        <main className="flex-1">
+            <header className="bg-white border-b p-4 md:hidden"> <button onClick={() => setIsMobileMenuOpen(true)}><Menu size={24} /></button> </header>
             <div className="p-4 md:p-8 max-w-7xl mx-auto">{renderContent()}</div>
         </main>
     </div>

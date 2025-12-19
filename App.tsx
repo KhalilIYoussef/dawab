@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, Sprout, LayoutDashboard, Wallet, TrendingUp, History, 
@@ -203,6 +204,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    password: '',
     role: UserRole.INVESTOR
   });
   const [error, setError] = useState('');
@@ -226,6 +228,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
     e.preventDefault();
     const user = users.find(u => u.phone === formData.phone);
     if (user) {
+      if (user.password && user.password !== formData.password) {
+          setError('كلمة المرور غير صحيحة.');
+          return;
+      }
       if (user.status === UserStatus.PENDING) {
         setError('الحساب قيد المراجعة. يرجى انتظار تفعيل الحساب من قبل الإدارة.');
         return;
@@ -242,7 +248,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, phone } = formData;
+    const { name, phone, password } = formData;
     if (users.some(u => u.phone === phone)) {
       setError('رقم الهاتف مسجل بالفعل.');
       return;
@@ -257,10 +263,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
        setError('رقم الهاتف غير صحيح: يجب أن يتكون من 11 رقم بالضبط.');
        return;
     }
+    if (password.length < 3) {
+       setError('كلمة المرور يجب أن تكون 3 أحرف على الأقل.');
+       return;
+    }
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
       name: name,
       phone: phone,
+      password: password,
       role: UserRole.INVESTOR,
       status: UserStatus.PENDING,
       documentsVerified: false,
@@ -269,7 +280,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
     setUsers([...users, newUser]);
     setIsRegistering(false);
     setSuccess('تم إنشاء الحساب بنجاح! حسابك الآن قيد المراجعة، سيقوم المسؤول بتفعيله قريباً.');
-    setFormData(prev => ({ ...prev, name: '' }));
+    setFormData(prev => ({ ...prev, name: '', password: '' }));
   };
 
   return (
@@ -295,6 +306,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
           <form onSubmit={isRegistering ? handleRegisterSubmit : handleLoginSubmit} className="space-y-4">
             {isRegistering && <Input label="الاسم بالكامل" name="name" value={formData.name} onChange={handleInputChange} placeholder="أحمد محمد" required />}
             <Input label="رقم الهاتف" name="phone" type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={11} value={formData.phone} onChange={handleInputChange} placeholder="01xxxxxxxxx" required />
+            <Input label="كلمة المرور" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="********" required />
             {error && (
                <div className="mb-2 p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm flex items-start gap-2">
                   <AlertTriangle size={16} className="shrink-0 mt-0.5" />
@@ -397,17 +409,19 @@ const ProfileView: React.FC<{
 
 const AdminDashboard: React.FC<{ 
     users: User[], setUsers: (u: User[]) => void, 
-    cycles: Cycle[], setCycles: (c: Cycle[]) => void 
-}> = ({ users, setUsers, cycles, setCycles }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'cycles'>('overview');
+    cycles: Cycle[], setCycles: (c: Cycle[]) => void,
+    investments: Investment[], setInvestments: (i: Investment[]) => void
+}> = ({ users, setUsers, cycles, setCycles, investments, setInvestments }) => {
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'cycles' | 'investments'>('overview');
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-    const [newUserForm, setNewUserForm] = useState({ name: '', phone: '', role: UserRole.INVESTOR });
+    const [newUserForm, setNewUserForm] = useState({ name: '', phone: '', password: '123', role: UserRole.INVESTOR });
     const [isSellModalOpen, setIsSellModalOpen] = useState(false);
     const [selectedCycleToSell, setSelectedCycleToSell] = useState<Cycle | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
 
     const pendingUsers = users.filter(u => u.status === UserStatus.PENDING);
     const pendingCycles = cycles.filter(c => c.status === CycleStatus.PENDING);
+    const pendingInvestments = investments.filter(i => i.status === 'PENDING_APPROVAL');
 
     const handleUserAction = (id: string, action: 'approve' | 'reject') => {
         setUsers(users.map(u => u.id === id ? { ...u, status: action === 'approve' ? UserStatus.ACTIVE : UserStatus.REJECTED } : u));
@@ -417,11 +431,25 @@ const AdminDashboard: React.FC<{
         setCycles(cycles.map(c => c.id === id ? { ...c, status: action === 'approve' ? CycleStatus.ACTIVE : CycleStatus.REJECTED } : c));
     };
 
+    const handleInvestmentAction = (id: string, action: 'approve' | 'reject', addInsurance: boolean) => {
+        setInvestments(investments.map(i => {
+            if (i.id === id) {
+                return { 
+                    ...i, 
+                    status: action === 'approve' ? 'APPROVED' : 'REJECTED',
+                    hasAnimalInsurance: addInsurance,
+                    animalInsuranceFee: addInsurance ? i.amount * INSURANCE_FEE_PERCENT : 0
+                };
+            }
+            return i;
+        }));
+    };
+
     const handleCreateUser = () => {
-        const newUser: User = { id: Math.random().toString(36).substr(2, 9), name: newUserForm.name, phone: newUserForm.phone, role: newUserForm.role, status: UserStatus.ACTIVE, documentsVerified: true };
+        const newUser: User = { id: Math.random().toString(36).substr(2, 9), name: newUserForm.name, phone: newUserForm.phone, password: newUserForm.password, role: newUserForm.role, status: UserStatus.ACTIVE, documentsVerified: true };
         setUsers([...users, newUser]);
         setIsAddUserModalOpen(false);
-        setNewUserForm({ name: '', phone: '', role: UserRole.INVESTOR });
+        setNewUserForm({ name: '', phone: '', password: '123', role: UserRole.INVESTOR });
     };
 
     const openSellModal = (cycle: Cycle) => {
@@ -444,42 +472,17 @@ const AdminDashboard: React.FC<{
     return (
         <div className="space-y-6">
             <div className="flex gap-4 border-b overflow-x-auto pb-2">
-                {['overview', 'users', 'cycles'].map(tab => (
+                {['overview', 'users', 'cycles', 'investments'].map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-4 py-2 font-medium whitespace-nowrap ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-black opacity-60'}`}>
-                        {tab === 'overview' ? 'نظرة عامة' : tab === 'users' ? 'المستخدمين' : 'الدورات'}
+                        {tab === 'overview' ? 'نظرة عامة' : tab === 'users' ? 'المستخدمين' : tab === 'cycles' ? 'الدورات' : 'الاستثمارات'}
                     </button>
                 ))}
             </div>
             {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatCard title="إجمالي المستخدمين" value={users.length} icon={Users} color="blue" />
-                    <StatCard title="طلبات التسجيل المعلقة" value={pendingUsers.length} icon={UserPlus} color="secondary" />
+                    <StatCard title="تحويلات بانتظار التأكيد" value={pendingInvestments.length} icon={Banknote} color="secondary" />
                     <StatCard title="الدورات النشطة" value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} icon={Activity} color="primary" />
-                    <div className="md:col-span-3">
-                        <h3 className="font-bold text-black mb-4">طلبات تتطلب اتخاذ إجراء</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card className="p-4">
-                                <h4 className="font-bold text-sm text-black opacity-70 mb-3 flex justify-between"> <span>مستخدمين جدد ({pendingUsers.length})</span> <span className="text-xs text-primary cursor-pointer" onClick={() => setActiveTab('users')}>عرض الكل</span> </h4>
-                                {pendingUsers.slice(0, 3).map(u => (
-                                    <div key={u.id} className="flex items-center justify-between p-3 border-b last:border-0">
-                                        <div className="flex items-center gap-3"> <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-black">{u.name[0]}</div> <div> <p className="text-sm font-bold text-black">{u.name}</p> <p className="text-xs text-gray-500">{u.role === UserRole.BREEDER ? 'مربي' : 'مستثمر'}</p> </div> </div>
-                                        <div className="flex gap-2"> <button onClick={() => handleUserAction(u.id, 'approve')} className="text-green-600 hover:bg-green-50 p-1 rounded"><Check size={18}/></button> <button onClick={() => handleUserAction(u.id, 'reject')} className="text-red-600 hover:bg-red-50 p-1 rounded"><X size={18}/></button> </div>
-                                    </div>
-                                ))}
-                                {pendingUsers.length === 0 && <p className="text-sm text-center py-4 text-black opacity-50">لا يوجد طلبات معلقة</p>}
-                            </Card>
-                            <Card className="p-4">
-                                <h4 className="font-bold text-sm text-black opacity-70 mb-3">دورات بانتظار الموافقة ({pendingCycles.length})</h4>
-                                {pendingCycles.slice(0, 3).map(c => (
-                                    <div key={c.id} className="flex items-center justify-between p-3 border-b last:border-0">
-                                        <div> <p className="text-sm font-bold text-black">{c.animalType}</p> <p className="text-xs text-gray-500">الهدف: {c.fundingGoal.toLocaleString()} ج.م</p> </div>
-                                        <div className="flex gap-2"> <button onClick={() => handleCycleAction(c.id, 'approve')} className="text-green-600 hover:bg-green-50 p-1 rounded"><Check size={18}/></button> <button onClick={() => handleCycleAction(c.id, 'reject')} className="text-red-600 hover:bg-red-50 p-1 rounded"><X size={18}/></button> </div>
-                                    </div>
-                                ))}
-                                {pendingCycles.length === 0 && <p className="text-sm text-center py-4 text-black opacity-50">لا يوجد دورات معلقة</p>}
-                            </Card>
-                        </div>
-                    </div>
                 </div>
             )}
             {activeTab === 'users' && (
@@ -533,10 +536,45 @@ const AdminDashboard: React.FC<{
                     </div>
                 </div>
             )}
+            {activeTab === 'investments' && (
+                <div>
+                    <h3 className="font-bold text-lg mb-4 text-black">تأكيد تحويلات المستثمرين</h3>
+                    <div className="bg-white rounded-xl shadow overflow-hidden">
+                        <table className="w-full text-right">
+                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">المستثمر</th> <th className="p-4">الدورة</th> <th className="p-4">المبلغ</th> <th className="p-4">الإيصال</th> <th className="p-4">الإجراء</th> </tr> </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {pendingInvestments.map(inv => {
+                                    const investor = users.find(u => u.id === inv.investorId);
+                                    const cycle = cycles.find(c => c.id === inv.cycleId);
+                                    return (
+                                        <tr key={inv.id} className="hover:bg-gray-50">
+                                            <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> <div className="text-xs text-gray-500">{investor?.phone}</div> </td>
+                                            <td className="p-4"> <div className="text-sm text-black">{cycle?.animalType}</div> </td>
+                                            <td className="p-4 font-bold text-primary">{inv.amount.toLocaleString()} ج.م</td>
+                                            <td className="p-4"> {inv.transferReceiptUrl && <button onClick={() => window.open(inv.transferReceiptUrl)} className="text-blue-600 hover:underline flex items-center gap-1 text-xs"> <ImageIcon size={14}/> عرض </button>} </td>
+                                            <td className="p-4">
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex gap-2">
+                                                        <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve', false)} className="bg-green-600">قبول</Button>
+                                                        <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'approve', true)} className="bg-blue-600 text-[10px]">قبول + تأمين</Button>
+                                                        <Button size="sm" onClick={() => handleInvestmentAction(inv.id, 'reject', false)} className="bg-red-600">رفض</Button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {pendingInvestments.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-gray-400">لا توجد تحويلات معلقة</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
             <Modal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} title="إضافة مستخدم جديد">
                 <div className="space-y-4">
                     <Input label="الاسم" value={newUserForm.name} onChange={(e) => setNewUserForm({...newUserForm, name: e.target.value})} />
                     <Input label="رقم الهاتف" value={newUserForm.phone} onChange={(e) => setNewUserForm({...newUserForm, phone: e.target.value})} />
+                    <Input label="كلمة المرور" type="password" value={newUserForm.password} onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})} />
                     <div> <label className="block text-sm font-medium text-black mb-1">نوع المستخدم</label> <select className="w-full p-2 border rounded-lg text-black" value={newUserForm.role} onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as UserRole})}> <option value={UserRole.INVESTOR}>مستثمر</option> <option value={UserRole.BREEDER}>مربي</option> <option value={UserRole.ADMIN}>مشرف (Admin)</option> </select> </div>
                     <Button className="w-full mt-4" onClick={handleCreateUser}>إضافة</Button>
                 </div>
@@ -810,14 +848,14 @@ const InvestorPortfolio: React.FC<{
                         <Card key={inv.id} className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center">
                             <img src={cycle.imageUrl} className="w-full md:w-32 h-32 object-cover rounded-lg" alt="" />
                             <div className="flex-1 space-y-2 w-full">
-                                <div className="flex justify-between items-start"> <div> <h3 className="font-bold text-lg text-black">{cycle.animalType}</h3> <p className="text-xs text-gray-500 flex items-center gap-1"> <Clock size={12}/> تاريخ الاستثمار: {new Date(inv.date).toLocaleDateString('ar-EG')} </p> </div> <StatusBadge status={cycle.status} type="cycle" /> </div>
+                                <div className="flex justify-between items-start"> <div> <h3 className="font-bold text-lg text-black">{cycle.animalType}</h3> <p className="text-xs text-gray-500 flex items-center gap-1"> <Clock size={12}/> تاريخ الاستثمار: {new Date(inv.date).toLocaleDateString('ar-EG')} </p> </div> <div className="flex flex-col items-end gap-1"> <StatusBadge status={inv.status} /> {inv.hasAnimalInsurance && <Badge color="green"> <div className="flex items-center gap-1"> <Shield size={10}/> مؤمن </div> </Badge>} </div> </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-3 rounded-lg text-sm">
                                     <div> <span className="block text-gray-500 text-xs">مبلغ الاستثمار</span> <span className="font-bold text-black">{inv.amount.toLocaleString()} ج.م</span> </div>
                                     <div> <span className="block text-gray-500 text-xs">تاريخ البدء</span> <span className="font-medium text-black">{cycle.startDate}</span> </div>
                                     {isCompleted ? (
                                         <> <div> <span className="block text-gray-500 text-xs">العائد النهائي</span> <span className="font-bold text-green-700">{(inv.amount + profit).toLocaleString()} ج.م</span> </div> <div> <span className="block text-gray-500 text-xs">صافي الربح</span> <span className="font-bold text-green-600"> +{profit.toLocaleString()} <span className="text-xs">({roi.toFixed(1)}%)</span> </span> </div> </>
                                     ) : ( <div className="col-span-1"> <span className="block text-gray-500 text-xs mb-1">الحالة</span> <span className="text-primary font-bold">جاري التسمين</span> </div> )}
-                                    {!isCompleted && (
+                                    {!isCompleted && inv.status === 'APPROVED' && (
                                         <div className="flex items-end justify-end">
                                             <Button size="sm" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white" onClick={() => setSelectedCycleForLogs(cycle)}>
                                                 <Eye size={14} /> سجل المتابعة
@@ -851,30 +889,22 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
         if (isNaN(amount) || amount <= 0) { setError("يرجى إدخال مبلغ صحيح أكبر من صفر."); return; }
         if (amount > remainingNeeded) { setError(`المبلغ المدخل يتجاوز المبلغ المتبقي المطلوب (${remainingNeeded.toLocaleString()} ج.م)`); return; }
         if (!receiptImage) { setError("يرجى إرفاق صورة إيصال التحويل البنكي."); return; }
-        const newInv: Investment = { id: Math.random().toString(), investorId: user.id, cycleId: selectedCycle.id, amount: amount, date: new Date().toISOString(), status: 'APPROVED', headsCount: 1, contractCodes: ['DEMO-CONTRACT'], transferReceiptUrl: receiptImage };
+        const newInv: Investment = { id: Math.random().toString(), investorId: user.id, cycleId: selectedCycle.id, amount: amount, date: new Date().toISOString(), status: 'PENDING_APPROVAL', headsCount: 1, contractCodes: ['DEMO-CONTRACT'], transferReceiptUrl: receiptImage };
         setInvestments([...investments, newInv]);
-        const updatedCycles = cycles.map(c => c.id === selectedCycle.id ? { ...c, currentFunding: c.currentFunding + amount } : c);
-        setCycles(updatedCycles);
+        // Do not update cycle funding until admin approves
         setIsInvestModalOpen(false); setSelectedCycle(null); setInvestAmount(''); setReceiptImage(null);
-        alert("تم الاستثمار بنجاح! جاري مراجعة الإيصال."); onInvestSuccess();
+        alert("تم إرسال طلب الاستثمار بنجاح! سيظهر في محفظتك بعد تأكيد المسؤول للتحويل."); onInvestSuccess();
     };
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold mb-4 text-black">فرص الاستثمار المتاحة</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {availableCycles.map(cycle => (
-                    <Card key={cycle.id} className="overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                        <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-48 object-cover" />
-                        <div className="p-4 flex-1 flex flex-col">
-                            <div className="flex justify-between items-start mb-2"> <h3 className="font-bold text-lg text-black">{cycle.animalType}</h3> <Badge color="green">متاح</Badge> </div>
-                            <p className="text-sm text-gray-500 mb-4 line-clamp-2">{cycle.description}</p>
-                            <div className="mt-auto space-y-3">
-                                <div className="space-y-1"> <div className="flex justify-between text-xs text-gray-500"> <span className="text-black opacity-60">نسبة التغطية</span> <span className="text-black">{Math.round((cycle.currentFunding / cycle.fundingGoal) * 100)}%</span> </div> <div className="w-full bg-gray-100 rounded-full h-2"> <div className="bg-primary h-2 rounded-full" style={{ width: `${(cycle.currentFunding / cycle.fundingGoal) * 100}%` }}></div> </div> </div>
-                                <div className="flex justify-between text-sm font-medium"> <span className="text-black font-bold">{cycle.currentFunding.toLocaleString()} ج.م</span> <span className="text-black opacity-50">من {cycle.fundingGoal.toLocaleString()}</span> </div>
-                                <Button className="w-full" onClick={() => handleOpenInvestModal(cycle)}>استثمار الآن</Button>
-                            </div>
-                        </div>
-                    </Card>
+                    <CycleCard 
+                      key={cycle.id} 
+                      cycle={cycle} 
+                      onInvest={() => handleOpenInvestModal(cycle)}
+                    />
                 ))}
             </div>
             <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="استثمار جديد">
@@ -884,6 +914,65 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
             </Modal>
         </div>
     );
+};
+
+const CycleCard = ({ cycle, onInvest }: { cycle: Cycle, onInvest: () => void }) => {
+  const percentage = Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100);
+  
+  return (
+    <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+      <div className="relative h-48">
+        <img src={cycle.imageUrl} alt={cycle.animalType} className="w-full h-full object-cover" />
+        <div className="absolute top-2 right-2">
+          <StatusBadge status={cycle.status} />
+        </div>
+        {cycle.insurancePolicyNumber && (
+          <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-[10px] px-2 py-1 rounded flex items-center gap-1 shadow-sm">
+            <ShieldCheck size={12} /> مؤمن + تحصينات
+          </div>
+        )}
+      </div>
+      
+      <div className="p-4 flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-bold text-gray-800">{cycle.animalType}</h3>
+          <span className="text-xs bg-gray-100 px-2 py-1 rounded">{cycle.initialWeight} كجم</span>
+        </div>
+        
+        <p className="text-xs text-gray-500 mb-4 line-clamp-2">{cycle.description}</p>
+        
+        <div className="mt-auto">
+          {/* Progress Section Redesign */}
+          <div className="flex justify-between items-center mb-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
+             <span className="text-gray-500 text-sm font-bold">تمويل:</span>
+             <span className="text-xl font-black text-primary">{percentage}%</span>
+          </div>
+
+          <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-1" dir="rtl">
+             <div 
+               className="h-full bg-primary transition-all duration-1000 ease-out relative"
+               style={{ width: `${percentage}%` }}
+             >
+                {/* Shine effect */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/20 to-transparent"></div>
+             </div>
+          </div>
+          
+          <div className="flex justify-between text-[10px] text-gray-400 font-medium mb-4">
+             <span>المجمع: {cycle.currentFunding.toLocaleString('ar-EG')}</span>
+             <span>الهدف: {cycle.fundingGoal.toLocaleString('ar-EG')}</span>
+          </div>
+          
+          <div className="flex justify-between items-center text-xs text-gray-400 mb-3 border-t pt-2">
+             <span className="flex items-center gap-1"><Calendar size={12}/> البدء: {new Date(cycle.startDate).toLocaleDateString('ar-EG')}</span>
+             <span className="flex items-center gap-1"><Clock size={12}/> {cycle.expectedDuration} يوم</span>
+          </div>
+
+          <Button className="w-full" onClick={onInvest}>استثمر الآن</Button>
+        </div>
+      </div>
+    </Card>
+  );
 };
 
 // --- Main App Component ---
@@ -907,7 +996,7 @@ function App() {
         return <BreederActiveCycles user={currentUser!} cycles={cycles} logs={logs} setLogs={setLogs} />;
     }
     switch (currentUser?.role) {
-        case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} />;
+        case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
         case UserRole.BREEDER: return <BreederDashboard user={currentUser} cycles={cycles} setCycles={setCycles} />;
         case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} onInvestSuccess={() => setActiveTab('investments')} />;
         default: return <div>Unknown Role</div>;

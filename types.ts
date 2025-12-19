@@ -1,5 +1,4 @@
 
-
 export enum UserRole {
   ADMIN = 'ADMIN',
   BREEDER = 'BREEDER',
@@ -23,6 +22,7 @@ export interface User {
   id: string;
   name: string;
   phone: string;
+  password?: string; // New: Security
   role: UserRole;
   status: UserStatus;
   profilePictureUrl?: string; // New: Profile Picture

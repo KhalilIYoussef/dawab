@@ -147,15 +147,15 @@ export const INITIAL_CYCLES: Cycle[] = [
     actualEndDate: today.toISOString().split('T')[0],
   },
   {
-    id: '101', // SHARED OWNERSHIP (Active)
+    id: '101', // Active
     breederId: '2',
     animalType: 'عجل خليط رقم 101',
     initialWeight: 250,
     targetWeight: 450,
     fundingGoal: 32000,
-    currentFunding: 0, // Reset to 0 for demo purposes (so buttons work)
+    currentFunding: 32000,
     totalHeads: 1,
-    availableHeads: 1, 
+    availableHeads: 0, 
     startPricePerHead: 32000,
     startDate: twoMonthsAgo, 
     expectedDuration: 180, 
@@ -166,22 +166,60 @@ export const INITIAL_CYCLES: Cycle[] = [
     fatteningPlan: STANDARD_COW_PLAN,
   },
   {
-    id: '102', // Partial Funding
-    breederId: '3', // Ragab
-    animalType: 'خروف برقي رقم 50',
+    id: '102', // Opportunity 1
+    breederId: '3',
+    animalType: 'خروف برقي ممتاز',
     initialWeight: 35,
     targetWeight: 55, 
-    fundingGoal: 6000,
-    currentFunding: 2000, // Partially funded
+    fundingGoal: 6500,
+    currentFunding: 1500, 
     totalHeads: 1,
     availableHeads: 1,
-    startPricePerHead: 6000,
+    startPricePerHead: 6500,
     startDate: new Date().toISOString().split('T')[0], 
     expectedDuration: 100,
-    status: CycleStatus.ACTIVE, 
+    status: CycleStatus.PENDING, 
     healthCertUrl: '#',
     imageUrl: 'https://images.unsplash.com/photo-1484557985045-6f550bb4377c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    description: 'تسمين خروف برقي ممتاز. فرصة للمشاركة بمبلغ بسيط.',
+    description: 'تسمين خروف برقي ممتاز بعزبة أولاد رجب. فرصة استثمارية قصيرة المدى.',
+    fatteningPlan: STANDARD_SHEEP_PLAN,
+  },
+  {
+    id: '103', // Opportunity 2
+    breederId: '2',
+    animalType: 'عجل هولشتاين صغير',
+    initialWeight: 180,
+    targetWeight: 400, 
+    fundingGoal: 28000,
+    currentFunding: 12000, 
+    totalHeads: 1,
+    availableHeads: 1,
+    startPricePerHead: 28000,
+    startDate: new Date().toISOString().split('T')[0], 
+    expectedDuration: 210,
+    status: CycleStatus.PENDING, 
+    healthCertUrl: '#',
+    imageUrl: 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    description: 'دورة تسمين عجول هولشتاين، سلالة عالية التحويل في مزرعة الحاج متولي.',
+    fatteningPlan: STANDARD_COW_PLAN,
+  },
+  {
+    id: '104', // Opportunity 3
+    breederId: '2',
+    animalType: 'مجموعة أغنام عساف (5 رؤوس)',
+    initialWeight: 30,
+    targetWeight: 60, 
+    fundingGoal: 35000,
+    currentFunding: 0, 
+    totalHeads: 5,
+    availableHeads: 5,
+    startPricePerHead: 7000,
+    startDate: new Date().toISOString().split('T')[0], 
+    expectedDuration: 120,
+    status: CycleStatus.PENDING, 
+    healthCertUrl: '#',
+    imageUrl: 'https://images.unsplash.com/photo-1511117833452-482268548b01?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    description: 'دورة تسمين جماعية لـ 5 رؤوس من غنم العساف الممتاز.',
     fatteningPlan: STANDARD_SHEEP_PLAN,
   }
 ];
@@ -199,15 +237,14 @@ export const INITIAL_INVESTMENTS: Investment[] = [
     date: sixMonthsAgo,
     status: 'APPROVED',
   },
-  // Note: Cleared initial investments for 101 to match the 0 funding state
   {
-    id: 'inv_102_1',
-    investorId: '4', 
-    cycleId: '102',
-    amount: 2000,
-    headsCount: 0.33,
-    contractCodes: ['DW-102-PART1'],
-    date: new Date().toISOString(),
+    id: 'inv_101_1',
+    investorId: '4',
+    cycleId: '101',
+    amount: 32000, 
+    headsCount: 1,
+    contractCodes: ['DW-101-FULL'],
+    date: twoMonthsAgo,
     status: 'APPROVED',
   }
 ];

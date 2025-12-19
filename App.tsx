@@ -1161,7 +1161,6 @@ const InvestorPortfolio: React.FC<{
 
 const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; investments: Investment[]; setInvestments: (inv: Investment[]) => void; }> = ({ user, cycles, setCycles, investments, setInvestments }) => {
     const [searchQuery, setSearchQuery] = useState('');
-    // Investors can see PENDING cycles to fund them
     const availableCycles = cycles.filter(c => 
       c.status === CycleStatus.PENDING && 
       c.currentFunding < c.fundingGoal &&
@@ -1172,15 +1171,51 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
     const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
     const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(null);
     const [investAmount, setInvestAmount] = useState<string>('');
+    const [hasInsurance, setHasInsurance] = useState(false);
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
 
-    const handleOpenInvestModal = (cycle: Cycle) => { setSelectedCycle(cycle); setInvestAmount(''); setReceiptImage(null); setIsInvestModalOpen(true); };
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files && e.target.files[0]) { const file = e.target.files[0]; const reader = new FileReader(); reader.onloadend = () => { setReceiptImage(reader.result as string); }; reader.readAsDataURL(file); } };
+    const handleOpenInvestModal = (cycle: Cycle) => { 
+        setSelectedCycle(cycle); 
+        setInvestAmount(''); 
+        setHasInsurance(false);
+        setReceiptImage(null); 
+        setIsInvestModalOpen(true); 
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => { 
+        if (e.target.files && e.target.files[0]) { 
+            const file = e.target.files[0]; 
+            const reader = new FileReader(); 
+            reader.onloadend = () => { setReceiptImage(reader.result as string); }; 
+            reader.readAsDataURL(file); 
+        } 
+    };
     
+    const amountVal = parseFloat(investAmount) || 0;
+    const adminFee = amountVal * PLATFORM_FEE_PERCENT;
+    const insuranceFee = hasInsurance ? amountVal * INSURANCE_FEE_PERCENT : 0;
+    const totalToPay = amountVal + adminFee + insuranceFee;
+    const remainingToGoal = selectedCycle ? selectedCycle.fundingGoal - selectedCycle.currentFunding : 0;
+
     const handleConfirmInvest = () => {
         if (!selectedCycle) return;
-        const amount = parseFloat(investAmount);
-        const newInv: Investment = { id: Math.random().toString(), investorId: user.id, cycleId: selectedCycle.id, amount, date: new Date().toISOString(), status: 'PENDING_APPROVAL', headsCount: 1, contractCodes: ['DW-DEMO'], transferReceiptUrl: receiptImage || undefined };
+        if (amountVal <= 0) { alert("يرجى إدخال مبلغ استثمار صحيح."); return; }
+        if (amountVal > remainingToGoal) { alert(`المبلغ المدخل يتجاوز المتبقي للتمويل (${remainingToGoal.toLocaleString()} ج.م)`); return; }
+        if (!receiptImage) { alert("يرجى رفع إيصال التحويل لتأكيد العملية."); return; }
+
+        const newInv: Investment = { 
+            id: Math.random().toString(), 
+            investorId: user.id, 
+            cycleId: selectedCycle.id, 
+            amount: amountVal, 
+            date: new Date().toISOString(), 
+            status: 'PENDING_APPROVAL', 
+            headsCount: 1, 
+            contractCodes: ['DW-DEMO'], 
+            transferReceiptUrl: receiptImage || undefined,
+            hasAnimalInsurance: hasInsurance,
+            animalInsuranceFee: insuranceFee
+        };
         setInvestments([...investments, newInv]);
         setIsInvestModalOpen(false);
         alert("تم إرسال طلب الاستثمار بنجاح! سيظهر في محفظتك بعد تأكيد المسؤول.");
@@ -1197,27 +1232,136 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {availableCycles.map(cycle => (
-                    <Card key={cycle.id} className="overflow-hidden">
-                        <img src={cycle.imageUrl} className="h-40 w-full object-cover" />
+                    <Card key={cycle.id} className="overflow-hidden hover:shadow-lg transition-all border-transparent hover:border-primary/20 group">
+                        <div className="relative h-40">
+                            <img src={cycle.imageUrl} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                            <div className="absolute top-2 left-2">
+                                <Badge color="green">متبقي: {(cycle.fundingGoal - cycle.currentFunding).toLocaleString()} ج.م</Badge>
+                            </div>
+                        </div>
                         <div className="p-4 space-y-3">
                             <h3 className="font-bold text-black">{cycle.animalType}</h3>
-                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                              <div className="bg-primary h-full" style={{ width: `${(cycle.currentFunding/cycle.fundingGoal)*100}%` }}></div>
+                            <div className="space-y-1">
+                                <div className="flex justify-between text-[10px] text-gray-500">
+                                    <span>تقدم التمويل: {Math.floor((cycle.currentFunding/cycle.fundingGoal)*100)}%</span>
+                                    <span>الهدف: {cycle.fundingGoal.toLocaleString()} ج.م</span>
+                                </div>
+                                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                  <div className="bg-primary h-full transition-all duration-700" style={{ width: `${(cycle.currentFunding/cycle.fundingGoal)*100}%` }}></div>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-xs"> <span>المجمع: {cycle.currentFunding.toLocaleString()}</span> <span>الهدف: {cycle.fundingGoal.toLocaleString()}</span> </div>
                             <Button className="w-full" onClick={() => handleOpenInvestModal(cycle)}>استثمر الآن</Button>
                         </div>
                     </Card>
                 ))}
             </div>
-            <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="استثمار جديد">
-                <div className="space-y-4">
-                    <Input label="مبلغ الاستثمار (ج.م)" type="number" value={investAmount} onChange={(e) => setInvestAmount(e.target.value)} />
-                    <div className="border-2 border-dashed p-4 text-center rounded-xl">
-                      <input type="file" onChange={handleImageChange} className="hidden" id="receipt-upload" />
-                      <label htmlFor="receipt-upload" className="cursor-pointer text-gray-500"> {receiptImage ? <img src={receiptImage} className="h-20 mx-auto" /> : "اضغط لرفع إيصال التحويل"} </label>
+
+            <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="خطوات استثمارك الجديد">
+                <div className="space-y-6">
+                    {/* Summary Info */}
+                    {selectedCycle && (
+                        <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-center gap-4">
+                            <img src={selectedCycle.imageUrl} className="w-16 h-16 rounded-lg object-cover" />
+                            <div>
+                                <h4 className="font-bold text-black text-sm">{selectedCycle.animalType}</h4>
+                                <p className="text-xs text-primary font-bold">المبلغ المتاح حالياً: {remainingToGoal.toLocaleString()} ج.م</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        <Input 
+                            label="مبلغ الاستثمار المطلوب (ج.م)" 
+                            type="number" 
+                            max={remainingToGoal}
+                            value={investAmount} 
+                            onChange={(e) => setInvestAmount(e.target.value)} 
+                            placeholder="أدخل مبلغا يبدأ من 500 ج.م"
+                        />
+
+                        {/* Insurance Option */}
+                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm">
+                                    <ShieldCheck size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-blue-900">تأمين شامل على الحياة</p>
+                                    <p className="text-[10px] text-blue-700">تأمين ضد النفوق والأمراض الوبائية (3%)</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setHasInsurance(!hasInsurance)}
+                                className={`w-12 h-6 rounded-full transition-colors relative ${hasInsurance ? 'bg-blue-600' : 'bg-gray-300'}`}
+                            >
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${hasInsurance ? 'right-7' : 'right-1'}`}></div>
+                            </button>
+                        </div>
+
+                        {/* Cost Breakdown */}
+                        <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-100">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">قيمة الاستثمار:</span>
+                                <span className="font-bold text-black">{amountVal.toLocaleString()} ج.م</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">رسوم إدارية (2.5%):</span>
+                                <span className="font-bold text-black">{adminFee.toLocaleString()} ج.م</span>
+                            </div>
+                            {hasInsurance && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">رسوم التأمين (3%):</span>
+                                    <span className="font-bold text-black">{insuranceFee.toLocaleString()} ج.م</span>
+                                </div>
+                            )}
+                            <div className="pt-2 mt-2 border-t border-gray-200 flex justify-between items-center">
+                                <span className="font-bold text-black">إجمالي المبلغ المطلوب:</span>
+                                <span className="text-xl font-bold text-primary">{totalToPay.toLocaleString()} ج.م</span>
+                            </div>
+                        </div>
+
+                        {/* Payment Instructions */}
+                        <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                            <h5 className="text-xs font-bold text-orange-800 flex items-center gap-2 mb-1">
+                                <Banknote size={14} /> تعليمات التحويل البنكي
+                            </h5>
+                            <p className="text-[10px] text-orange-700 leading-relaxed">
+                                يرجى تحويل الإجمالي إلى حساب منصة دواب: <br/>
+                                <b>البنك الأهلي المصري: 123456789012345</b> <br/>
+                                أو عبر إنستاباي: <b>dawab@nbe</b>
+                            </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500">إرفاق إيصال التحويل</label>
+                            <div className="border-2 border-dashed border-gray-200 p-4 text-center rounded-xl hover:bg-gray-50 transition-colors">
+                              <input type="file" onChange={handleImageChange} className="hidden" id="receipt-upload" accept="image/*" />
+                              <label htmlFor="receipt-upload" className="cursor-pointer text-gray-500 flex flex-col items-center gap-2"> 
+                                {receiptImage ? (
+                                    <div className="relative group">
+                                        <img src={receiptImage} className="h-24 w-24 object-cover rounded-lg shadow-sm" />
+                                        <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera size={20} className="text-white" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Upload size={32} className="text-gray-300" />
+                                        <span className="text-sm">اضغط لرفع صورة الإيصال</span>
+                                    </>
+                                )} 
+                              </label>
+                            </div>
+                        </div>
                     </div>
-                    <Button className="w-full" onClick={handleConfirmInvest}>تأكيد</Button>
+
+                    <Button 
+                        className="w-full py-4 text-lg shadow-xl shadow-primary/20" 
+                        onClick={handleConfirmInvest}
+                        disabled={amountVal <= 0 || !receiptImage}
+                    >
+                        تأكيد طلب الاستثمار
+                    </Button>
                 </div>
             </Modal>
         </div>

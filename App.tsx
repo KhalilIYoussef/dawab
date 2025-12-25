@@ -503,12 +503,15 @@ const AdminDashboard: React.FC<{
     cycles: Cycle[], setCycles: (c: Cycle[]) => void,
     investments: Investment[], setInvestments: (i: Investment[]) => void
 }> = ({ users, setUsers, cycles, setCycles, investments, setInvestments }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'cycles' | 'investments'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'cycles' | 'investments' | 'insurance'>('overview');
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [newUserForm, setNewUserForm] = useState({ name: '', phone: '', password: '123', role: UserRole.INVESTOR });
     const [isSellModalOpen, setIsSellModalOpen] = useState(false);
     const [selectedCycleToSell, setSelectedCycleToSell] = useState<Cycle | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
+
+    const insuranceList = investments.filter(inv => inv.hasAnimalInsurance && inv.status === 'APPROVED');
+    const totalInsuranceFund = insuranceList.reduce((sum, inv) => sum + (inv.animalInsuranceFee || 0), 0);
 
     const roleLabels = {
         [UserRole.ADMIN]: 'مدير النظام',
@@ -565,9 +568,15 @@ const AdminDashboard: React.FC<{
     return (
         <div className="space-y-6">
             <div className="flex gap-4 border-b overflow-x-auto pb-2">
-                {['overview', 'users', 'cycles', 'investments'].map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-4 py-2 font-medium whitespace-nowrap transition-all ${activeTab === tab ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-black'}`}>
-                        {tab === 'overview' ? 'نظرة عامة' : tab === 'users' ? 'المستخدمين' : tab === 'cycles' ? 'الدورات' : 'الاستثمارات'}
+                {[
+                    { id: 'overview', label: 'نظرة عامة' },
+                    { id: 'users', label: 'المستخدمين' },
+                    { id: 'cycles', label: 'الدورات' },
+                    { id: 'investments', label: 'الاستثمارات' },
+                    { id: 'insurance', label: 'صندوق التأمين' }
+                ].map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2 font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-black'}`}>
+                        {tab.label}
                     </button>
                 ))}
             </div>
@@ -575,87 +584,58 @@ const AdminDashboard: React.FC<{
             {activeTab === 'overview' && (
                 <div className="animate-in fade-in duration-500">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <StatCard 
-                            title="إجمالي المستخدمين" 
-                            value={users.length} 
-                            icon={Users} 
-                            color="primary" 
-                        />
-                        <StatCard 
-                            title="الدورات النشطة" 
-                            value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} 
-                            icon={Activity} 
-                            color="blue" 
-                        />
-                        <StatCard 
-                            title="إجمالي الاستثمارات" 
-                            value={`${investments.filter(i => i.status === 'APPROVED').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} ج.م`} 
-                            icon={Banknote} 
-                            color="purple" 
-                        />
-                        <StatCard 
-                            title="طلبات معلقة" 
-                            value={users.filter(u => u.status === UserStatus.PENDING).length + investments.filter(i => i.status === 'PENDING_APPROVAL').length} 
-                            icon={AlertTriangle} 
-                            color="secondary" 
-                        />
+                        <StatCard title="إجمالي المستخدمين" value={users.length} icon={Users} color="primary" />
+                        <StatCard title="الدورات النشطة" value={cycles.filter(c => c.status === CycleStatus.ACTIVE).length} icon={Activity} color="blue" />
+                        <StatCard title="إجمالي الاستثمارات" value={`${investments.filter(i => i.status === 'APPROVED').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} ج.م`} icon={Banknote} color="purple" />
+                        <StatCard title="صندوق التأمين" value={`${totalInsuranceFund.toLocaleString()} ج.م`} icon={ShieldCheck} color="accent" />
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card className="p-6">
-                            <h3 className="font-bold text-black mb-4 flex items-center gap-2">
-                                <History size={20} className="text-primary" /> نشاط النظام الأخير
-                            </h3>
-                            <div className="space-y-4">
-                                {cycles.slice(-3).reverse().map(c => (
-                                    <div key={c.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <div className="p-2 bg-white rounded-lg shadow-sm">
-                                            <Tractor size={18} className="text-gray-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-black">إضافة دورة: {c.animalType}</p>
-                                            <p className="text-xs text-gray-500">{new Date(c.startDate).toLocaleDateString('ar-EG')}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {users.filter(u => u.status === UserStatus.PENDING).slice(0, 2).map(u => (
-                                    <div key={u.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-100">
-                                        <div className="flex items-center gap-3">
-                                            <UserPlus size={18} className="text-orange-500" />
-                                            <div>
-                                                <p className="text-sm font-bold text-black">مستخدم جديد: {u.name}</p>
-                                                <p className="text-xs text-gray-500">بانتظار التفعيل</p>
-                                            </div>
-                                        </div>
-                                        <Button size="sm" variant="outline" onClick={() => setActiveTab('users')}>عرض</Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </Card>
-                        <Card className="p-6">
-                            <h3 className="font-bold text-black mb-4 flex items-center gap-2">
-                                <TrendingUp size={20} className="text-blue-600" /> حالة التمويل
-                            </h3>
-                            <div className="space-y-6">
-                                {cycles.filter(c => c.status === CycleStatus.PENDING).slice(0, 3).map(c => {
-                                    const percent = Math.floor((c.currentFunding/c.fundingGoal)*100);
+                </div>
+            )}
+
+            {activeTab === 'insurance' && (
+                <div className="space-y-6 animate-in fade-in">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-r-yellow-500 flex flex-col items-center text-center">
+                            <span className="text-gray-500 text-sm">رصيد صندوق التأمين الحالي</span>
+                            <span className="text-3xl font-bold text-yellow-600 mt-2">{totalInsuranceFund.toLocaleString()} ج.م</span>
+                            <span className="text-[10px] text-gray-400 mt-1">مبالغ مخصصة لمواجهة نفوق الماشية فقط</span>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                            <span className="text-gray-500 text-sm">عدد الرؤوس المؤمنة</span>
+                            <span className="text-3xl font-bold text-blue-600 mt-2">{insuranceList.length} رأس</span>
+                        </div>
+                    </div>
+                    <Card className="overflow-hidden">
+                        <table className="w-full text-right text-sm">
+                            <thead className="bg-gray-50 text-gray-600">
+                                <tr>
+                                    <th className="p-4">المستثمر</th>
+                                    <th className="p-4">نوع الماشية</th>
+                                    <th className="p-4">مبلغ الاستثمار</th>
+                                    <th className="p-4 text-yellow-600">رسوم التأمين (3%)</th>
+                                    <th className="p-4 text-center">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {insuranceList.map(inv => {
+                                    const investor = users.find(u => u.id === inv.investorId);
+                                    const cycle = cycles.find(c => c.id === inv.cycleId);
                                     return (
-                                        <div key={c.id}>
-                                            <div className="flex justify-between text-xs mb-1">
-                                                <span className="font-bold text-black">{c.animalType}</span>
-                                                <span className="text-gray-500">{percent}%</span>
-                                            </div>
-                                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                                <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
-                                            </div>
-                                        </div>
+                                        <tr key={inv.id} className="hover:bg-gray-50">
+                                            <td className="p-4 font-bold">{investor?.name}</td>
+                                            <td className="p-4">{cycle?.animalType}</td>
+                                            <td className="p-4">{inv.amount.toLocaleString()} ج.م</td>
+                                            <td className="p-4 font-bold text-yellow-600">{inv.animalInsuranceFee?.toLocaleString()} ج.م</td>
+                                            <td className="p-4 text-center"><Badge color="green">مؤمنة</Badge></td>
+                                        </tr>
                                     );
                                 })}
-                                {cycles.filter(c => c.status === CycleStatus.PENDING).length === 0 && (
-                                    <p className="text-center py-10 text-gray-400 italic">لا توجد دورات قيد التمويل حالياً</p>
+                                {insuranceList.length === 0 && (
+                                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">لا توجد استثمارات مؤمنة حالياً</td></tr>
                                 )}
-                            </div>
-                        </Card>
-                    </div>
+                            </tbody>
+                        </table>
+                    </Card>
                 </div>
             )}
             
@@ -766,34 +746,6 @@ const AdminDashboard: React.FC<{
                                     {investments.filter(i => i.status === 'PENDING_APPROVAL').length === 0 && (
                                         <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">لا توجد تحويلات بانتظار الموافقة حالياً</td></tr>
                                     )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h3 className="font-bold text-lg mb-4 text-black flex items-center gap-2">
-                            <CheckCircle size={20} className="text-green-600" /> التحويلات المؤكدة (تاريخ العمليات)
-                        </h3>
-                        <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
-                            <table className="w-full text-right">
-                                <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">التاريخ</th> <th className="p-4">المستثمر</th> <th className="p-4">المبلغ</th> <th className="p-4">الحالة</th> </tr> </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {investments.filter(i => i.status !== 'PENDING_APPROVAL').reverse().map(inv => {
-                                        const investor = users.find(u => u.id === inv.investorId);
-                                        return (
-                                            <tr key={inv.id} className="hover:bg-gray-50">
-                                                <td className="p-4 text-xs text-gray-500">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
-                                                <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> </td>
-                                                <td className="p-4 font-bold text-gray-700">{inv.amount.toLocaleString()} ج.م</td>
-                                                <td className="p-4">
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${inv.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                        {inv.status === 'APPROVED' ? 'مقبول' : 'مرفوض'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -1159,7 +1111,13 @@ const BreederActiveCycles: React.FC<{
 const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; }> = ({ user, cycles, setCycles }) => {
   const myCycles = cycles.filter(c => c.breederId === user.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '' });
+  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ 
+    animalType: 'عجل هولشتاين', 
+    fundingGoal: 0, 
+    expectedDuration: 180, 
+    description: '',
+    insurancePolicyNumber: ''
+  });
   const [cycleImage, setCycleImage] = useState<string | null>(null);
 
   const animalTypes = [
@@ -1201,6 +1159,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     setCycles([...cycles, cycle]); 
     setIsModalOpen(false);
     setCycleImage(null);
+    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', insurancePolicyNumber: '' });
   };
 
   return (
@@ -1267,6 +1226,14 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     <Input label="الهدف المالي (ج.م)" type="number" value={newCycle.fundingGoal} onChange={(e) => setNewCycle({...newCycle, fundingGoal: Number(e.target.value)})} />
                     <Input label="المدة (أيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
                 </div>
+
+                <Input 
+                    label="الرقم التأميني للحيوان (اختياري)" 
+                    type="text" 
+                    value={newCycle.insurancePolicyNumber || ''} 
+                    onChange={(e) => setNewCycle({...newCycle, insurancePolicyNumber: e.target.value})} 
+                    placeholder="أدخل رقم بوليصة التأمين إن وجد"
+                />
                 
                 <div className="bg-orange-50 p-3 rounded-xl flex items-start gap-3 border border-orange-100">
                     <Info size={18} className="text-orange-500 shrink-0 mt-0.5" />
@@ -1396,8 +1363,6 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
     const handleConfirmInvest = () => {
         if (!selectedCycle) return;
         
-        // Fix: Removed unnecessary casting that was causing type comparison errors. 
-        // Ensuring direct comparison between numeric values.
         if (amountVal <= 0) { alert("يرجى إدخال مبلغ استثمار صحيح."); return; }
         if (amountVal > remainingToGoal) { alert(`المبلغ المدخل يتجاوز المتبقي للتمويل (${remainingToGoal.toLocaleString()} ج.م)`); return; }
         if (!receiptImage) { alert("يرجى رفع إيصال التحويل لتأكيد العملية."); return; }

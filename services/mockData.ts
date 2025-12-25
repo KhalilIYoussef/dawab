@@ -61,7 +61,7 @@ export const INITIAL_USERS: User[] = [
     spaceLimit: 50,
     availableSpace: 30,
     rating: 4.8,
-    documentsVerified: true, // Fully verified
+    documentsVerified: true,
     physicalPapersSent: true,
     physicalPapersVerified: true,
     governorate: 'الشرقية',
@@ -79,7 +79,7 @@ export const INITIAL_USERS: User[] = [
     phone: '01100000003',
     password: '123',
     role: UserRole.BREEDER,
-    status: UserStatus.PENDING, // Needs Admin Approval
+    status: UserStatus.PENDING,
     spaceLimit: 20,
     availableSpace: 20,
     rating: 0,
@@ -110,10 +110,10 @@ export const INITIAL_USERS: User[] = [
     phone: '01055555555',
     password: '123',
     role: UserRole.INVESTOR,
-    status: UserStatus.PENDING, // Needs Admin Verification (Docs uploaded)
+    status: UserStatus.PENDING,
     documentsVerified: false,
     profilePictureUrl: 'https://i.pravatar.cc/150?u=mona',
-    idCardFrontUrl: 'uploaded', // Simulated upload
+    idCardFrontUrl: 'uploaded',
     idCardBackUrl: 'uploaded',
   }
 ];
@@ -126,7 +126,7 @@ const sixMonthsAgo = new Date(new Date().setDate(today.getDate() - 180)).toISOSt
 
 export const INITIAL_CYCLES: Cycle[] = [
   {
-    id: '100', // Completed
+    id: '100',
     breederId: '2',
     animalType: 'عجل تسمين هولشتاين',
     initialWeight: 200,
@@ -147,7 +147,7 @@ export const INITIAL_CYCLES: Cycle[] = [
     actualEndDate: today.toISOString().split('T')[0],
   },
   {
-    id: '101', // Active
+    id: '101',
     breederId: '2',
     animalType: 'عجل خليط رقم 101',
     initialWeight: 250,
@@ -164,9 +164,10 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'عجل خليط عالي التحويل، شراكة بين مستثمرين.',
     fatteningPlan: STANDARD_COW_PLAN,
+    insurancePolicyNumber: 'POL-101-99'
   },
   {
-    id: '102', // Opportunity 1
+    id: '102',
     breederId: '3',
     animalType: 'خروف برقي ممتاز',
     initialWeight: 35,
@@ -183,9 +184,10 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1484557985045-6f550bb4377c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'تسمين خروف برقي ممتاز بعزبة أولاد رجب. فرصة استثمارية قصيرة المدى.',
     fatteningPlan: STANDARD_SHEEP_PLAN,
+    insurancePolicyNumber: 'INS-SHEEP-01'
   },
   {
-    id: '103', // Opportunity 2
+    id: '103',
     breederId: '2',
     animalType: 'عجل هولشتاين صغير',
     initialWeight: 180,
@@ -204,7 +206,7 @@ export const INITIAL_CYCLES: Cycle[] = [
     fatteningPlan: STANDARD_COW_PLAN,
   },
   {
-    id: '104', // Opportunity 3
+    id: '104',
     breederId: '2',
     animalType: 'مجموعة أغنام عساف (5 رؤوس)',
     initialWeight: 30,
@@ -221,10 +223,29 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1511117833452-482268548b01?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'دورة تسمين جماعية لـ 5 رؤوس من غنم العساف الممتاز.',
     fatteningPlan: STANDARD_SHEEP_PLAN,
+    insurancePolicyNumber: 'INS-ASSAF-GROUP'
+  },
+  {
+    id: '105',
+    breederId: '2',
+    animalType: 'عجل بقري بلدي',
+    initialWeight: 220,
+    targetWeight: 500, 
+    fundingGoal: 33000,
+    currentFunding: 5000, 
+    totalHeads: 1,
+    availableHeads: 1,
+    startPricePerHead: 33000,
+    startDate: new Date().toISOString().split('T')[0], 
+    expectedDuration: 200,
+    status: CycleStatus.PENDING, 
+    healthCertUrl: '#',
+    imageUrl: 'https://images.unsplash.com/photo-1545468841-72460679809a?auto=format&fit=crop&w=800&q=80',
+    description: 'عجل بقري بلدي ممتاز، دورة استثمارية متوسطة المدى.',
+    fatteningPlan: STANDARD_COW_PLAN,
+    insurancePolicyNumber: 'POL-BALADI-202'
   }
 ];
-
-// --- Mock Investments (Shared) ---
 
 export const INITIAL_INVESTMENTS: Investment[] = [
   {

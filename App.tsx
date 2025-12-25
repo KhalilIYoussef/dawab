@@ -8,7 +8,7 @@ import {
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
   Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
   Calculator, ArrowDown, ShoppingBag, Gavel, UserCog, Calendar, ChevronDown, ChevronUp, Syringe, Pill, Stethoscope, Droplets, Minus, HeartPulse,
-  Play
+  Play, Zap, Leaf, FlaskConical
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -71,9 +71,9 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
             <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200 group-last:bg-transparent"></div>
             
             {/* Timeline Dot */}
-            <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-primary shadow-sm z-10"></div>
+            <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-primary shadow-sm z-10 transition-transform group-hover:scale-125"></div>
             
-            <Card className="p-0 shadow-sm border-gray-100 hover:shadow-md transition-all overflow-hidden">
+            <Card className="p-0 shadow-sm border-gray-100 hover:shadow-md transition-all overflow-hidden border-r-4 border-r-primary/10">
                 <div className="bg-gray-50/50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <Calendar size={14} className="text-gray-400" />
@@ -93,7 +93,7 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                     {/* Nutrition Section */}
                     <div className="space-y-3">
                         <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
-                            <Wheat size={12} /> التغذية اليومية
+                            <Wheat size={12} className="text-primary" /> سجل التغذية اليومي
                         </h4>
                         
                         {!feedData ? (
@@ -103,12 +103,14 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                                 {feedData.energy.length > 0 && (
                                     <div className="bg-white border border-gray-100 rounded-xl p-2.5">
                                         <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-gray-50">
-                                            <span className="text-sm">🌽</span>
+                                            <Zap size={12} className="text-orange-500" />
                                             <span className="text-[10px] font-bold text-gray-600">مركزات طاقة</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             {feedData.energy.map((item, idx) => (
-                                                <span key={idx} className="bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-orange-100">{item}</span>
+                                                <span key={idx} className="bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-orange-100 flex items-center gap-1">
+                                                    <Zap size={10} className="opacity-60" /> {item}
+                                                </span>
                                             ))}
                                         </div>
                                     </div>
@@ -116,12 +118,14 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                                 {feedData.rough.length > 0 && (
                                     <div className="bg-white border border-gray-100 rounded-xl p-2.5">
                                         <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-gray-50">
-                                            <span className="text-sm">🌿</span>
+                                            <Leaf size={12} className="text-green-500" />
                                             <span className="text-[10px] font-bold text-gray-600">أعلاف خضراء</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             {feedData.rough.map((item, idx) => (
-                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-green-100">{item}</span>
+                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-green-100 flex items-center gap-1">
+                                                    <Leaf size={10} className="opacity-60" /> {item}
+                                                </span>
                                             ))}
                                         </div>
                                     </div>
@@ -129,12 +133,14 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                                 {feedData.additives.length > 0 && (
                                     <div className="bg-white border border-gray-100 rounded-xl p-2.5">
                                         <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-gray-50">
-                                            <span className="text-sm">🧂</span>
+                                            <FlaskConical size={12} className="text-blue-500" />
                                             <span className="text-[10px] font-bold text-gray-600">إضافات ومياه</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             {feedData.additives.map((item, idx) => (
-                                                <span key={idx} className="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-blue-100">{item}</span>
+                                                <span key={idx} className="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-blue-100 flex items-center gap-1">
+                                                    <Droplets size={10} className="opacity-60" /> {item}
+                                                </span>
                                             ))}
                                         </div>
                                     </div>
@@ -147,7 +153,7 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                     {(vaccines.length > 0 || treatments.length > 0) && (
                         <div className="space-y-2">
                             <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
-                                <HeartPulse size={12} /> الحالة الصحية
+                                <HeartPulse size={12} className="text-red-500" /> الحالة الطبية
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 {vaccines.map((v, idx) => (
@@ -867,11 +873,13 @@ const CollapsibleSection: React.FC<{ title: string, icon: string, children: Reac
     );
 };
 
-const ItemCard: React.FC<{ icon: string, name: string, unit: string, value: number, onChange: (v: number) => void, warning?: boolean }> = ({ icon, name, unit, value, onChange, warning }) => (
+const ItemCard: React.FC<{ icon: string | React.ReactNode, name: string, unit: string, value: number, onChange: (v: number) => void, warning?: boolean }> = ({ icon, name, unit, value, onChange, warning }) => (
     <Card className={`p-3 relative overflow-hidden transition-all duration-200 ${warning ? 'border-red-200 bg-red-50/30' : 'hover:border-primary/30'}`}>
         {warning && <div className="absolute top-1 right-1"><AlertTriangle size={12} className="text-red-500" /></div>}
         <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-2xl">{icon}</div>
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-2xl text-primary">
+                {typeof icon === 'string' ? icon : icon}
+            </div>
             <div className="flex-1">
                 <h4 className="font-bold text-sm text-black leading-tight">{name}</h4>
                 <p className="text-[10px] text-gray-400">الوحدة: {unit}</p>
@@ -881,9 +889,11 @@ const ItemCard: React.FC<{ icon: string, name: string, unit: string, value: numb
     </Card>
 );
 
-const VetCard: React.FC<{ icon: string, name: string, type: 'vaccine' | 'treatment', onApply: () => void }> = ({ icon, name, type, onApply }) => (
+const VetCard: React.FC<{ icon: string | React.ReactNode, name: string, type: 'vaccine' | 'treatment', onApply: () => void }> = ({ icon, name, type, onApply }) => (
     <Card className={`p-4 flex items-center gap-4 hover:shadow-md transition-all ${type === 'vaccine' ? 'bg-blue-50/50 border-blue-100' : 'bg-orange-50/50 border-orange-100'}`}>
-        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl">{icon}</div>
+        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl text-primary">
+            {typeof icon === 'string' ? icon : icon}
+        </div>
         <div className="flex-1">
             <h4 className="font-bold text-black">{name}</h4>
             <p className="text-xs text-gray-500">{type === 'vaccine' ? 'تحصين وقائي' : 'علاج طارئ'}</p>
@@ -1041,31 +1051,31 @@ const BreederActiveCycles: React.FC<{
                         {activeLogTab === 'feed' ? (
                             <div className="space-y-6 pb-4">
                                 <CollapsibleSection title="مركزات الطاقة والبروتين" icon="🌽">
-                                    <ItemCard icon="🌽" name="ذرة صفراء مجروشة" unit="كجم" value={feedItems["ذرة صفراء"] || 0} onChange={(v) => handleUpdateFeed("ذرة صفراء", v)} />
-                                    <ItemCard icon="🌾" name="شعير" unit="كجم" value={feedItems["شعير"] || 0} onChange={(v) => handleUpdateFeed("شعير", v)} />
-                                    <ItemCard icon="🌱" name="فول صويا (كُسب)" unit="كجم" value={feedItems["فول صويا"] || 0} onChange={(v) => handleUpdateFeed("فول صويا", v)} />
-                                    <ItemCard icon="🍚" name="ردة (نخالة)" unit="كجم" value={feedItems["ردة"] || 0} onChange={(v) => handleUpdateFeed("ردة", v)} />
-                                    <ItemCard icon="🍂" name="نخالة قمح (خشنة)" unit="كجم" value={feedItems["نخالة قمح"] || 0} onChange={(v) => handleUpdateFeed("نخالة قمح", v)} />
-                                    <ItemCard icon="⚫" name="بذور قطن" unit="كجم" value={feedItems["بذور قطن"] || 0} onChange={(v) => handleUpdateFeed("بذور قطن", v)} />
-                                    <ItemCard icon="🏭" name="علف مركز (جاهز)" unit="كجم" value={feedItems["علف مركز"] || 0} onChange={(v) => handleUpdateFeed("علف مركز", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="ذرة صفراء مجروشة" unit="كجم" value={feedItems["ذرة صفراء"] || 0} onChange={(v) => handleUpdateFeed("ذرة صفراء", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="شعير" unit="كجم" value={feedItems["شعير"] || 0} onChange={(v) => handleUpdateFeed("شعير", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="فول صويا (كُسب)" unit="كجم" value={feedItems["فول صويا"] || 0} onChange={(v) => handleUpdateFeed("فول صويا", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="ردة (نخالة)" unit="كجم" value={feedItems["ردة"] || 0} onChange={(v) => handleUpdateFeed("ردة", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="نخالة قمح (خشنة)" unit="كجم" value={feedItems["نخالة قمح"] || 0} onChange={(v) => handleUpdateFeed("نخالة قمح", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="بذور قطن" unit="كجم" value={feedItems["بذور قطن"] || 0} onChange={(v) => handleUpdateFeed("بذور قطن", v)} />
+                                    <ItemCard icon={<Zap size={18}/>} name="علف مركز (جاهز)" unit="كجم" value={feedItems["علف مركز"] || 0} onChange={(v) => handleUpdateFeed("علف مركز", v)} />
                                 </CollapsibleSection>
 
                                 <CollapsibleSection title="الأعلاف الخشنة والخضراء" icon="🌿">
-                                    <ItemCard icon="🌿" name="علف أخضر برسيم" unit="كجم" value={feedItems["برسيم"] || 0} onChange={(v) => handleUpdateFeed("برسيم", v)} />
-                                    <ItemCard icon="🌽📦" name="علف أخضر سيلاج ذرة" unit="طن" value={feedItems["سيلاج"] || 0} onChange={(v) => handleUpdateFeed("سيلاج", v)} />
-                                    <ItemCard icon="🌾🟫" name="علف خشن دريس" unit="كجم" value={feedItems["دريس"] || 0} onChange={(v) => handleUpdateFeed("دريس", v)} />
-                                    <ItemCard icon="🌾🟡" name="تبن قمح" unit="كجم" value={feedItems["تبن"] || 0} onChange={(v) => handleUpdateFeed("تبن", v)} />
-                                    <ItemCard icon="🌾⚪" name="قش أرز" unit="كجم" value={feedItems["قش"] || 0} onChange={(v) => handleUpdateFeed("قش", v)} />
+                                    <ItemCard icon={<Leaf size={18}/>} name="علف أخضر برسيم" unit="كجم" value={feedItems["برسيم"] || 0} onChange={(v) => handleUpdateFeed("برسيم", v)} />
+                                    <ItemCard icon={<Leaf size={18}/>} name="علف أخضر سيلاج ذرة" unit="طن" value={feedItems["سيلاج"] || 0} onChange={(v) => handleUpdateFeed("سيلاج", v)} />
+                                    <ItemCard icon={<Leaf size={18}/>} name="علف خشن دريس" unit="كجم" value={feedItems["دريس"] || 0} onChange={(v) => handleUpdateFeed("دريس", v)} />
+                                    <ItemCard icon={<Leaf size={18}/>} name="تبن قمح" unit="كجم" value={feedItems["تبن"] || 0} onChange={(v) => handleUpdateFeed("تبن", v)} />
+                                    <ItemCard icon={<Leaf size={18}/>} name="قش أرز" unit="كجم" value={feedItems["قش"] || 0} onChange={(v) => handleUpdateFeed("قش", v)} />
                                 </CollapsibleSection>
 
                                 <CollapsibleSection title="الإضافات والمياه" icon="🧂">
-                                    <ItemCard icon="🧂" name="ملح طعام" unit="كجم" value={feedItems["ملح"] || 0} onChange={(v) => handleUpdateFeed("ملح", v)} />
-                                    <ItemCard icon="🦴" name="كالسيوم (حجر جيري)" unit="كجم" value={feedItems["كالسيوم"] || 0} onChange={(v) => handleUpdateFeed("كالسيوم", v)} />
-                                    <ItemCard icon="🧪" name="بيكاربونات صوديوم" unit="كجم" value={feedItems["بيكاربونات"] || 0} onChange={(v) => handleUpdateFeed("بيكاربونات", v)} />
-                                    <ItemCard icon="🍞" name="خميرة حية" unit="جرام" value={feedItems["خميرة"] || 0} onChange={(v) => handleUpdateFeed("خميرة", v)} />
-                                    <ItemCard icon="💎" name="أملاح معدنية" unit="كجم" value={feedItems["أملاح"] || 0} onChange={(v) => handleUpdateFeed("أملاح", v)} />
-                                    <ItemCard icon="🍊" name="فيتامينات (AD3E)" unit="لتر" value={feedItems["فيتامينات"] || 0} onChange={(v) => handleUpdateFeed("فيتامينات", v)} />
-                                    <ItemCard icon="💧" name="مياه الشرب" unit="لتر" value={feedItems["مياه"] || 0} onChange={(v) => handleUpdateFeed("مياه", v)} />
+                                    <ItemCard icon={<FlaskConical size={18}/>} name="ملح طعام" unit="كجم" value={feedItems["ملح"] || 0} onChange={(v) => handleUpdateFeed("ملح", v)} />
+                                    <ItemCard icon={<FlaskConical size={18}/>} name="كالسيوم (حجر جيري)" unit="كجم" value={feedItems["كالسيوم"] || 0} onChange={(v) => handleUpdateFeed("كالسيوم", v)} />
+                                    <ItemCard icon={<FlaskConical size={18}/>} name="بيكاربونات صوديوم" unit="كجم" value={feedItems["بيكاربونات"] || 0} onChange={(v) => handleUpdateFeed("بيكاربونات", v)} />
+                                    <ItemCard icon={<FlaskConical size={18}/>} name="خميرة حية" unit="جرام" value={feedItems["خميرة"] || 0} onChange={(v) => handleUpdateFeed("خميرة", v)} />
+                                    <ItemCard icon={<FlaskConical size={18}/>} name="أملاح معدنية" unit="كجم" value={feedItems["أملاح"] || 0} onChange={(v) => handleUpdateFeed("أملاح", v)} />
+                                    <ItemCard icon={<FlaskConical size={18}/>} name="فيتامينات (AD3E)" unit="لتر" value={feedItems["فيتامينات"] || 0} onChange={(v) => handleUpdateFeed("فيتامينات", v)} />
+                                    <ItemCard icon={<Droplets size={18}/>} name="مياه الشرب" unit="لتر" value={feedItems["مياه"] || 0} onChange={(v) => handleUpdateFeed("مياه", v)} />
                                 </CollapsibleSection>
                             </div>
                         ) : (
@@ -1074,22 +1084,22 @@ const BreederActiveCycles: React.FC<{
                                     <h4 className="font-bold text-black flex items-center gap-2 px-1 text-sm">
                                         <ShieldCheck size={18} className="text-blue-500" /> التحصينات الدورية
                                     </h4>
-                                    <VetCard icon="🦠" name="حمى قلاعية (FMD)" type="vaccine" onApply={() => handleApplyVet("حمى قلاعية", "vaccine")} />
-                                    <VetCard icon="🦟" name="حمى الوادى المتصدع" type="vaccine" onApply={() => handleApplyVet("حمى الوادى المتصدع", "vaccine")} />
-                                    <VetCard icon="🐮🔴" name="جلد عقدى (LSD)" type="vaccine" onApply={() => handleApplyVet("جلد عقدى", "vaccine")} />
-                                    <VetCard icon="🩸💀" name="تسمم دموى" type="vaccine" onApply={() => handleApplyVet("تسمم دموى", "vaccine")} />
+                                    <VetCard icon={<ShieldCheck size={20}/>} name="حمى قلاعية (FMD)" type="vaccine" onApply={() => handleApplyVet("حمى قلاعية", "vaccine")} />
+                                    <VetCard icon={<ShieldCheck size={20}/>} name="حمى الوادى المتصدع" type="vaccine" onApply={() => handleApplyVet("حمى الوادى المتصدع", "vaccine")} />
+                                    <VetCard icon={<ShieldCheck size={20}/>} name="جلد عقدى (LSD)" type="vaccine" onApply={() => handleApplyVet("جلد عقدى", "vaccine")} />
+                                    <VetCard icon={<ShieldCheck size={20}/>} name="تسمم دموى" type="vaccine" onApply={() => handleApplyVet("تسمم دموى", "vaccine")} />
                                 </div>
 
                                 <div className="space-y-3">
                                     <h4 className="font-bold text-black flex items-center gap-2 px-1 text-sm">
                                         <Stethoscope size={18} className="text-orange-500" /> العلاجات والطوارئ
                                     </h4>
-                                    <VetCard icon="🫁" name="التهاب رئوى (علاج)" type="treatment" onApply={() => handleApplyVet("التهاب رئوى", "treatment")} />
-                                    <VetCard icon="🪱" name="مضاد للديدان" type="treatment" onApply={() => handleApplyVet("مضاد للديدان", "treatment")} />
-                                    <VetCard icon="🕷️" name="قراد (رش/تغطيس)" type="treatment" onApply={() => handleApplyVet("مكافحة طفيليات خارجية", "treatment")} />
-                                    <VetCard icon="🐕" name="جرب (حقن/دهان)" type="treatment" onApply={() => handleApplyVet("علاج جرب", "treatment")} />
-                                    <VetCard icon="🛢️" name="زيت برافين (للانتفاخ)" type="treatment" onApply={() => handleApplyVet("زيت برافين", "treatment")} />
-                                    <VetCard icon="🥤⚡" name="محلول جفاف" type="treatment" onApply={() => handleApplyVet("محلول جفاف", "treatment")} />
+                                    <VetCard icon={<Stethoscope size={20}/>} name="التهاب رئوى (علاج)" type="treatment" onApply={() => handleApplyVet("التهاب رئوى", "treatment")} />
+                                    <VetCard icon={<Stethoscope size={20}/>} name="مضاد للديدان" type="treatment" onApply={() => handleApplyVet("مضاد للديدان", "treatment")} />
+                                    <VetCard icon={<Stethoscope size={20}/>} name="قراد (رش/تغطيس)" type="treatment" onApply={() => handleApplyVet("مكافحة طفيليات خارجية", "treatment")} />
+                                    <VetCard icon={<Stethoscope size={20}/>} name="جرب (حقن/دهان)" type="treatment" onApply={() => handleApplyVet("علاج جرب", "treatment")} />
+                                    <VetCard icon={<Stethoscope size={20}/>} name="زيت برافين (للانتفاخ)" type="treatment" onApply={() => handleApplyVet("زيت برافين", "treatment")} />
+                                    <VetCard icon={<Stethoscope size={20}/>} name="محلول جفاف" type="treatment" onApply={() => handleApplyVet("محلول جفاف", "treatment")} />
                                 </div>
                             </div>
                         )}
@@ -1149,44 +1159,123 @@ const BreederActiveCycles: React.FC<{
 const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; }> = ({ user, cycles, setCycles }) => {
   const myCycles = cycles.filter(c => c.breederId === user.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ animalType: '', fundingGoal: 0, expectedDuration: 180, description: '' });
+  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '' });
+  const [cycleImage, setCycleImage] = useState<string | null>(null);
+
+  const animalTypes = [
+    "عجل هولشتاين",
+    "عجل بلدي",
+    "عجل خليط",
+    "خروف برقي",
+    "خروف رحماني",
+    "ماعز بور",
+    "إبل (جمل)"
+  ];
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCycleImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
 
   const handleAddCycle = () => {
+    if (!cycleImage) {
+      alert("يرجى رفع صورة للحيوان لإتمام إضافة الدورة.");
+      return;
+    }
+
     const cycle: Cycle = { 
       id: Math.random().toString(36).substr(2, 9), 
       breederId: user.id, 
       status: CycleStatus.PENDING, 
       startDate: new Date().toISOString().split('T')[0], 
       totalHeads: 1, availableHeads: 1, currentFunding: 0, 
-      imageUrl: 'https://images.unsplash.com/photo-1546445317-29f4545e9d53?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80', 
+      imageUrl: cycleImage, 
       healthCertUrl: "#", startPricePerHead: 0, initialWeight: 200, targetWeight: 450,
       ...newCycle as any 
     };
     setCycles([...cycles, cycle]); 
     setIsModalOpen(false);
+    setCycleImage(null);
   };
 
   return (
     <div className="space-y-6">
-        <div className="flex justify-between items-center"> <h2 className="text-xl font-bold text-black">دوراتي</h2> <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button> </div>
+        <div className="flex justify-between items-center"> <h2 className="text-xl font-bold text-black">دوراتي الإنتاجية</h2> <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button> </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCycles.map(cycle => (
-                <Card key={cycle.id} className="overflow-hidden">
-                    <img src={cycle.imageUrl} className="w-full h-40 object-cover" />
+                <Card key={cycle.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+                    <div className="relative h-48">
+                        <img src={cycle.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <div className="absolute top-2 right-2">
+                            <StatusBadge status={cycle.status} type="cycle" />
+                        </div>
+                    </div>
                     <div className="p-4"> 
-                      <h3 className="font-bold text-black">{cycle.animalType}</h3> 
-                      <div className="flex justify-between text-xs mt-2"> <span>التمويل المطلوب:</span> <b>{cycle.fundingGoal.toLocaleString()} ج.م</b> </div>
-                      <div className="mt-2"><StatusBadge status={cycle.status} type="cycle" /></div>
+                      <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
+                      <div className="flex justify-between text-xs mt-2 text-gray-500"> <span>التمويل المطلوب:</span> <b className="text-primary">{cycle.fundingGoal.toLocaleString()} ج.م</b> </div>
                     </div>
                 </Card>
             ))}
         </div>
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة جديدة">
-            <div className="space-y-4">
-                <Input label="نوع الحيوان" value={newCycle.animalType} onChange={(e) => setNewCycle({...newCycle, animalType: e.target.value})} />
-                <Input label="مبلغ التمويل المطلوب (ج.م)" type="number" value={newCycle.fundingGoal} onChange={(e) => setNewCycle({...newCycle, fundingGoal: Number(e.target.value)})} />
-                <Input label="مدة الدورة (بالأيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
-                <Button className="w-full" onClick={handleAddCycle}>حفظ وإرسال للمراجعة</Button>
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة تسمين جديدة">
+            <div className="space-y-5">
+                {/* Animal Type Select */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">نوع الحيوان</label>
+                    <select 
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-black focus:ring-2 focus:ring-primary focus:outline-none"
+                        value={newCycle.animalType}
+                        onChange={(e) => setNewCycle({...newCycle, animalType: e.target.value})}
+                    >
+                        {animalTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                </div>
+
+                {/* Image Upload Area */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">صورة الحيوان (إلزامي)</label>
+                    <div className={`relative border-2 border-dashed rounded-2xl p-4 transition-colors text-center ${cycleImage ? 'border-primary bg-green-50' : 'border-gray-200 hover:border-primary/50'}`}>
+                        <input 
+                            type="file" 
+                            id="cycle-image-upload" 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={handleImageChange}
+                        />
+                        <label htmlFor="cycle-image-upload" className="cursor-pointer block">
+                            {cycleImage ? (
+                                <div className="space-y-2">
+                                    <img src={cycleImage} alt="Animal preview" className="h-32 w-full object-cover rounded-xl mx-auto shadow-sm" />
+                                    <span className="text-xs text-primary font-bold">اضغط لتغيير الصورة</span>
+                                </div>
+                            ) : (
+                                <div className="py-6 space-y-2">
+                                    <Camera size={32} className="mx-auto text-gray-300" />
+                                    <p className="text-sm text-gray-400">انقر لرفع صورة واضحة للحيوان</p>
+                                </div>
+                            )}
+                        </label>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <Input label="الهدف المالي (ج.م)" type="number" value={newCycle.fundingGoal} onChange={(e) => setNewCycle({...newCycle, fundingGoal: Number(e.target.value)})} />
+                    <Input label="المدة (أيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
+                </div>
+                
+                <div className="bg-orange-50 p-3 rounded-xl flex items-start gap-3 border border-orange-100">
+                    <Info size={18} className="text-orange-500 shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-orange-700">سيتم مراجعة بيانات الدورة والصورة من قبل الإدارة قبل طرحها للاستثمار لضمان الجودة.</p>
+                </div>
+
+                <Button className="w-full py-3" onClick={handleAddCycle} disabled={!cycleImage}>
+                    إرسال الطلب للمراجعة
+                </Button>
             </div>
         </Modal>
     </div>
@@ -1306,6 +1395,9 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
 
     const handleConfirmInvest = () => {
         if (!selectedCycle) return;
+        
+        // Fix: Removed unnecessary casting that was causing type comparison errors. 
+        // Ensuring direct comparison between numeric values.
         if (amountVal <= 0) { alert("يرجى إدخال مبلغ استثمار صحيح."); return; }
         if (amountVal > remainingToGoal) { alert(`المبلغ المدخل يتجاوز المتبقي للتمويل (${remainingToGoal.toLocaleString()} ج.م)`); return; }
         if (!receiptImage) { alert("يرجى رفع إيصال التحويل لتأكيد العملية."); return; }

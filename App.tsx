@@ -509,6 +509,7 @@ const AdminDashboard: React.FC<{
     const [isSellModalOpen, setIsSellModalOpen] = useState(false);
     const [selectedCycleToSell, setSelectedCycleToSell] = useState<Cycle | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
     const insuranceList = investments.filter(inv => inv.hasAnimalInsurance && inv.status === 'APPROVED');
     const totalInsuranceFund = insuranceList.reduce((sum, inv) => sum + (inv.animalInsuranceFee || 0), 0);
@@ -519,8 +520,13 @@ const AdminDashboard: React.FC<{
         [UserRole.INVESTOR]: 'مستثمر'
     };
 
-    const handleUserAction = (id: string, action: 'approve' | 'reject') => {
-        setUsers(users.map(u => u.id === id ? { ...u, status: action === 'approve' ? UserStatus.ACTIVE : UserStatus.REJECTED } : u));
+    const handleUserAction = (id: string, action: 'approve' | 'reject' | 'delete') => {
+        if (action === 'delete') {
+            setUsers(users.filter(u => u.id !== id));
+            setUserToDelete(null);
+        } else {
+            setUsers(users.map(u => u.id === id ? { ...u, status: action === 'approve' ? UserStatus.ACTIVE : UserStatus.REJECTED } : u));
+        }
     };
 
     const handleCycleAction = (id: string, action: 'approve' | 'reject') => {
@@ -651,7 +657,21 @@ const AdminDashboard: React.FC<{
                                         <td className="p-4"> <div className="font-bold text-black">{u.name}</div> <div className="text-xs text-gray-500">{u.phone}</div> </td>
                                         <td className="p-4"> <span className="text-xs font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-md">{roleLabels[u.role] || u.role}</span> </td>
                                         <td className="p-4"><StatusBadge status={u.status} type="user" /></td>
-                                        <td className="p-4"> {u.status === UserStatus.PENDING && ( <div className="flex gap-2"> <Button size="sm" variant="outline" className="text-green-600 border-green-200" onClick={() => handleUserAction(u.id, 'approve')}>قبول</Button> <Button size="sm" variant="outline" className="text-red-600 border-red-200" onClick={() => handleUserAction(u.id, 'reject')}>رفض</Button> </div> )} </td>
+                                        <td className="p-4"> 
+                                            <div className="flex gap-2"> 
+                                                {u.status === UserStatus.PENDING && (
+                                                    <>
+                                                        <Button size="sm" variant="outline" className="text-green-600 border-green-200" onClick={() => handleUserAction(u.id, 'approve')}>قبول</Button>
+                                                        <Button size="sm" variant="outline" className="text-red-600 border-red-200" onClick={() => handleUserAction(u.id, 'reject')}>رفض</Button>
+                                                    </>
+                                                )}
+                                                {u.role !== UserRole.ADMIN && (
+                                                    <Button size="sm" variant="ghost" className="text-red-500" onClick={() => setUserToDelete(u)}>
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                )}
+                                            </div> 
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -766,6 +786,20 @@ const AdminDashboard: React.FC<{
                 <div className="space-y-4">
                     <Input label="سعر البيع النهائي (ج.م)" type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
                     <Button className="w-full" onClick={handleConfirmSale}>تأكيد البيع وتوزيع الأرباح</Button>
+                </div>
+            </Modal>
+
+            <Modal isOpen={!!userToDelete} onClose={() => setUserToDelete(null)} title="تأكيد حذف المستخدم">
+                <div className="space-y-4 text-center">
+                    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertTriangle size={32} />
+                    </div>
+                    <p className="font-bold text-lg">هل أنت متأكد من حذف هذا المستخدم؟</p>
+                    <p className="text-sm text-gray-500">حذف المستخدم <b>{userToDelete?.name}</b> سيؤدي إلى مسح كافة بياناته المرتبطة. لا يمكن التراجع عن هذا الإجراء.</p>
+                    <div className="flex gap-3 pt-4">
+                        <Button variant="danger" className="flex-1" onClick={() => handleUserAction(userToDelete!.id, 'delete')}>تأكيد الحذف النهائي</Button>
+                        <Button variant="outline" className="flex-1" onClick={() => setUserToDelete(null)}>إلغاء</Button>
+                    </div>
                 </div>
             </Modal>
         </div>
@@ -1085,18 +1119,26 @@ const BreederActiveCycles: React.FC<{
       <div className="space-y-6">
           <h2 className="text-xl font-bold mb-4 text-black">الدورات النشطة (متابعة)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeCycles.map(cycle => (
-                  <Card key={cycle.id} className="p-4 flex flex-col gap-4 hover:shadow-lg transition-all border-transparent hover:border-primary/10">
-                      <div className="flex items-start gap-4"> 
-                        <img src={cycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover bg-gray-100 shadow-sm" /> 
-                        <div className="flex-1"> 
-                          <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
-                          <p className="text-xs text-gray-400 mb-2 flex items-center gap-1"><Clock size={12}/> البدء: {cycle.startDate}</p>
-                          <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">عرض ومتابعة الدورة</Button>
-                        </div> 
-                      </div>
-                  </Card>
-              ))}
+              {activeCycles.map(cycle => {
+                  const fundPercent = Math.min(100, Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100));
+                  return (
+                    <Card key={cycle.id} className="p-4 flex flex-col gap-4 hover:shadow-lg transition-all border-transparent hover:border-primary/10">
+                        <div className="flex items-start gap-4"> 
+                            <div className="relative shrink-0">
+                                <img src={cycle.imageUrl} className="w-20 h-20 rounded-2xl object-cover bg-gray-100 shadow-sm" /> 
+                                <div className="absolute -top-2 -left-2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md border border-white">
+                                    {fundPercent}% تمويل
+                                </div>
+                            </div>
+                            <div className="flex-1"> 
+                            <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
+                            <p className="text-xs text-gray-400 mb-2 flex items-center gap-1"><Clock size={12}/> البدء: {cycle.startDate}</p>
+                            <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">عرض ومتابعة الدورة</Button>
+                            </div> 
+                        </div>
+                    </Card>
+                  );
+              })}
               {activeCycles.length === 0 && (
                 <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
                     <Tractor size={48} className="mx-auto text-gray-100 mb-4" />
@@ -1166,20 +1208,35 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     <div className="space-y-6">
         <div className="flex justify-between items-center"> <h2 className="text-xl font-bold text-black">دوراتي الإنتاجية</h2> <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button> </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myCycles.map(cycle => (
-                <Card key={cycle.id} className="overflow-hidden hover:shadow-md transition-shadow group">
-                    <div className="relative h-48">
-                        <img src={cycle.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                        <div className="absolute top-2 right-2">
-                            <StatusBadge status={cycle.status} type="cycle" />
+            {myCycles.map(cycle => {
+                const fundPercent = Math.min(100, Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100));
+                return (
+                    <Card key={cycle.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+                        <div className="relative h-48">
+                            <img src={cycle.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                            <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
+                                <StatusBadge status={cycle.status} type="cycle" />
+                                <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm border border-primary/20 flex flex-col items-center">
+                                    <span className="text-[10px] font-bold text-primary leading-none">{fundPercent}%</span>
+                                    <span className="text-[8px] text-gray-500 font-medium">تمويل</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="p-4"> 
-                      <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
-                      <div className="flex justify-between text-xs mt-2 text-gray-500"> <span>التمويل المطلوب:</span> <b className="text-primary">{cycle.fundingGoal.toLocaleString()} ج.م</b> </div>
-                    </div>
-                </Card>
-            ))}
+                        <div className="p-4 space-y-3"> 
+                            <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between text-xs text-gray-500"> 
+                                    <span>التمويل المطلوب:</span> 
+                                    <b className="text-primary">{cycle.fundingGoal.toLocaleString()} ج.م</b> 
+                                </div>
+                                <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                                    <div className="bg-primary h-full transition-all duration-700" style={{ width: `${fundPercent}%` }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                );
+            })}
         </div>
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة تسمين جديدة">
             <div className="space-y-5">

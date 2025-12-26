@@ -74,9 +74,16 @@ export interface Cycle {
   imageUrl: string;
   description: string;
   fatteningPlan?: string; // New: Feeding and Care Plan details
-  isInsured?: boolean; // New: Flag for cycle insurance
-  insurancePolicyNumber?: string; // Animal Insurance
-  animalInsuranceCost?: number;
+  
+  // Insurance Options
+  isInsured?: boolean; // Generic flag
+  insurancePolicyNumber?: string;
+  animalInsuranceCost?: number; // Calculated cost if relevant
+  
+  // Barn Insurance (Specifically for Breeder)
+  isBarnInsured?: boolean;
+  barnInsuranceCost?: number;
+  
   adminNote?: string;
   
   // Financials & Completion
@@ -98,8 +105,8 @@ export interface Investment {
   status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
   transferReceiptUrl?: string; // URL/Path to the uploaded image
   
-  // Investor Animal Insurance
-  hasAnimalInsurance?: boolean; // Opt-in if cycle isn't insured
+  // Animal Life Insurance (Specifically for Investor)
+  hasAnimalInsurance?: boolean; 
   animalInsuranceFee?: number;
 }
 

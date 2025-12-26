@@ -8,7 +8,7 @@ import {
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
   Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
   Calculator, ArrowDown, ShoppingBag, Gavel, UserCog, Calendar, ChevronDown, ChevronUp, Syringe, Pill, Stethoscope, Droplets, Minus, HeartPulse,
-  Play, Zap, Leaf, FlaskConical, BrainCircuit
+  Play, Zap, Leaf, FlaskConical, BrainCircuit, Heart, Home
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -22,7 +22,8 @@ import { Button, Card, Badge, Modal, Input, FatteningPlanViewer, SimplePlanBuild
 
 // --- Constants ---
 const PLATFORM_FEE_PERCENT = 0.025; // 2.5% Platform Operation Fee
-const INSURANCE_FEE_PERCENT = 0.03; // 3.0% Animal Life Insurance
+const ANIMAL_INSURANCE_FEE_PERCENT = 0.03; // 3.0% Animal Life Insurance (Investor)
+const BARN_INSURANCE_FIXED_FEE = 750; // Fixed fee for barn insurance (Breeder)
 
 // App Logo Configuration
 const APP_LOGO = "dawab_logo2.png"; 
@@ -64,7 +65,6 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
         return result;
     };
 
-    // Correctly using log.foodDetails here as foodDetails is not in the outer scope
     const feedData = categorizeFeed(log.foodDetails);
     const notesArray = log.notes ? log.notes.split('|').map(n => n.trim()) : [];
     const vaccines = notesArray.filter(n => n.includes('[vaccine]')).map(n => n.replace('[vaccine]', '').trim());
@@ -511,8 +511,14 @@ const AdminDashboard: React.FC<{
     const [salePrice, setSalePrice] = useState<string>('');
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-    const insuranceList = investments.filter(inv => inv.hasAnimalInsurance && inv.status === 'APPROVED');
-    const totalInsuranceFund = insuranceList.reduce((sum, inv) => sum + (inv.animalInsuranceFee || 0), 0);
+    // Calculations for Insurance Fund
+    const investorInsuranceEntries = investments.filter(inv => inv.hasAnimalInsurance && inv.status === 'APPROVED');
+    const totalAnimalLifeInsurance = investorInsuranceEntries.reduce((sum, inv) => sum + (inv.animalInsuranceFee || 0), 0);
+
+    const breederBarnInsuranceEntries = cycles.filter(c => c.isBarnInsured && (c.status === CycleStatus.ACTIVE || c.status === CycleStatus.COMPLETED));
+    const totalBarnInsurance = breederBarnInsuranceEntries.reduce((sum, c) => sum + (c.barnInsuranceCost || 0), 0);
+
+    const totalInsuranceFund = totalAnimalLifeInsurance + totalBarnInsurance;
 
     const roleLabels = {
         [UserRole.ADMIN]: 'مدير النظام',
@@ -579,7 +585,7 @@ const AdminDashboard: React.FC<{
                     { id: 'users', label: 'المستخدمين' },
                     { id: 'cycles', label: 'الدورات' },
                     { id: 'investments', label: 'الاستثمارات' },
-                    { id: 'insurance', label: 'صندوق التأمين' }
+                    { id: 'insurance', label: 'صندوق التأمين الشامل' }
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2 font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-black'}`}>
                         {tab.label}
@@ -600,48 +606,92 @@ const AdminDashboard: React.FC<{
 
             {activeTab === 'insurance' && (
                 <div className="space-y-6 animate-in fade-in">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-r-yellow-500 flex flex-col items-center text-center">
-                            <span className="text-gray-500 text-sm">رصيد صندوق التأمين الحالي</span>
-                            <span className="text-3xl font-bold text-yellow-600 mt-2">{totalInsuranceFund.toLocaleString()} ج.م</span>
-                            <span className="text-[10px] text-gray-400 mt-1">مبالغ مخصصة لمواجهة نفوق الماشية فقط</span>
-                        </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
-                            <span className="text-gray-500 text-sm">عدد الرؤوس المؤمنة</span>
-                            <span className="text-3xl font-bold text-blue-600 mt-2">{insuranceList.length} رأس</span>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card className="p-6 border-r-4 border-r-yellow-500 bg-white shadow-sm flex flex-col items-center text-center">
+                            <span className="text-gray-500 text-sm">إجمالي صندوق التأمين الشامل</span>
+                            <span className="text-3xl font-black text-yellow-600 mt-2">{totalInsuranceFund.toLocaleString()} ج.م</span>
+                            <div className="mt-2 flex gap-1">
+                                <Badge color="green">أمان فائق</Badge>
+                                <Badge color="blue">تغطية مزدوجة</Badge>
+                            </div>
+                        </Card>
+                        <Card className="p-6 border-r-4 border-r-primary bg-white shadow-sm flex flex-col items-center text-center">
+                            <span className="text-gray-500 text-sm">تأمين حياة الماشية (المستثمرون)</span>
+                            <span className="text-2xl font-bold text-primary mt-2">{totalAnimalLifeInsurance.toLocaleString()} ج.م</span>
+                            <span className="text-[10px] text-gray-400 mt-1">من {investorInsuranceEntries.length} عملية استثمار</span>
+                        </Card>
+                        <Card className="p-6 border-r-4 border-r-orange-500 bg-white shadow-sm flex flex-col items-center text-center">
+                            <span className="text-gray-500 text-sm">تأمين الحظيرة (المربون)</span>
+                            <span className="text-2xl font-bold text-orange-600 mt-2">{totalBarnInsurance.toLocaleString()} ج.م</span>
+                            <span className="text-[10px] text-gray-400 mt-1">من {breederBarnInsuranceEntries.length} دورة نشطة</span>
+                        </Card>
                     </div>
-                    <Card className="overflow-hidden">
-                        <table className="w-full text-right text-sm">
-                            <thead className="bg-gray-50 text-gray-600">
-                                <tr>
-                                    <th className="p-4">المستثمر</th>
-                                    <th className="p-4">نوع الماشية</th>
-                                    <th className="p-4">مبلغ الاستثمار</th>
-                                    <th className="p-4 text-yellow-600">رسوم التأمين (3%)</th>
-                                    <th className="p-4 text-center">الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {insuranceList.map(inv => {
-                                    const investor = users.find(u => u.id === inv.investorId);
-                                    const cycle = cycles.find(c => c.id === inv.cycleId);
-                                    return (
-                                        <tr key={inv.id} className="hover:bg-gray-50">
-                                            <td className="p-4 font-bold">{investor?.name}</td>
-                                            <td className="p-4">{cycle?.animalType}</td>
-                                            <td className="p-4">{inv.amount.toLocaleString()} ج.م</td>
-                                            <td className="p-4 font-bold text-yellow-600">{inv.animalInsuranceFee?.toLocaleString()} ج.م</td>
-                                            <td className="p-4 text-center"><Badge color="green">مؤمنة</Badge></td>
-                                        </tr>
-                                    );
-                                })}
-                                {insuranceList.length === 0 && (
-                                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">لا توجد استثمارات مؤمنة حالياً</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </Card>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Animal Life Insurance (Investors) */}
+                        <Card className="overflow-hidden">
+                            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                                <h4 className="font-bold text-sm text-gray-700">سجل تأمين حياة الماشية</h4>
+                                <ShieldCheck size={18} className="text-primary" />
+                            </div>
+                            <table className="w-full text-right text-xs">
+                                <thead className="bg-white border-b text-gray-400">
+                                    <tr>
+                                        <th className="p-3">المستثمر</th>
+                                        <th className="p-3">قيمة الاستثمار</th>
+                                        <th className="p-3">قسط التأمين</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {investorInsuranceEntries.map(inv => {
+                                        const investor = users.find(u => u.id === inv.investorId);
+                                        return (
+                                            <tr key={inv.id} className="hover:bg-gray-50">
+                                                <td className="p-3 font-bold">{investor?.name}</td>
+                                                <td className="p-3">{inv.amount.toLocaleString()} ج.م</td>
+                                                <td className="p-3 font-bold text-primary">{inv.animalInsuranceFee?.toLocaleString()} ج.م</td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {investorInsuranceEntries.length === 0 && (
+                                        <tr><td colSpan={3} className="p-6 text-center text-gray-400 italic">لا توجد سجلات حالياً</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </Card>
+
+                        {/* Barn Insurance (Breeders) */}
+                        <Card className="overflow-hidden">
+                            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                                <h4 className="font-bold text-sm text-gray-700">سجل تأمين الحظيرة</h4>
+                                <Home size={18} className="text-orange-500" />
+                            </div>
+                            <table className="w-full text-right text-xs">
+                                <thead className="bg-white border-b text-gray-400">
+                                    <tr>
+                                        <th className="p-3">المربي</th>
+                                        <th className="p-3">نوع الدورة</th>
+                                        <th className="p-3">مبلغ التأمين</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {breederBarnInsuranceEntries.map(c => {
+                                        const breeder = users.find(u => u.id === c.breederId);
+                                        return (
+                                            <tr key={c.id} className="hover:bg-gray-50">
+                                                <td className="p-3 font-bold">{breeder?.name}</td>
+                                                <td className="p-3">{c.animalType}</td>
+                                                <td className="p-3 font-bold text-orange-600">{c.barnInsuranceCost?.toLocaleString()} ج.م</td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {breederBarnInsuranceEntries.length === 0 && (
+                                        <tr><td colSpan={3} className="p-6 text-center text-gray-400 italic">لا توجد سجلات حالياً</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </Card>
+                    </div>
                 </div>
             )}
             
@@ -1162,7 +1212,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     fundingGoal: 0, 
     expectedDuration: 180, 
     description: '',
-    isInsured: true // تفعيل افتراضي بناءً على طلب المستخدم
+    isBarnInsured: true // Breeder default
   });
   const [cycleImage, setCycleImage] = useState<string | null>(null);
 
@@ -1192,7 +1242,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
       return;
     }
 
-    const insuranceCost = newCycle.isInsured ? (newCycle.fundingGoal || 0) * INSURANCE_FEE_PERCENT : 0;
+    const barnInsuranceCost = newCycle.isBarnInsured ? BARN_INSURANCE_FIXED_FEE : 0;
 
     const cycle: Cycle = { 
       id: Math.random().toString(36).substr(2, 9), 
@@ -1202,13 +1252,14 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
       totalHeads: 1, availableHeads: 1, currentFunding: 0, 
       imageUrl: cycleImage, 
       healthCertUrl: "#", startPricePerHead: 0, initialWeight: 200, targetWeight: 450,
-      animalInsuranceCost: insuranceCost,
+      isBarnInsured: newCycle.isBarnInsured,
+      barnInsuranceCost: barnInsuranceCost,
       ...newCycle as any 
     };
     setCycles([...cycles, cycle]); 
     setIsModalOpen(false);
     setCycleImage(null);
-    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', isInsured: true });
+    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', isBarnInsured: true });
   };
 
   return (
@@ -1227,9 +1278,9 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                             />
                             <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
                                 <StatusBadge status={cycle.status} type="cycle" />
-                                {cycle.isInsured && (
-                                    <div className="bg-blue-600/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                                        <ShieldCheck size={10} /> مؤمنة
+                                {cycle.isBarnInsured && (
+                                    <div className="bg-orange-500/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                                        <Home size={10} /> تأمين الحظيرة
                                     </div>
                                 )}
                             </div>
@@ -1294,45 +1345,37 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     <Input label="المدة (أيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
                 </div>
 
-                {/* خيار التأمين الاختياري بشكل متطور - مفعل افتراضياً */}
-                <div className={`p-4 rounded-2xl border transition-all duration-300 ${newCycle.isInsured ? 'bg-green-50 border-primary/30 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
+                {/* Barn Insurance Option (Breeder Only) */}
+                <div className={`p-4 rounded-2xl border transition-all duration-300 ${newCycle.isBarnInsured ? 'bg-orange-50 border-orange-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button 
                                 type="button"
-                                onClick={() => setNewCycle({...newCycle, isInsured: !newCycle.isInsured})}
-                                className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${newCycle.isInsured ? 'bg-primary/20' : 'bg-gray-200'}`}
+                                onClick={() => setNewCycle({...newCycle, isBarnInsured: !newCycle.isBarnInsured})}
+                                className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${newCycle.isBarnInsured ? 'bg-orange-500/20' : 'bg-gray-200'}`}
                             >
-                                <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${newCycle.isInsured ? 'bg-primary translate-x-1' : 'bg-white translate-x-8'}`}>
-                                    {newCycle.isInsured && <Check size={10} className="text-white" />}
+                                <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${newCycle.isBarnInsured ? 'bg-orange-500 translate-x-1' : 'bg-white translate-x-8'}`}>
+                                    {newCycle.isBarnInsured && <Check size={10} className="text-white" />}
                                 </div>
                             </button>
                             <div>
-                                <h4 className={`text-sm font-bold transition-colors ${newCycle.isInsured ? 'text-green-900' : 'text-gray-700'}`}>طلب تأمين شامل</h4>
-                                <p className="text-[10px] text-gray-500">تغطية مخاطر النفوق والأمراض الوبائية (اختياري)</p>
+                                <h4 className={`text-sm font-bold ${newCycle.isBarnInsured ? 'text-orange-900' : 'text-gray-700'}`}>تأمين الحظيرة والمنشأة</h4>
+                                <p className="text-[10px] text-gray-500">تغطية مخاطر الحرائق والسرقة والحوادث للمزرعة</p>
                             </div>
                         </div>
-                        <div className={`p-2 rounded-xl shadow-sm transition-colors ${newCycle.isInsured ? 'bg-primary text-white' : 'bg-white text-gray-400'}`}>
-                            <ShieldCheck size={22} />
-                        </div>
+                        <Home size={22} className={newCycle.isBarnInsured ? 'text-orange-600' : 'text-gray-300'} />
                     </div>
-                    {newCycle.isInsured && (
-                        <div className="mt-3 pt-3 border-t border-primary/10 flex justify-between items-center animate-in slide-in-from-top-2">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-primary/70 font-bold uppercase tracking-wider">تكلفة التأمين</span>
-                                <span className="text-xs text-gray-600 font-medium">3% من قيمة التمويل</span>
-                            </div>
-                            <div className="text-left">
-                                <span className="text-lg font-black text-primary">{( (newCycle.fundingGoal || 0) * INSURANCE_FEE_PERCENT).toLocaleString()}</span>
-                                <span className="text-[10px] font-bold text-primary mr-1">ج.م</span>
-                            </div>
+                    {newCycle.isBarnInsured && (
+                        <div className="mt-2 pt-2 border-t border-orange-100 flex justify-between items-center">
+                            <span className="text-[10px] text-orange-700 font-bold uppercase tracking-wider">تكلفة الاشتراك:</span>
+                            <span className="text-xs font-bold text-orange-700">{BARN_INSURANCE_FIXED_FEE} ج.م</span>
                         </div>
                     )}
                 </div>
                 
                 <div className="bg-orange-50 p-3 rounded-xl flex items-start gap-3 border border-orange-100">
                     <Info size={18} className="text-orange-500 shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-orange-700">سيتم مراجعة بيانات الدورة والصورة من قبل الإدارة قبل طرحها للاستثمار لضمان الجودة.</p>
+                    <p className="text-[10px] text-orange-700">سيتم مراجعة بيانات الدورة من قبل الإدارة قبل طرحها للاستثمار لضمان الجودة.</p>
                 </div>
 
                 <Button className="w-full py-4 text-lg shadow-lg shadow-primary/10" onClick={handleAddCycle} disabled={!cycleImage}>
@@ -1343,6 +1386,8 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     </div>
   );
 };
+
+// --- Investor Portfolio Component ---
 
 const InvestorPortfolio: React.FC<{
     user: User;
@@ -1437,13 +1482,13 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
     const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
     const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(null);
     const [investAmount, setInvestAmount] = useState<string>('');
-    const [hasInsurance, setHasInsurance] = useState(true); // تفعيل افتراضي بناءً على طلب المستخدم
+    const [hasAnimalInsurance, setHasAnimalInsurance] = useState(true); // Default to true for Investor
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
 
     const handleOpenInvestModal = (cycle: Cycle) => { 
         setSelectedCycle(cycle); 
         setInvestAmount(''); 
-        setHasInsurance(true); // دائماً يبدأ مفعلاً
+        setHasAnimalInsurance(true); 
         setReceiptImage(null); 
         setIsInvestModalOpen(true); 
     };
@@ -1459,8 +1504,8 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
     
     const amountVal = parseFloat(investAmount) || 0;
     const adminFee = amountVal * PLATFORM_FEE_PERCENT;
-    const insuranceFee = hasInsurance ? amountVal * INSURANCE_FEE_PERCENT : 0;
-    const totalToPay = amountVal + adminFee + insuranceFee;
+    const animalInsuranceFee = hasAnimalInsurance ? amountVal * ANIMAL_INSURANCE_FEE_PERCENT : 0;
+    const totalToPay = amountVal + adminFee + animalInsuranceFee;
     const remainingToGoal = selectedCycle ? (selectedCycle.fundingGoal as number) - (selectedCycle.currentFunding as number) : 0;
 
     const handleConfirmInvest = () => {
@@ -1480,8 +1525,8 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
             headsCount: 1, 
             contractCodes: ['DW-DEMO'], 
             transferReceiptUrl: receiptImage || undefined,
-            hasAnimalInsurance: hasInsurance,
-            animalInsuranceFee: insuranceFee
+            hasAnimalInsurance: hasAnimalInsurance,
+            animalInsuranceFee: animalInsuranceFee
         };
         setInvestments([...investments, newInv]);
         setIsInvestModalOpen(false);
@@ -1510,10 +1555,10 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                                 <div className="bg-green-50/90 backdrop-blur-sm text-green-800 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-green-100/50">
                                     متبقي: {(cycle.fundingGoal - cycle.currentFunding).toLocaleString()} ج.م
                                 </div>
-                                {(cycle.isInsured || cycle.insurancePolicyNumber) && (
-                                    <div className="bg-blue-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-blue-400/30 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-500">
-                                        <ShieldCheck size={12} strokeWidth={3} />
-                                        <span>مؤمن عليه</span>
+                                {cycle.isBarnInsured && (
+                                    <div className="bg-orange-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-orange-400/30 flex items-center gap-1.5">
+                                        <Home size={12} strokeWidth={3} />
+                                        <span>حظيرة مؤمنة</span>
                                     </div>
                                 )}
                             </div>
@@ -1561,31 +1606,30 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                             placeholder="أدخل مبلغا يبدأ من 500 ج.م"
                         />
 
-                        <div className={`p-4 rounded-2xl border transition-all duration-300 ${hasInsurance ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}>
+                        {/* Animal Life Insurance Option (Investor Only) */}
+                        <div className={`p-4 rounded-2xl border transition-all duration-300 ${hasAnimalInsurance ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <button 
                                         type="button"
-                                        onClick={() => setHasInsurance(!hasInsurance)}
-                                        className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${hasInsurance ? 'bg-blue-600/20' : 'bg-gray-200'}`}
+                                        onClick={() => setHasAnimalInsurance(!hasAnimalInsurance)}
+                                        className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${hasAnimalInsurance ? 'bg-blue-600/20' : 'bg-gray-200'}`}
                                     >
-                                        <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${hasInsurance ? 'bg-blue-600 translate-x-1' : 'bg-white translate-x-8'}`}>
-                                            {hasInsurance && <Check size={10} className="text-white" />}
+                                        <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${hasAnimalInsurance ? 'bg-blue-600 translate-x-1' : 'bg-white translate-x-8'}`}>
+                                            {hasAnimalInsurance && <Check size={10} className="text-white" />}
                                         </div>
                                     </button>
                                     <div>
-                                        <h4 className={`text-sm font-bold ${hasInsurance ? 'text-blue-900' : 'text-gray-700'}`}>طلب تأمين شامل</h4>
+                                        <h4 className={`text-sm font-bold ${hasAnimalInsurance ? 'text-blue-900' : 'text-gray-700'}`}>تأمين حياة الماشية</h4>
                                         <p className="text-[10px] text-gray-500">تأمين ضد النفوق والأمراض الوبائية (3%)</p>
                                     </div>
                                 </div>
-                                <div className={`p-2 rounded-xl shadow-sm transition-colors ${hasInsurance ? 'bg-blue-600 text-white' : 'bg-white text-gray-400'}`}>
-                                    <ShieldCheck size={22} />
-                                </div>
+                                <ShieldCheck size={22} className={hasAnimalInsurance ? 'text-blue-600' : 'text-gray-300'} />
                             </div>
-                            {hasInsurance && (
+                            {hasAnimalInsurance && (
                                 <div className="mt-3 pt-3 border-t border-blue-100 flex justify-between items-center text-blue-800 animate-in slide-in-from-top-2">
-                                    <span className="text-xs font-bold">تكلفة التأمين المحسوبة:</span>
-                                    <span className="text-lg font-black">{((parseFloat(investAmount) || 0) * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
+                                    <span className="text-xs font-bold">قسط التأمين المحسوب:</span>
+                                    <span className="text-lg font-black">{((parseFloat(investAmount) || 0) * ANIMAL_INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
                                 </div>
                             )}
                         </div>
@@ -1599,10 +1643,10 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                                 <span className="text-gray-500">رسوم إدارية (2.5%):</span>
                                 <span className="font-bold text-black">{adminFee.toLocaleString()} ج.م</span>
                             </div>
-                            {hasInsurance && (
+                            {hasAnimalInsurance && (
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">رسوم التأمين (3%):</span>
-                                    <span className="font-bold text-black">{insuranceFee.toLocaleString()} ج.م</span>
+                                    <span className="text-gray-500">رسوم تأمين الماشية (3%):</span>
+                                    <span className="font-bold text-black">{animalInsuranceFee.toLocaleString()} ج.م</span>
                                 </div>
                             )}
                             <div className="pt-2 mt-2 border-t border-gray-200 flex justify-between items-center">

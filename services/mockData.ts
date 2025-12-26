@@ -165,7 +165,9 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'عجل خليط عالي التحويل، شراكة بين مستثمرين.',
     fatteningPlan: STANDARD_COW_PLAN,
-    insurancePolicyNumber: 'POL-101-99'
+    insurancePolicyNumber: 'POL-101-99',
+    isBarnInsured: true,
+    barnInsuranceCost: 750
   },
   {
     id: '102',
@@ -205,7 +207,9 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'دورة تسمين عجول هولشتاين، سلالة عالية التحويل في مزرعة الحاج متولي.',
     fatteningPlan: STANDARD_COW_PLAN,
-    insurancePolicyNumber: 'POL-HOL-003'
+    insurancePolicyNumber: 'POL-HOL-003',
+    isBarnInsured: true,
+    barnInsuranceCost: 750
   },
   {
     id: '104',
@@ -225,7 +229,9 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1511117833452-482268548b01?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'دورة تسمين جماعية لـ 5 رؤوس من غنم العساف الممتاز.',
     fatteningPlan: STANDARD_SHEEP_PLAN,
-    insurancePolicyNumber: 'INS-ASSAF-GROUP'
+    insurancePolicyNumber: 'INS-ASSAF-GROUP',
+    isBarnInsured: true,
+    barnInsuranceCost: 750
   },
   {
     id: '105',

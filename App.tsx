@@ -1593,9 +1593,14 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                                 <div className="bg-green-50/90 backdrop-blur-sm text-green-800 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-green-100/50">
                                     متبقي: {(cycle.fundingGoal - cycle.currentFunding).toLocaleString()} ج.م
                                 </div>
+                            </div>
+                            {/* Barn Insurance Badge - DISTINGUISHING ICON ADDED HERE */}
+                            <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
                                 {cycle.isBarnInsured && (
-                                    <div className="bg-orange-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-orange-400/30 flex items-center gap-1.5">
-                                        <Home size={12} strokeWidth={3} />
+                                    <div className="bg-orange-500/90 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg shadow-xl border border-orange-300/50 flex items-center gap-1.5 animate-in zoom-in duration-300">
+                                        <div className="p-0.5 bg-white rounded-full">
+                                            <Shield size={10} className="text-orange-600 fill-orange-600" />
+                                        </div>
                                         <span>حظيرة مؤمنة</span>
                                     </div>
                                 )}

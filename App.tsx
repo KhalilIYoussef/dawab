@@ -1293,30 +1293,38 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     <Input label="المدة (أيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
                 </div>
 
-                {/* استبدال حقل الرقم التأميني بخيار التأمين الاختياري */}
-                <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-3">
+                {/* خيار التأمين الاختياري بشكل متطور */}
+                <div className={`p-4 rounded-2xl border transition-all duration-300 ${newCycle.isInsured ? 'bg-green-50 border-primary/30 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm">
+                            <div className={`p-2 rounded-xl shadow-sm transition-colors ${newCycle.isInsured ? 'bg-primary text-white' : 'bg-white text-gray-400'}`}>
                                 <ShieldCheck size={22} />
                             </div>
                             <div>
-                                <h4 className="text-sm font-bold text-blue-900">طلب تأمين شامل (اختياري)</h4>
-                                <p className="text-[10px] text-blue-700">تغطية مخاطر النفوق والأمراض الوبائية</p>
+                                <h4 className={`text-sm font-bold transition-colors ${newCycle.isInsured ? 'text-green-900' : 'text-gray-700'}`}>طلب تأمين شامل</h4>
+                                <p className="text-[10px] text-gray-500">تغطية مخاطر النفوق والأمراض الوبائية (اختياري)</p>
                             </div>
                         </div>
                         <button 
                             type="button"
                             onClick={() => setNewCycle({...newCycle, isInsured: !newCycle.isInsured})}
-                            className={`w-12 h-6 rounded-full transition-all relative ${newCycle.isInsured ? 'bg-blue-600' : 'bg-gray-300'}`}
+                            className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${newCycle.isInsured ? 'bg-primary/20' : 'bg-gray-200'}`}
                         >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${newCycle.isInsured ? 'left-1' : 'left-7'}`}></div>
+                            <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${newCycle.isInsured ? 'bg-primary translate-x-1' : 'bg-white translate-x-8'}`}>
+                                {newCycle.isInsured && <Check size={10} className="text-white" />}
+                            </div>
                         </button>
                     </div>
                     {newCycle.isInsured && (
-                        <div className="pt-2 border-t border-blue-100 flex justify-between items-center text-[11px] animate-in fade-in slide-in-from-top-1">
-                            <span className="text-blue-800 font-medium">تكلفة التأمين المضافة للهدف (3%):</span>
-                            <span className="font-bold text-blue-900">{( (newCycle.fundingGoal || 0) * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
+                        <div className="mt-3 pt-3 border-t border-primary/10 flex justify-between items-center animate-in slide-in-from-top-2">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-primary/70 font-bold uppercase tracking-wider">تكلفة التأمين</span>
+                                <span className="text-xs text-gray-600 font-medium">3% من قيمة التمويل</span>
+                            </div>
+                            <div className="text-left">
+                                <span className="text-lg font-black text-primary">{( (newCycle.fundingGoal || 0) * INSURANCE_FEE_PERCENT).toLocaleString()}</span>
+                                <span className="text-[10px] font-bold text-primary mr-1">ج.م</span>
+                            </div>
                         </div>
                     )}
                 </div>

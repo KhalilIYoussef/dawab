@@ -738,11 +738,12 @@ const AdminDashboard: React.FC<{
                             <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">الدورة</th> <th className="p-4">التمويل والمشاركين</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {cycles.map(c => {
-                                    const cycleInvestments = investments.filter(inv => inv.cycleId === c.id && inv.status === 'APPROVED');
+                                    // Include both APPROVED and PENDING_APPROVAL to ensure the list is accurate for Admin
+                                    const cycleInvestments = investments.filter(inv => inv.cycleId === c.id && (inv.status === 'APPROVED' || inv.status === 'PENDING_APPROVAL'));
                                     const participants = cycleInvestments.map(inv => {
                                       const investor = users.find(u => u.id === inv.investorId);
                                       const share = ((inv.amount / c.fundingGoal) * 100).toFixed(1);
-                                      return { name: investor?.name || "مستثمر", share };
+                                      return { name: investor?.name || "مستثمر", share, status: inv.status };
                                     });
                                     const fundPercent = Math.floor((c.currentFunding/c.fundingGoal)*100);
 
@@ -756,9 +757,12 @@ const AdminDashboard: React.FC<{
                                                 </div>
                                                 <div className="space-y-1">
                                                   {participants.map((p, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center bg-gray-50 px-2 py-0.5 rounded text-[10px]">
-                                                      <span className="text-gray-600 truncate max-w-[80px]">{p.name}</span>
-                                                      <span className="font-bold text-primary">{p.share}%</span>
+                                                    <div key={idx} className={`flex justify-between items-center bg-gray-50 px-2 py-0.5 rounded text-[10px] border ${p.status === 'PENDING_APPROVAL' ? 'border-yellow-200 border-dashed' : 'border-transparent'}`}>
+                                                      <span className="text-black font-medium truncate max-w-[100px] flex items-center gap-1">
+                                                        {p.name}
+                                                        {p.status === 'PENDING_APPROVAL' && <Clock size={8} className="text-yellow-600" />}
+                                                      </span>
+                                                      <span className={`font-bold ${p.status === 'PENDING_APPROVAL' ? 'text-yellow-700' : 'text-primary'}`}>{p.share}%</span>
                                                     </div>
                                                   ))}
                                                 </div>
@@ -775,7 +779,7 @@ const AdminDashboard: React.FC<{
                                                 )}
                                                 {c.status === CycleStatus.ACTIVE && (
                                                   <div className="flex gap-2">
-                                                    <Button size="sm" onClick={() => openSellModal(c)} className="bg-orange-50">تسجيل بيع</Button>
+                                                    <Button size="sm" onClick={() => openSellModal(c)} className="bg-orange-50 text-orange-700">تسجيل بيع</Button>
                                                     <Button size="sm" variant="outline" className="text-red-500 border-red-200" onClick={() => { if(confirm('تنبيه: هل أنت متأكد من رغبتك في إيقاف هذه الدورة وإعادتها لحالة "تحتاج تمويل"؟')) { setCycles(cycles.map(item => item.id === c.id ? {...item, status: CycleStatus.PENDING} : item)); } }}>إيقاف</Button>
                                                   </div>
                                                 )}
@@ -815,6 +819,40 @@ const AdminDashboard: React.FC<{
                                     })}
                                     {investments.filter(i => i.status === 'PENDING_APPROVAL').length === 0 && (
                                         <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">لا توجد تحويلات بانتظار الموافقة حالياً</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 className="font-bold text-lg mb-4 text-black flex items-center gap-2">
+                            <CheckCircle size={20} className="text-green-600" /> سجل الاستثمارات المؤكدة
+                        </h3>
+                        <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+                            <table className="w-full text-right">
+                                <thead className="bg-gray-50 text-black text-sm"> 
+                                    <tr> 
+                                        <th className="p-4">المستثمر</th> 
+                                        <th className="p-4">المبلغ</th> 
+                                        <th className="p-4">التاريخ</th>
+                                        <th className="p-4">الإيصال</th> 
+                                    </tr> 
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {investments.filter(i => i.status === 'APPROVED').sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(inv => {
+                                        const investor = users.find(u => u.id === inv.investorId);
+                                        return (
+                                            <tr key={inv.id} className="hover:bg-gray-50">
+                                                <td className="p-4"> <div className="font-bold text-black">{investor?.name}</div> </td>
+                                                <td className="p-4 font-bold text-primary">{inv.amount.toLocaleString()} ج.م</td>
+                                                <td className="p-4 text-xs text-gray-500 font-medium">{new Date(inv.date).toLocaleDateString('ar-EG')}</td>
+                                                <td className="p-4"> {inv.transferReceiptUrl && <button onClick={() => window.open(inv.transferReceiptUrl)} className="text-blue-600 text-xs hover:underline">عرض الإيصال</button>} </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {investments.filter(i => i.status === 'APPROVED').length === 0 && (
+                                        <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">لا توجد استثمارات مؤكدة حالياً</td></tr>
                                     )}
                                 </tbody>
                             </table>

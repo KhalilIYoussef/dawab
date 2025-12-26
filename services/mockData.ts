@@ -275,6 +275,18 @@ export const INITIAL_INVESTMENTS: Investment[] = [
     animalInsuranceFee: 960 // 3% of 32,000
   },
   {
+    id: 'inv_102_1',
+    investorId: '4',
+    cycleId: '102',
+    amount: 1500, 
+    headsCount: 1,
+    contractCodes: ['DW-102-MOCK'],
+    date: today.toISOString(),
+    status: 'APPROVED',
+    hasAnimalInsurance: true,
+    animalInsuranceFee: 45
+  },
+  {
     id: 'inv_mock_3',
     investorId: '4',
     cycleId: '103',
@@ -285,6 +297,18 @@ export const INITIAL_INVESTMENTS: Investment[] = [
     status: 'APPROVED',
     hasAnimalInsurance: true,
     animalInsuranceFee: 360 // 3% of 12,000
+  },
+  {
+    id: 'inv_105_1',
+    investorId: '4',
+    cycleId: '105',
+    amount: 5000, 
+    headsCount: 1,
+    contractCodes: ['DW-105-MOCK'],
+    date: today.toISOString(),
+    status: 'APPROVED',
+    hasAnimalInsurance: true,
+    animalInsuranceFee: 150
   }
 ];
 

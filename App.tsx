@@ -637,9 +637,9 @@ const AdminDashboard: React.FC<{
                             <table className="w-full text-right text-xs">
                                 <thead className="bg-white border-b text-gray-400">
                                     <tr>
-                                        <th className="p-3">المستثمر</th>
-                                        <th className="p-3">قيمة الاستثمار</th>
-                                        <th className="p-3">قسط التأمين</th>
+                                        <th className="p-3 text-gray-700 font-bold">المستثمر</th>
+                                        <th className="p-3 text-gray-700 font-bold">قيمة الاستثمار</th>
+                                        <th className="p-3 text-gray-700 font-bold">قسط التأمين</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -647,8 +647,8 @@ const AdminDashboard: React.FC<{
                                         const investor = users.find(u => u.id === inv.investorId);
                                         return (
                                             <tr key={inv.id} className="hover:bg-gray-50">
-                                                <td className="p-3 font-bold">{investor?.name}</td>
-                                                <td className="p-3">{inv.amount.toLocaleString()} ج.م</td>
+                                                <td className="p-3 font-bold text-black">{investor?.name}</td>
+                                                <td className="p-3 text-gray-900 font-medium">{inv.amount.toLocaleString()} ج.م</td>
                                                 <td className="p-3 font-bold text-primary">{inv.animalInsuranceFee?.toLocaleString()} ج.م</td>
                                             </tr>
                                         );
@@ -669,9 +669,9 @@ const AdminDashboard: React.FC<{
                             <table className="w-full text-right text-xs">
                                 <thead className="bg-white border-b text-gray-400">
                                     <tr>
-                                        <th className="p-3">المربي</th>
-                                        <th className="p-3">نوع الدورة</th>
-                                        <th className="p-3">مبلغ التأمين</th>
+                                        <th className="p-3 text-gray-700 font-bold">المربي</th>
+                                        <th className="p-3 text-gray-700 font-bold">نوع الدورة</th>
+                                        <th className="p-3 text-gray-700 font-bold">مبلغ التأمين</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -679,8 +679,8 @@ const AdminDashboard: React.FC<{
                                         const breeder = users.find(u => u.id === c.breederId);
                                         return (
                                             <tr key={c.id} className="hover:bg-gray-50">
-                                                <td className="p-3 font-bold">{breeder?.name}</td>
-                                                <td className="p-3">{c.animalType}</td>
+                                                <td className="p-3 font-bold text-black">{breeder?.name}</td>
+                                                <td className="p-3 text-gray-900 font-medium">{c.animalType}</td>
                                                 <td className="p-3 font-bold text-orange-600">{c.barnInsuranceCost?.toLocaleString()} ج.م</td>
                                             </tr>
                                         );
@@ -1607,7 +1607,7 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                         />
 
                         {/* Animal Life Insurance Option (Investor Only) */}
-                        <div className={`p-4 rounded-2xl border transition-all duration-300 ${hasAnimalInsurance ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}>
+                        <div className={`p-4 rounded-2xl border transition-all duration-300 ${hasAnimalInsurance ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <button 

@@ -501,15 +501,17 @@ const ProfileView: React.FC<{
 const AdminDashboard: React.FC<{ 
     users: User[], setUsers: (u: User[]) => void, 
     cycles: Cycle[], setCycles: (c: Cycle[]) => void,
-    investments: Investment[], setInvestments: (i: Investment[]) => void
-}> = ({ users, setUsers, cycles, setCycles, investments, setInvestments }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'cycles' | 'investments' | 'insurance'>('overview');
+    investments: Investment[], setInvestments: (i: Investment[]) => void,
+    logs: CycleLog[]
+}> = ({ users, setUsers, cycles, setCycles, investments, setInvestments, logs }) => {
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'cycles' | 'monitoring' | 'investments' | 'insurance'>('overview');
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [newUserForm, setNewUserForm] = useState({ name: '', phone: '', password: '123', role: UserRole.INVESTOR });
     const [isSellModalOpen, setIsSellModalOpen] = useState(false);
     const [selectedCycleToSell, setSelectedCycleToSell] = useState<Cycle | null>(null);
     const [salePrice, setSalePrice] = useState<string>('');
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [selectedCycleForMonitoring, setSelectedCycleForMonitoring] = useState<Cycle | null>(null);
 
     // Calculations for Insurance Fund
     const investorInsuranceEntries = investments.filter(inv => inv.hasAnimalInsurance && inv.status === 'APPROVED');
@@ -584,10 +586,11 @@ const AdminDashboard: React.FC<{
                     { id: 'overview', label: 'نظرة عامة' },
                     { id: 'users', label: 'المستخدمين' },
                     { id: 'cycles', label: 'الدورات' },
+                    { id: 'monitoring', label: 'متابعة الإنتاج' },
                     { id: 'investments', label: 'الاستثمارات' },
                     { id: 'insurance', label: 'صندوق التأمين الشامل' }
                 ].map(tab => (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-4 py-2 font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-black'}`}>
+                    <button key={tab.id} onClick={() => { setActiveTab(tab.id as any); setSelectedCycleForMonitoring(null); }} className={`px-4 py-2 font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-black'}`}>
                         {tab.label}
                     </button>
                 ))}
@@ -790,6 +793,82 @@ const AdminDashboard: React.FC<{
                             </tbody>
                         </table>
                     </div>
+                </div>
+            )}
+
+            {activeTab === 'monitoring' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2">
+                    {selectedCycleForMonitoring ? (
+                        <div className="space-y-6">
+                            <button onClick={() => setSelectedCycleForMonitoring(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع لقائمة المتابعة </button>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                                <img src={selectedCycleForMonitoring.imageUrl} onError={handleAnimalImageError} className="w-16 h-16 rounded-xl object-cover" />
+                                <div>
+                                    <h2 className="text-xl font-bold text-black">{selectedCycleForMonitoring.animalType}</h2>
+                                    <p className="text-xs text-gray-500">إشراف ومراقبة الإدارة - تاريخ البدء: {selectedCycleForMonitoring.startDate}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <h3 className="font-bold text-lg text-black flex items-center gap-2"><Activity size={20} className="text-primary" /> سجل التطور والنمو اليومي</h3>
+                                <div className="space-y-2">
+                                    {logs.filter(l => l.cycleId === selectedCycleForMonitoring.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(log => (
+                                        <DailyLogTimelineItem key={log.id} log={log} />
+                                    ))}
+                                    {logs.filter(l => l.cycleId === selectedCycleForMonitoring.id).length === 0 && (
+                                        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                                            <Clock size={40} className="mx-auto text-gray-200 mb-3" />
+                                            <p className="text-gray-400 font-medium">لم يتم تسجيل أي تحديثات لهذه الدورة بعد.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <h3 className="font-bold text-lg text-black flex items-center gap-2"><Tractor size={20} className="text-primary"/> مراقبة الدورات النشطة (تحت التسمين)</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {cycles.filter(c => c.status === CycleStatus.ACTIVE).map(cycle => {
+                                    const cycleLogs = logs.filter(l => l.cycleId === cycle.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                                    const currentWeight = cycleLogs[0]?.weight || cycle.initialWeight;
+                                    const growth = currentWeight - cycle.initialWeight;
+                                    const breeder = users.find(u => u.id === cycle.breederId);
+
+                                    return (
+                                        <Card key={cycle.id} className="overflow-hidden hover:shadow-lg transition-all group">
+                                            <div className="relative h-32">
+                                                <img src={cycle.imageUrl} onError={handleAnimalImageError} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors"></div>
+                                                <div className="absolute top-2 right-2"><Badge color="green">نشطة</Badge></div>
+                                            </div>
+                                            <div className="p-4 space-y-4">
+                                                <div>
+                                                    <h4 className="font-bold text-black">{cycle.animalType}</h4>
+                                                    <p className="text-[10px] text-gray-500">المربي: {breeder?.name}</p>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="bg-blue-50 p-2 rounded-lg text-center">
+                                                        <p className="text-[10px] text-blue-600 font-bold">الوزن الحالي</p>
+                                                        <p className="text-sm font-black text-blue-800">{currentWeight} كجم</p>
+                                                    </div>
+                                                    <div className="bg-green-50 p-2 rounded-lg text-center">
+                                                        <p className="text-[10px] text-green-600 font-bold">النمو المحقق</p>
+                                                        <p className="text-sm font-black text-green-800">+{growth} كجم</p>
+                                                    </div>
+                                                </div>
+                                                <Button size="sm" variant="outline" className="w-full" onClick={() => setSelectedCycleForMonitoring(cycle)}>فتح سجل المتابعة</Button>
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                                {cycles.filter(c => c.status === CycleStatus.ACTIVE).length === 0 && (
+                                    <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                                        <Activity size={40} className="mx-auto text-gray-200 mb-3" />
+                                        <p className="text-gray-400 font-medium">لا توجد دورات نشطة لمراقبتها حالياً.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -1761,7 +1840,7 @@ function App() {
     if (activeTab === 'active_cycles') return <BreederActiveCycles user={currentUser!} cycles={cycles} logs={logs} setLogs={setLogs} />;
     
     switch (currentUser?.role) {
-        case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
+        case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} logs={logs} />;
         case UserRole.BREEDER: return <BreederDashboard user={currentUser} cycles={cycles} setCycles={setCycles} />;
         case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
         default: return null;

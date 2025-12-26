@@ -74,6 +74,7 @@ export interface Cycle {
   imageUrl: string;
   description: string;
   fatteningPlan?: string; // New: Feeding and Care Plan details
+  isInsured?: boolean; // New: Flag for cycle insurance
   insurancePolicyNumber?: string; // Animal Insurance
   animalInsuranceCost?: number;
   adminNote?: string;

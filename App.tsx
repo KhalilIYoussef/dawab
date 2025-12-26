@@ -8,7 +8,7 @@ import {
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
   Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
   Calculator, ArrowDown, ShoppingBag, Gavel, UserCog, Calendar, ChevronDown, ChevronUp, Syringe, Pill, Stethoscope, Droplets, Minus, HeartPulse,
-  Play, Zap, Leaf, FlaskConical
+  Play, Zap, Leaf, FlaskConical, BrainCircuit
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -42,7 +42,6 @@ const handleAnimalImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>
 // --- Shared Log Components ---
 
 const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
-    // Helper to categorize feed items based on keywords
     const categorizeFeed = (foodDetails: string) => {
         if (!foodDetails || foodDetails === "تغذية روتينية") return null;
         
@@ -73,10 +72,7 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
 
     return (
         <div className="relative pl-8 pb-8 last:pb-0 group">
-            {/* Timeline Line */}
             <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200 group-last:bg-transparent"></div>
-            
-            {/* Timeline Dot */}
             <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-primary shadow-sm z-10 transition-transform group-hover:scale-125"></div>
             
             <Card className="p-0 shadow-sm border-gray-100 hover:shadow-md transition-all overflow-hidden border-r-4 border-r-primary/10">
@@ -96,7 +92,6 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                 </div>
 
                 <div className="p-4 space-y-4">
-                    {/* Nutrition Section */}
                     <div className="space-y-3">
                         <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
                             <Wheat size={12} className="text-primary" /> سجل التغذية اليومي
@@ -155,7 +150,6 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                         )}
                     </div>
 
-                    {/* Health Section */}
                     {(vaccines.length > 0 || treatments.length > 0) && (
                         <div className="space-y-2">
                             <h4 className="text-[10px] uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1">
@@ -178,7 +172,6 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                         </div>
                     )}
 
-                    {/* General Notes */}
                     {generalNotes.length > 0 && (
                         <div className="pt-2">
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -909,7 +902,6 @@ const BreederActiveCycles: React.FC<{
   const [activeLogTab, setActiveLogTab] = useState<'feed' | 'health'>('feed');
   const [currentWeight, setCurrentWeight] = useState<string>('');
   
-  // States for feed items
   const [feedItems, setFeedItems] = useState<Record<string, number>>({});
   const [vetItems, setVetItems] = useState<Array<{ name: string, date: string, type: string, note?: string }>>([]);
   const [notes, setNotes] = useState('');
@@ -922,7 +914,7 @@ const BreederActiveCycles: React.FC<{
     if (!selectedCycleId) return;
     
     const feedLines = Object.entries(feedItems)
-        .filter(([_, val]) => val > 0)
+        .filter(([_, val]) => (val as number) > 0)
         .map(([name, val]) => `${name}: ${val}`)
         .join(', ');
 
@@ -1012,7 +1004,6 @@ const BreederActiveCycles: React.FC<{
 
               <Modal isOpen={isLogModalOpen} onClose={() => {setIsLogModalOpen(false); resetForm();}} title="تحديث يومي جديد">
                   <div className="space-y-6">
-                      {/* Weight Card - Unified Experience */}
                       <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
                         <label className="block text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
                             <Scale size={18} /> الوزن الحالي للرأس (كجم)
@@ -1026,7 +1017,6 @@ const BreederActiveCycles: React.FC<{
                         />
                       </div>
 
-                      {/* Tabs */}
                       <div className="flex p-1 bg-gray-100 rounded-2xl">
                         <button 
                             onClick={() => setActiveLogTab('feed')}
@@ -1042,7 +1032,6 @@ const BreederActiveCycles: React.FC<{
                         </button>
                       </div>
 
-                      {/* Content Area */}
                       <div className="max-h-[50vh] overflow-y-auto px-1 space-y-6">
                         {activeLogTab === 'feed' ? (
                             <div className="space-y-6 pb-4">
@@ -1114,7 +1103,7 @@ const BreederActiveCycles: React.FC<{
                         <Button 
                             onClick={handleAddLog} 
                             className="w-full py-4 text-lg shadow-xl shadow-primary/20"
-                            disabled={Object.values(feedItems).every(v => v === 0) && vetItems.length === 0 && !currentWeight}
+                            disabled={(Object.values(feedItems) as number[]).every(v => v === 0) && vetItems.length === 0 && !currentWeight}
                         >
                             حفظ وإرسال التقرير
                         </Button>
@@ -1172,7 +1161,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     fundingGoal: 0, 
     expectedDuration: 180, 
     description: '',
-    insurancePolicyNumber: ''
+    isInsured: false
   });
   const [cycleImage, setCycleImage] = useState<string | null>(null);
 
@@ -1202,6 +1191,8 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
       return;
     }
 
+    const insuranceCost = newCycle.isInsured ? (newCycle.fundingGoal || 0) * INSURANCE_FEE_PERCENT : 0;
+
     const cycle: Cycle = { 
       id: Math.random().toString(36).substr(2, 9), 
       breederId: user.id, 
@@ -1210,12 +1201,13 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
       totalHeads: 1, availableHeads: 1, currentFunding: 0, 
       imageUrl: cycleImage, 
       healthCertUrl: "#", startPricePerHead: 0, initialWeight: 200, targetWeight: 450,
+      animalInsuranceCost: insuranceCost,
       ...newCycle as any 
     };
     setCycles([...cycles, cycle]); 
     setIsModalOpen(false);
     setCycleImage(null);
-    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', insurancePolicyNumber: '' });
+    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', isInsured: false });
   };
 
   return (
@@ -1234,10 +1226,11 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                             />
                             <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
                                 <StatusBadge status={cycle.status} type="cycle" />
-                                <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm border border-primary/20 flex flex-col items-center">
-                                    <span className="text-[10px] font-bold text-primary leading-none">{fundPercent}%</span>
-                                    <span className="text-[8px] text-gray-500 font-medium">تمويل</span>
-                                </div>
+                                {cycle.isInsured && (
+                                    <div className="bg-blue-600/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                                        <ShieldCheck size={10} /> مؤمنة
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="p-4 space-y-3"> 
@@ -1258,7 +1251,6 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
         </div>
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة تسمين جديدة">
             <div className="space-y-5">
-                {/* Animal Type Select */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">نوع الحيوان</label>
                     <select 
@@ -1270,7 +1262,6 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     </select>
                 </div>
 
-                {/* Image Upload Area */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">صورة الحيوان (إلزامي)</label>
                     <div className={`relative border-2 border-dashed rounded-2xl p-4 transition-colors text-center ${cycleImage ? 'border-primary bg-green-50' : 'border-gray-200 hover:border-primary/50'}`}>
@@ -1302,20 +1293,40 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     <Input label="المدة (أيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
                 </div>
 
-                <Input 
-                    label="الرقم التأميني للحيوان (اختياري)" 
-                    type="text" 
-                    value={newCycle.insurancePolicyNumber || ''} 
-                    onChange={(e) => setNewCycle({...newCycle, insurancePolicyNumber: e.target.value})} 
-                    placeholder="أدخل رقم بوليصة التأمين إن وجد"
-                />
+                {/* استبدال حقل الرقم التأميني بخيار التأمين الاختياري */}
+                <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm">
+                                <ShieldCheck size={22} />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-blue-900">طلب تأمين شامل (اختياري)</h4>
+                                <p className="text-[10px] text-blue-700">تغطية مخاطر النفوق والأمراض الوبائية</p>
+                            </div>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={() => setNewCycle({...newCycle, isInsured: !newCycle.isInsured})}
+                            className={`w-12 h-6 rounded-full transition-all relative ${newCycle.isInsured ? 'bg-blue-600' : 'bg-gray-300'}`}
+                        >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${newCycle.isInsured ? 'left-1' : 'left-7'}`}></div>
+                        </button>
+                    </div>
+                    {newCycle.isInsured && (
+                        <div className="pt-2 border-t border-blue-100 flex justify-between items-center text-[11px] animate-in fade-in slide-in-from-top-1">
+                            <span className="text-blue-800 font-medium">تكلفة التأمين المضافة للهدف (3%):</span>
+                            <span className="font-bold text-blue-900">{( (newCycle.fundingGoal || 0) * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
+                        </div>
+                    )}
+                </div>
                 
                 <div className="bg-orange-50 p-3 rounded-xl flex items-start gap-3 border border-orange-100">
                     <Info size={18} className="text-orange-500 shrink-0 mt-0.5" />
                     <p className="text-[10px] text-orange-700">سيتم مراجعة بيانات الدورة والصورة من قبل الإدارة قبل طرحها للاستثمار لضمان الجودة.</p>
                 </div>
 
-                <Button className="w-full py-3" onClick={handleAddCycle} disabled={!cycleImage}>
+                <Button className="w-full py-4 text-lg shadow-lg shadow-primary/10" onClick={handleAddCycle} disabled={!cycleImage}>
                     إرسال الطلب للمراجعة
                 </Button>
             </div>
@@ -1441,13 +1452,13 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
     const adminFee = amountVal * PLATFORM_FEE_PERCENT;
     const insuranceFee = hasInsurance ? amountVal * INSURANCE_FEE_PERCENT : 0;
     const totalToPay = amountVal + adminFee + insuranceFee;
-    const remainingToGoal = selectedCycle ? selectedCycle.fundingGoal - selectedCycle.currentFunding : 0;
+    const remainingToGoal = selectedCycle ? (selectedCycle.fundingGoal as number) - (selectedCycle.currentFunding as number) : 0;
 
     const handleConfirmInvest = () => {
         if (!selectedCycle) return;
         
         if (amountVal <= 0) { alert("يرجى إدخال مبلغ استثمار صحيح."); return; }
-        if (amountVal > remainingToGoal) { alert(`المبلغ المدخل يتجاوز المتبقي للتمويل (${remainingToGoal.toLocaleString()} ج.م)`); return; }
+        if (amountVal > (remainingToGoal as number)) { alert(`المبلغ المدخل يتجاوز المتبقي للتمويل (${remainingToGoal.toLocaleString()} ج.م)`); return; }
         if (!receiptImage) { alert("يرجى رفع إيصال التحويل لتأكيد العملية."); return; }
 
         const newInv: Investment = { 
@@ -1490,7 +1501,7 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                                 <div className="bg-green-50/90 backdrop-blur-sm text-green-800 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-green-100/50">
                                     متبقي: {(cycle.fundingGoal - cycle.currentFunding).toLocaleString()} ج.م
                                 </div>
-                                {cycle.insurancePolicyNumber && (
+                                {(cycle.isInsured || cycle.insurancePolicyNumber) && (
                                     <div className="bg-blue-600/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-blue-400/30 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-500">
                                         <ShieldCheck size={12} strokeWidth={3} />
                                         <span>مؤمن عليه</span>
@@ -1517,7 +1528,6 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
 
             <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="خطوات استثمارك الجديد">
                 <div className="space-y-6">
-                    {/* Summary Info */}
                     {selectedCycle && (
                         <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-center gap-4">
                             <img 
@@ -1542,7 +1552,6 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                             placeholder="أدخل مبلغا يبدأ من 500 ج.م"
                         />
 
-                        {/* Insurance Option */}
                         <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm">
@@ -1561,7 +1570,6 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                             </button>
                         </div>
 
-                        {/* Cost Breakdown */}
                         <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-100">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">قيمة الاستثمار:</span>
@@ -1583,7 +1591,6 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                             </div>
                         </div>
 
-                        {/* Payment Instructions */}
                         <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl">
                             <h5 className="text-xs font-bold text-orange-800 flex items-center gap-2 mb-1">
                                 <Banknote size={14} /> تعليمات التحويل البنكي

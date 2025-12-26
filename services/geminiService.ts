@@ -1,3 +1,9 @@
+
+// @google/genai Coding Guidelines: 
+// 1. Use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+// 2. Use ai.models.generateContent to query GenAI.
+// 3. The GenerateContentResponse features a 'text' property (not a method).
+
 import { GoogleGenAI } from "@google/genai";
 import { Cycle } from '../types';
 
@@ -7,7 +13,7 @@ export const analyzeCycleRisk = async (cycle: Cycle): Promise<string> => {
     return "خدمة التحليل بالذكاء الاصطناعي غير متاحة حالياً (مفتاح API مفقود).";
   }
 
-  // Fix: Initializing client inside the function to ensure up-to-date API key access
+  // Initializing with the recommended pattern
   const ai = new GoogleGenAI({ apiKey });
 
   try {
@@ -20,17 +26,24 @@ export const analyzeCycleRisk = async (cycle: Cycle): Promise<string> => {
       الوزن المستهدف: ${cycle.targetWeight} كجم
       مبلغ التمويل المطلوب: ${cycle.fundingGoal} جنيه مصري
       الوصف: ${cycle.description}
-      حالة التأمين: ${cycle.insurancePolicyNumber ? 'مؤمن (تأمين شامل وتحصينات)' : 'غير مؤمن'}
+      حالة التأمين: ${cycle.isInsured ? 'مؤمن (تأمين شامل وتحصينات)' : 'غير مؤمن'}
 
-      اكتب تقريرًا قصيرًا بالعربية (لا يتجاوز 100 كلمة) يوضح النقاط الإيجابية والمخاطر المحتملة، مع مراعاة ظروف السوق المصري (أسعار الأعلاف، الأمراض الموسمية، الطلب في المواسم).
+      اكتب تقريرًا تفصيلياً بالعربية يوضح النقاط الإيجابية والمخاطر المحتملة، مع مراعاة ظروف السوق المصري (أسعار الأعلاف، الأمراض الموسمية، الطلب في المواسم).
     `;
 
-    // Fix: Updated to gemini-3-pro-preview for complex reasoning task as per latest guidelines
+    // Using gemini-3-pro-preview with thinking budget for complex reasoning tasks.
+    // Simplified contents to a string as per guidelines.
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 32768 // max budget for gemini-3-pro-preview to ensure deep analysis
+        }
+      }
     });
 
+    // Directly access the .text property
     return response.text || "لم يتمكن النظام من تحليل البيانات.";
   } catch (error) {
     console.error("Gemini Error:", error);

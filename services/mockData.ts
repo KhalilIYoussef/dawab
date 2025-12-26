@@ -145,6 +145,7 @@ export const INITIAL_CYCLES: Cycle[] = [
     fatteningPlan: STANDARD_COW_PLAN,
     finalSalePrice: 45000,
     actualEndDate: today.toISOString().split('T')[0],
+    insurancePolicyNumber: 'POL-999-FIN'
   },
   {
     id: '101',
@@ -204,6 +205,7 @@ export const INITIAL_CYCLES: Cycle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     description: 'دورة تسمين عجول هولشتاين، سلالة عالية التحويل في مزرعة الحاج متولي.',
     fatteningPlan: STANDARD_COW_PLAN,
+    insurancePolicyNumber: 'POL-HOL-003'
   },
   {
     id: '104',
@@ -257,6 +259,8 @@ export const INITIAL_INVESTMENTS: Investment[] = [
     contractCodes: ['DW-100-FULL'],
     date: sixMonthsAgo,
     status: 'APPROVED',
+    hasAnimalInsurance: true,
+    animalInsuranceFee: 900 // 3% of 30,000
   },
   {
     id: 'inv_101_1',
@@ -267,6 +271,20 @@ export const INITIAL_INVESTMENTS: Investment[] = [
     contractCodes: ['DW-101-FULL'],
     date: twoMonthsAgo,
     status: 'APPROVED',
+    hasAnimalInsurance: true,
+    animalInsuranceFee: 960 // 3% of 32,000
+  },
+  {
+    id: 'inv_mock_3',
+    investorId: '4',
+    cycleId: '103',
+    amount: 12000, 
+    headsCount: 1,
+    contractCodes: ['DW-103-MOCK'],
+    date: today.toISOString(),
+    status: 'APPROVED',
+    hasAnimalInsurance: true,
+    animalInsuranceFee: 360 // 3% of 12,000
   }
 ];
 

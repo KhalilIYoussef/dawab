@@ -8,7 +8,7 @@ import {
   Lock, ArrowRight, UserPlus, LogIn, FileCheck, FileWarning, Filter, Check, XCircle,
   Banknote, Image as ImageIcon, ClipboardList, Scale, Shield, Info, PieChart, Coins,
   Calculator, ArrowDown, ShoppingBag, Gavel, UserCog, Calendar, ChevronDown, ChevronUp, Syringe, Pill, Stethoscope, Droplets, Minus, HeartPulse,
-  Play, Zap, Leaf, FlaskConical, BrainCircuit, Heart, Home
+  Play, Zap, Leaf, FlaskConical, BrainCircuit, Heart, Home, Star
 } from 'lucide-react';
 import { 
   INITIAL_USERS, INITIAL_CYCLES, INITIAL_INVESTMENTS, INITIAL_LOGS,
@@ -18,7 +18,7 @@ import {
   User, UserRole, UserStatus, Cycle, CycleStatus, Investment, CycleLog 
 } from './types';
 import { analyzeCycleRisk } from './services/geminiService';
-import { Button, Card, Badge, Modal, Input, FatteningPlanViewer, SimplePlanBuilder } from './components/UIComponents';
+import { Button, Card, Badge, Modal, Input, FatteningPlanViewer, SimplePlanBuilder, StarRating } from './components/UIComponents';
 
 // --- Constants ---
 const PLATFORM_FEE_PERCENT = 0.025; // 2.5% Platform Operation Fee
@@ -125,7 +125,7 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             {feedData.rough.map((item, idx) => (
-                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-green-100 flex items-center gap-1">
+                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-orange-100 flex items-center gap-1">
                                                     <Leaf size={10} className="opacity-60" /> {item}
                                                 </span>
                                             ))}
@@ -467,6 +467,11 @@ const ProfileView: React.FC<{
           <div className="flex-1 text-center md:text-right mb-4 md:mb-0">
              <h2 className="text-2xl font-bold text-black">{user.name}</h2>
              <p className="text-gray-500 flex items-center justify-center md:justify-start gap-2"> <MapPin size={16} /> {user.governorate || 'غير محدد'} </p>
+             {user.role === UserRole.BREEDER && user.rating !== undefined && (
+                 <div className="flex justify-center md:justify-start mt-2">
+                     <StarRating rating={user.rating} />
+                 </div>
+             )}
           </div>
           <div className="flex gap-2"> <StatusBadge status={user.status} type="user" /> </div>
         </div>
@@ -703,11 +708,18 @@ const AdminDashboard: React.FC<{
                     <div className="flex justify-between items-center mb-4"> <h3 className="font-bold text-lg text-black">إدارة المستخدمين</h3> <Button size="sm" onClick={() => setIsAddUserModalOpen(true)}><Plus size={16}/> إضافة مستخدم</Button> </div>
                     <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
                         <table className="w-full text-right">
-                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">الاسم</th> <th className="p-4">الدور</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
+                            <thead className="bg-gray-50 text-black text-sm"> <tr> <th className="p-4">الاسم</th> <th className="p-4">التقييم</th> <th className="p-4">الدور</th> <th className="p-4">الحالة</th> <th className="p-4">الإجراءات</th> </tr> </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {users.map(u => (
                                     <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="p-4"> <div className="font-bold text-black">{u.name}</div> <div className="text-xs text-gray-500">{u.phone}</div> </td>
+                                        <td className="p-4">
+                                            {u.role === UserRole.BREEDER ? (
+                                                <StarRating rating={u.rating || 0} size={12} />
+                                            ) : (
+                                                <span className="text-gray-300">-</span>
+                                            )}
+                                        </td>
                                         <td className="p-4"> <span className="text-xs font-medium text-gray-800 bg-gray-100 px-2 py-1 rounded-md">{roleLabels[u.role] || u.role}</span> </td>
                                         <td className="p-4"><StatusBadge status={u.status} type="user" /></td>
                                         <td className="p-4"> 
@@ -843,7 +855,10 @@ const AdminDashboard: React.FC<{
                                             <div className="p-4 space-y-4">
                                                 <div>
                                                     <h4 className="font-bold text-black">{cycle.animalType}</h4>
-                                                    <p className="text-[10px] text-gray-500">المربي: {breeder?.name}</p>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-[10px] text-gray-500">المربي: {breeder?.name}</p>
+                                                        {breeder?.rating !== undefined && <StarRating rating={breeder.rating} size={10} />}
+                                                    </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div className="bg-blue-50 p-2 rounded-lg text-center">
@@ -1587,7 +1602,7 @@ const InvestorPortfolio: React.FC<{
     );
 };
 
-const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; investments: Investment[]; setInvestments: (inv: Investment[]) => void; }> = ({ user, cycles, setCycles, investments, setInvestments }) => {
+const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; investments: Investment[]; setInvestments: (inv: Investment[]) => void; users: User[]; }> = ({ user, cycles, setCycles, investments, setInvestments, users }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const availableCycles = cycles.filter(c => 
       c.status === CycleStatus.PENDING && 
@@ -1660,46 +1675,55 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {availableCycles.map(cycle => (
-                    <Card key={cycle.id} className="overflow-hidden hover:shadow-lg transition-all border-transparent hover:border-primary/20 group">
-                        <div className="relative h-44 overflow-hidden">
-                            <img 
-                                src={cycle.imageUrl} 
-                                onError={handleAnimalImageError}
-                                className="h-full w-full object-cover transition-transform group-hover:scale-105" 
-                            />
-                            <div className="absolute top-3 left-3 flex flex-col gap-2">
-                                <div className="bg-green-50/90 backdrop-blur-sm text-green-800 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-green-100/50">
-                                    متبقي: {(cycle.fundingGoal - cycle.currentFunding).toLocaleString()} ج.م
-                                </div>
-                            </div>
-                            {/* Barn Insurance Badge - DISTINGUISHING ICON ADDED HERE */}
-                            <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                                {cycle.isBarnInsured && (
-                                    <div className="bg-orange-500/90 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg shadow-xl border border-orange-300/50 flex items-center gap-1.5 animate-in zoom-in duration-300">
-                                        <div className="p-0.5 bg-white rounded-full">
-                                            <Shield size={10} className="text-orange-600 fill-orange-600" />
-                                        </div>
-                                        <span>حظيرة مؤمنة</span>
+                {availableCycles.map(cycle => {
+                    const breeder = users.find(u => u.id === cycle.breederId);
+                    return (
+                        <Card key={cycle.id} className="overflow-hidden hover:shadow-lg transition-all border-transparent hover:border-primary/20 group">
+                            <div className="relative h-44 overflow-hidden">
+                                <img 
+                                    src={cycle.imageUrl} 
+                                    onError={handleAnimalImageError}
+                                    className="h-full w-full object-cover transition-transform group-hover:scale-105" 
+                                />
+                                <div className="absolute top-3 left-3 flex flex-col gap-2">
+                                    <div className="bg-green-50/90 backdrop-blur-sm text-green-800 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-green-100/50">
+                                        متبقي: {(cycle.fundingGoal - cycle.currentFunding).toLocaleString()} ج.م
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3>
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-[10px] text-gray-500">
-                                    <span>تقدم التمويل: {Math.floor((cycle.currentFunding/cycle.fundingGoal)*100)}%</span>
-                                    <span>الهدف: {cycle.fundingGoal.toLocaleString()} ج.م</span>
                                 </div>
-                                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
-                                  <div className="bg-primary h-full transition-all duration-1000 ease-out" style={{ width: `${(cycle.currentFunding/cycle.fundingGoal)*100}%` }}></div>
+                                {/* Barn Insurance Badge - DISTINGUISHING ICON ADDED HERE */}
+                                <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
+                                    {cycle.isBarnInsured && (
+                                        <div className="bg-orange-500/90 backdrop-blur-sm text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg shadow-xl border border-orange-300/50 flex items-center gap-1.5 animate-in zoom-in duration-300">
+                                            <div className="p-0.5 bg-white rounded-full">
+                                                <Shield size={10} className="text-orange-600 fill-orange-600" />
+                                            </div>
+                                            <span>حظيرة مؤمنة</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <Button className="w-full shadow-sm shadow-primary/10" onClick={() => handleOpenInvestModal(cycle)}>استثمر الآن</Button>
-                        </div>
-                    </Card>
-                ))}
+                            <div className="p-4 space-y-3">
+                                <div>
+                                    <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <p className="text-[10px] text-gray-500">المربي: {breeder?.name}</p>
+                                        {breeder?.rating !== undefined && <StarRating rating={breeder.rating} size={10} />}
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[10px] text-gray-500">
+                                        <span>تقدم التمويل: {Math.floor((cycle.currentFunding/cycle.fundingGoal)*100)}%</span>
+                                        <span>الهدف: {cycle.fundingGoal.toLocaleString()} ج.م</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
+                                      <div className="bg-primary h-full transition-all duration-1000 ease-out" style={{ width: `${(cycle.currentFunding/cycle.fundingGoal)*100}%` }}></div>
+                                    </div>
+                                </div>
+                                <Button className="w-full shadow-sm shadow-primary/10" onClick={() => handleOpenInvestModal(cycle)}>استثمر الآن</Button>
+                            </div>
+                        </Card>
+                    );
+                })}
             </div>
 
             <Modal isOpen={isInvestModalOpen} onClose={() => setIsInvestModalOpen(false)} title="خطوات استثمارك الجديد">
@@ -1842,7 +1866,7 @@ function App() {
     switch (currentUser?.role) {
         case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} logs={logs} />;
         case UserRole.BREEDER: return <BreederDashboard user={currentUser} cycles={cycles} setCycles={setCycles} />;
-        case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
+        case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} users={users} />;
         default: return null;
     }
   };

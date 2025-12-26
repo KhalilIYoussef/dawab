@@ -1,6 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Syringe, Wheat, CheckCircle, Clock, Pill, Stethoscope, Droplets, Utensils, ChevronDown, ChevronUp, Plus, Minus, Trash2 } from 'lucide-react';
+import { X, Calendar, Syringe, Wheat, CheckCircle, Clock, Pill, Stethoscope, Droplets, Utensils, ChevronDown, ChevronUp, Plus, Minus, Trash2, Star, StarHalf } from 'lucide-react';
+
+// --- Star Rating ---
+export const StarRating: React.FC<{ rating: number; size?: number; className?: string }> = ({ rating, size = 16, className = '' }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className={`flex items-center gap-0.5 ${className}`} title={`التقييم: ${rating}/5`}>
+      {[...Array(fullStars)].map((_, i) => (
+        <Star key={`full-${i}`} size={size} className="fill-yellow-400 text-yellow-400" />
+      ))}
+      {hasHalfStar && <StarHalf size={size} className="fill-yellow-400 text-yellow-400" />}
+      {[...Array(emptyStars)].map((_, i) => (
+        <Star key={`empty-${i}`} size={size} className="text-gray-300" />
+      ))}
+      <span className="text-[10px] font-bold text-gray-500 mr-1">({rating})</span>
+    </div>
+  );
+};
 
 // --- Button ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

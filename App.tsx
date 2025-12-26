@@ -64,6 +64,7 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
         return result;
     };
 
+    // Correctly using log.foodDetails here as foodDetails is not in the outer scope
     const feedData = categorizeFeed(log.foodDetails);
     const notesArray = log.notes ? log.notes.split('|').map(n => n.trim()) : [];
     const vaccines = notesArray.filter(n => n.includes('[vaccine]')).map(n => n.replace('[vaccine]', '').trim());
@@ -1161,7 +1162,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     fundingGoal: 0, 
     expectedDuration: 180, 
     description: '',
-    isInsured: false
+    isInsured: true // تفعيل افتراضي بناءً على طلب المستخدم
   });
   const [cycleImage, setCycleImage] = useState<string | null>(null);
 
@@ -1207,7 +1208,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
     setCycles([...cycles, cycle]); 
     setIsModalOpen(false);
     setCycleImage(null);
-    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', isInsured: false });
+    setNewCycle({ animalType: 'عجل هولشتاين', fundingGoal: 0, expectedDuration: 180, description: '', isInsured: true });
   };
 
   return (
@@ -1293,27 +1294,27 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     <Input label="المدة (أيام)" type="number" value={newCycle.expectedDuration} onChange={(e) => setNewCycle({...newCycle, expectedDuration: Number(e.target.value)})} />
                 </div>
 
-                {/* خيار التأمين الاختياري بشكل متطور */}
+                {/* خيار التأمين الاختياري بشكل متطور - مفعل افتراضياً */}
                 <div className={`p-4 rounded-2xl border transition-all duration-300 ${newCycle.isInsured ? 'bg-green-50 border-primary/30 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl shadow-sm transition-colors ${newCycle.isInsured ? 'bg-primary text-white' : 'bg-white text-gray-400'}`}>
-                                <ShieldCheck size={22} />
-                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => setNewCycle({...newCycle, isInsured: !newCycle.isInsured})}
+                                className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${newCycle.isInsured ? 'bg-primary/20' : 'bg-gray-200'}`}
+                            >
+                                <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${newCycle.isInsured ? 'bg-primary translate-x-1' : 'bg-white translate-x-8'}`}>
+                                    {newCycle.isInsured && <Check size={10} className="text-white" />}
+                                </div>
+                            </button>
                             <div>
                                 <h4 className={`text-sm font-bold transition-colors ${newCycle.isInsured ? 'text-green-900' : 'text-gray-700'}`}>طلب تأمين شامل</h4>
                                 <p className="text-[10px] text-gray-500">تغطية مخاطر النفوق والأمراض الوبائية (اختياري)</p>
                             </div>
                         </div>
-                        <button 
-                            type="button"
-                            onClick={() => setNewCycle({...newCycle, isInsured: !newCycle.isInsured})}
-                            className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${newCycle.isInsured ? 'bg-primary/20' : 'bg-gray-200'}`}
-                        >
-                            <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${newCycle.isInsured ? 'bg-primary translate-x-1' : 'bg-white translate-x-8'}`}>
-                                {newCycle.isInsured && <Check size={10} className="text-white" />}
-                            </div>
-                        </button>
+                        <div className={`p-2 rounded-xl shadow-sm transition-colors ${newCycle.isInsured ? 'bg-primary text-white' : 'bg-white text-gray-400'}`}>
+                            <ShieldCheck size={22} />
+                        </div>
                     </div>
                     {newCycle.isInsured && (
                         <div className="mt-3 pt-3 border-t border-primary/10 flex justify-between items-center animate-in slide-in-from-top-2">
@@ -1436,13 +1437,13 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
     const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
     const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(null);
     const [investAmount, setInvestAmount] = useState<string>('');
-    const [hasInsurance, setHasInsurance] = useState(false);
+    const [hasInsurance, setHasInsurance] = useState(true); // تفعيل افتراضي بناءً على طلب المستخدم
     const [receiptImage, setReceiptImage] = useState<string | null>(null);
 
     const handleOpenInvestModal = (cycle: Cycle) => { 
         setSelectedCycle(cycle); 
         setInvestAmount(''); 
-        setHasInsurance(false);
+        setHasInsurance(true); // دائماً يبدأ مفعلاً
         setReceiptImage(null); 
         setIsInvestModalOpen(true); 
     };
@@ -1560,22 +1561,33 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                             placeholder="أدخل مبلغا يبدأ من 500 ج.م"
                         />
 
-                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm">
-                                    <ShieldCheck size={20} />
+                        <div className={`p-4 rounded-2xl border transition-all duration-300 ${hasInsurance ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setHasInsurance(!hasInsurance)}
+                                        className={`group w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ${hasInsurance ? 'bg-blue-600/20' : 'bg-gray-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md flex items-center justify-center ${hasInsurance ? 'bg-blue-600 translate-x-1' : 'bg-white translate-x-8'}`}>
+                                            {hasInsurance && <Check size={10} className="text-white" />}
+                                        </div>
+                                    </button>
+                                    <div>
+                                        <h4 className={`text-sm font-bold ${hasInsurance ? 'text-blue-900' : 'text-gray-700'}`}>طلب تأمين شامل</h4>
+                                        <p className="text-[10px] text-gray-500">تأمين ضد النفوق والأمراض الوبائية (3%)</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-bold text-blue-900">تأمين شامل على الحياة</p>
-                                    <p className="text-[10px] text-blue-700">تأمين ضد النفوق والأمراض الوبائية (3%)</p>
+                                <div className={`p-2 rounded-xl shadow-sm transition-colors ${hasInsurance ? 'bg-blue-600 text-white' : 'bg-white text-gray-400'}`}>
+                                    <ShieldCheck size={22} />
                                 </div>
                             </div>
-                            <button 
-                                onClick={() => setHasInsurance(!hasInsurance)}
-                                className={`w-12 h-6 rounded-full transition-colors relative ${hasInsurance ? 'bg-blue-600' : 'bg-gray-300'}`}
-                            >
-                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${hasInsurance ? 'right-7' : 'right-1'}`}></div>
-                            </button>
+                            {hasInsurance && (
+                                <div className="mt-3 pt-3 border-t border-blue-100 flex justify-between items-center text-blue-800 animate-in slide-in-from-top-2">
+                                    <span className="text-xs font-bold">تكلفة التأمين المحسوبة:</span>
+                                    <span className="text-lg font-black">{((parseFloat(investAmount) || 0) * INSURANCE_FEE_PERCENT).toLocaleString()} ج.م</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-100">

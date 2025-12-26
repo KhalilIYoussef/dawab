@@ -947,8 +947,9 @@ const BreederActiveCycles: React.FC<{
   cycles: Cycle[];
   logs: CycleLog[];
   setLogs: (logs: CycleLog[]) => void;
-}> = ({ user, cycles, logs, setLogs }) => {
-  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
+  selectedCycleId: string | null;
+  onSelectCycle: (id: string | null) => void;
+}> = ({ user, cycles, logs, setLogs, selectedCycleId, onSelectCycle }) => {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [activeLogTab, setActiveLogTab] = useState<'feed' | 'health'>('feed');
   const [currentWeight, setCurrentWeight] = useState<string>('');
@@ -957,7 +958,7 @@ const BreederActiveCycles: React.FC<{
   const [vetItems, setVetItems] = useState<Array<{ name: string, date: string, type: string, note?: string }>>([]);
   const [notes, setNotes] = useState('');
 
-  const activeCycles = cycles.filter(c => c.breederId === user.id && c.status === CycleStatus.ACTIVE);
+  const breederCycles = cycles.filter(c => c.breederId === user.id);
   const selectedCycle = cycles.find(c => c.id === selectedCycleId);
   const cycleLogs = logs.filter(l => l.cycleId === selectedCycleId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -1011,7 +1012,7 @@ const BreederActiveCycles: React.FC<{
   if (selectedCycle) {
       return (
           <div className="space-y-6">
-              <button onClick={() => setSelectedCycleId(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع للقائمة </button>
+              <button onClick={() => onSelectCycle(null)} className="flex items-center gap-2 text-black opacity-60 hover:opacity-100 transition-opacity"> <ArrowRight size={20}/> رجوع للقائمة </button>
               
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
                   <div className="flex gap-4 items-center">
@@ -1033,9 +1034,11 @@ const BreederActiveCycles: React.FC<{
                         </div>
                     </div>
                   </div>
-                  <Button size="lg" onClick={() => setIsLogModalOpen(true)} className="w-full md:w-auto shadow-lg shadow-primary/20"> 
-                    <Plus size={20}/> تسجيل تحديث يومي 
-                  </Button>
+                  {selectedCycle.status === CycleStatus.ACTIVE && (
+                    <Button size="lg" onClick={() => setIsLogModalOpen(true)} className="w-full md:w-auto shadow-lg shadow-primary/20"> 
+                        <Plus size={20}/> تسجيل تحديث يومي 
+                    </Button>
+                  )}
               </div>
 
               <div className="space-y-4">
@@ -1167,12 +1170,13 @@ const BreederActiveCycles: React.FC<{
 
   return (
       <div className="space-y-6">
-          <h2 className="text-xl font-bold mb-4 text-black">الدورات النشطة (متابعة)</h2>
+          <h2 className="text-xl font-bold mb-4 text-black">متابعة كافة الدورات</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeCycles.map(cycle => {
+              {breederCycles.map(cycle => {
                   const fundPercent = Math.min(100, Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100));
+                  const isActive = cycle.status === CycleStatus.ACTIVE;
                   return (
-                    <Card key={cycle.id} className="p-4 flex flex-col gap-4 hover:shadow-lg transition-all border-transparent hover:border-primary/10">
+                    <Card key={cycle.id} className={`p-4 flex flex-col gap-4 hover:shadow-lg transition-all border-transparent ${isActive ? 'hover:border-primary/20' : ''}`}>
                         <div className="flex items-start gap-4"> 
                             <div className="relative shrink-0">
                                 <img 
@@ -1180,23 +1184,29 @@ const BreederActiveCycles: React.FC<{
                                     onError={handleAnimalImageError}
                                     className="w-20 h-20 rounded-2xl object-cover bg-gray-100 shadow-sm" 
                                 /> 
-                                <div className="absolute -top-2 -left-2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md border border-white">
-                                    {fundPercent}% تمويل
+                                <div className="absolute -top-2 -left-2 flex flex-col gap-1">
+                                    <StatusBadge status={cycle.status} type="cycle" />
                                 </div>
                             </div>
                             <div className="flex-1"> 
-                            <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
-                            <p className="text-xs text-gray-400 mb-2 flex items-center gap-1"><Clock size={12}/> البدء: {cycle.startDate}</p>
-                            <Button size="sm" onClick={() => setSelectedCycleId(cycle.id)} variant="outline">عرض ومتابعة الدورة</Button>
+                                <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
+                                <div className="flex flex-col gap-1 mt-1">
+                                    <p className="text-xs text-gray-400 flex items-center gap-1"><Clock size={12}/> البدء: {cycle.startDate}</p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <Button size="sm" onClick={() => onSelectCycle(cycle.id)} variant={isActive ? 'primary' : 'outline'} className="text-[10px] h-8">
+                                            {isActive ? 'تسجيل متابعة يومية' : 'عرض السجل'}
+                                        </Button>
+                                    </div>
+                                </div>
                             </div> 
                         </div>
                     </Card>
                   );
               })}
-              {activeCycles.length === 0 && (
+              {breederCycles.length === 0 && (
                 <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
                     <Tractor size={48} className="mx-auto text-gray-100 mb-4" />
-                    <p className="text-gray-400 font-medium">لا توجد دورات نشطة حالياً.</p>
+                    <p className="text-gray-400 font-medium">لا توجد دورات حالياً. أضف دورتك الأولى من لوحة التحكم.</p>
                 </div>
               )}
           </div>
@@ -1204,7 +1214,12 @@ const BreederActiveCycles: React.FC<{
   );
 };
 
-const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycles: Cycle[]) => void; }> = ({ user, cycles, setCycles }) => {
+const BreederDashboard: React.FC<{ 
+    user: User; 
+    cycles: Cycle[]; 
+    setCycles: (cycles: Cycle[]) => void;
+    onFollowUp: (id: string) => void;
+}> = ({ user, cycles, setCycles, onFollowUp }) => {
   const myCycles = cycles.filter(c => c.breederId === user.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCycle, setNewCycle] = useState<Partial<Cycle>>({ 
@@ -1269,7 +1284,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
             {myCycles.map(cycle => {
                 const fundPercent = Math.min(100, Math.floor((cycle.currentFunding / cycle.fundingGoal) * 100));
                 return (
-                    <Card key={cycle.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+                    <Card key={cycle.id} className="overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full">
                         <div className="relative h-48">
                             <img 
                                 src={cycle.imageUrl} 
@@ -1285,23 +1300,33 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                                 )}
                             </div>
                         </div>
-                        <div className="p-4 space-y-3"> 
-                            <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
-                            <div className="space-y-1.5">
-                                <div className="flex justify-between text-xs text-gray-500"> 
-                                    <span>التمويل المطلوب:</span> 
-                                    <b className="text-primary">{cycle.fundingGoal.toLocaleString()} ج.م</b> 
-                                </div>
-                                <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
-                                    <div className="bg-primary h-full transition-all duration-700" style={{ width: `${fundPercent}%` }}></div>
+                        <div className="p-4 space-y-3 flex-1 flex flex-col justify-between"> 
+                            <div>
+                                <h3 className="font-bold text-black text-lg">{cycle.animalType}</h3> 
+                                <div className="space-y-1.5 mt-2">
+                                    <div className="flex justify-between text-xs text-gray-500"> 
+                                        <span>التمويل المطلوب:</span> 
+                                        <b className="text-primary">{cycle.fundingGoal.toLocaleString()} ج.م</b> 
+                                    </div>
+                                    <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                                        <div className="bg-primary h-full transition-all duration-700" style={{ width: `${fundPercent}%` }}></div>
+                                    </div>
                                 </div>
                             </div>
+                            <Button 
+                                className="w-full mt-4 text-xs font-bold gap-2" 
+                                variant="outline"
+                                onClick={() => onFollowUp(cycle.id)}
+                            >
+                                <Activity size={14} /> عرض وتحديث المتابعة
+                            </Button>
                         </div>
                     </Card>
                 );
             })}
         </div>
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="إضافة دورة تسمين جديدة">
+            {/* Modal Content... */}
             <div className="space-y-5">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">نوع الحيوان</label>
@@ -1359,7 +1384,7 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                                 </div>
                             </button>
                             <div>
-                                <h4 className={`text-sm font-bold ${newCycle.isBarnInsured ? 'text-orange-900' : 'text-gray-700'}`}>تأمين الحظيرة والمنشأة</h4>
+                                <h4 className={`text-sm font-bold ${newCycle.isBarnInsured ? 'text-orange-900' : 'text-gray-700'}`}>تأمين الحظيرة</h4>
                                 <p className="text-[10px] text-gray-500">تغطية مخاطر الحرائق والسرقة والحوادث للمزرعة</p>
                             </div>
                         </div>
@@ -1711,18 +1736,29 @@ function App() {
   const [logs, setLogs] = useState<CycleLog[]>(INITIAL_LOGS);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // New state for persisting cycle selection across tabs
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
+
+  const handleFollowUp = (cycleId: string) => {
+    setSelectedCycleId(cycleId);
+    setActiveTab('active_cycles');
+  };
 
   const renderContent = () => {
     if (activeTab === 'profile') return <ProfileView user={currentUser!} onUpdate={(u) => { setUsers(users.map(user => user.id === u.id ? u : user)); setCurrentUser(u); }} />;
-    if (activeTab === 'investments') return <InvestorPortfolio user={currentUser!} cycles={cycles} investments={investments} logs={logs} />;
-    if (activeTab === 'active_cycles') return <BreederActiveCycles user={currentUser!} cycles={cycles} logs={logs} setLogs={setLogs} />;
+    if (activeTab === 'investments' && currentUser?.role === UserRole.INVESTOR) return <InvestorPortfolio user={currentUser!} cycles={cycles} investments={investments} logs={logs} />;
     
-    switch (currentUser?.role) {
-        case UserRole.ADMIN: return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
-        case UserRole.BREEDER: return <BreederDashboard user={currentUser} cycles={cycles} setCycles={setCycles} />;
-        case UserRole.INVESTOR: return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
-        default: return null;
+    if (currentUser?.role === UserRole.BREEDER) {
+        if (activeTab === 'dashboard') return <BreederDashboard user={currentUser} cycles={cycles} setCycles={setCycles} onFollowUp={handleFollowUp} />;
+        if (activeTab === 'active_cycles') return <BreederActiveCycles user={currentUser} cycles={cycles} logs={logs} setLogs={setLogs} selectedCycleId={selectedCycleId} onSelectCycle={setSelectedCycleId} />;
     }
+
+    if (currentUser?.role === UserRole.INVESTOR && activeTab === 'dashboard') return <InvestorDashboard user={currentUser} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
+    
+    if (currentUser?.role === UserRole.ADMIN && activeTab === 'dashboard') return <AdminDashboard users={users} setUsers={setUsers} cycles={cycles} setCycles={setCycles} investments={investments} setInvestments={setInvestments} />;
+    
+    return null;
   };
 
   if (!currentUser) return <LoginScreen onLogin={setCurrentUser} users={users} setUsers={setUsers} />;
@@ -1749,9 +1785,17 @@ function App() {
             </div>
             <div className="p-4 space-y-2">
                 <SidebarItem icon={LayoutDashboard} label="لوحة التحكم" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }} />
-                {currentUser.role === UserRole.INVESTOR && <SidebarItem icon={PieChart} label="محفظتي" active={activeTab === 'investments'} onClick={() => { setActiveTab('investments'); setIsMobileMenuOpen(false); }} />}
-                {currentUser.role === UserRole.BREEDER && <SidebarItem icon={Activity} label="الدورات النشطة" active={activeTab === 'active_cycles'} onClick={() => { setActiveTab('active_cycles'); setIsMobileMenuOpen(false); }} />}
+                
+                {currentUser.role === UserRole.INVESTOR && (
+                    <SidebarItem icon={PieChart} label="محفظتي" active={activeTab === 'investments'} onClick={() => { setActiveTab('investments'); setIsMobileMenuOpen(false); }} />
+                )}
+                
+                {currentUser.role === UserRole.BREEDER && (
+                    <SidebarItem icon={Activity} label="المتابعة اليومية" active={activeTab === 'active_cycles'} onClick={() => { setActiveTab('active_cycles'); setIsMobileMenuOpen(false); }} />
+                )}
+                
                 <SidebarItem icon={UserCog} label="الملف الشخصي" active={activeTab === 'profile'} onClick={() => { setActiveTab('profile'); setIsMobileMenuOpen(false); }} />
+                
                 <div className="pt-4 border-t border-gray-100">
                     <button onClick={() => setCurrentUser(null)} className="w-full flex gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"> 
                         <LogOut size={20} /> 

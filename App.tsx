@@ -125,7 +125,7 @@ const DailyLogTimelineItem: React.FC<{ log: CycleLog }> = ({ log }) => {
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             {feedData.rough.map((item, idx) => (
-                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-orange-100 flex items-center gap-1">
+                                                <span key={idx} className="bg-green-50 text-green-700 text-[10px] px-2 py-0.5 rounded-md font-medium border border-green-100 flex items-center gap-1">
                                                     <Leaf size={10} className="opacity-60" /> {item}
                                                 </span>
                                             ))}
@@ -290,6 +290,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
     name: '',
     phone: '',
     password: '',
+    nationalId: '',
+    governorate: '', // Used as Farm Address for breeder
     role: UserRole.INVESTOR
   });
   const [error, setError] = useState('');
@@ -297,9 +299,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    if (name === 'phone') {
+    if (name === 'phone' || name === 'nationalId') {
         const numericValue = value.replace(/\D/g, '');
-        if (numericValue.length <= 11) {
+        const limit = name === 'phone' ? 11 : 14;
+        if (numericValue.length <= limit) {
             setFormData({ ...formData, [name]: numericValue });
         }
     } else {
@@ -317,10 +320,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
           setError('كلمة مورور غير صحيحة.');
           return;
       }
-      if (user.status === UserStatus.PENDING) {
-        setError('الحساب قيد المراجعة. يرجى انتظار تفعيل الحساب من قبل الإدارة.');
-        return;
-      }
+      // Removed the block for PENDING status to allow login as requested.
       if (user.status === UserStatus.REJECTED) {
         setError('عذراً، تم رفض هذا الحساب. يرجى التواصل مع الدعم الفني.');
         return;
@@ -333,7 +333,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, phone, password } = formData;
+    const { name, phone, password, nationalId, governorate, role } = formData;
     if (users.some(u => u.phone === phone)) {
       setError('رقم الهاتف مسجل بالفعل.');
       return;
@@ -348,6 +348,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
        setError('رقم الهاتف غير صحيح: يجب أن يتكون من 11 رقم بالضبط.');
        return;
     }
+    const nationalIdRegex = /^\d{14}$/;
+    if (!nationalIdRegex.test(nationalId)) {
+       setError('الرقم القومي غير صحيح: يجب أن يتكون من 14 رقم.');
+       return;
+    }
+    if (role === UserRole.BREEDER && !governorate.trim()) {
+       setError('يرجى إدخال عنوان المزرعة.');
+       return;
+    }
     if (password.length < 3) {
        setError('كلمة المرور يجب أن تكون 3 أحرف على الأقل.');
        return;
@@ -357,15 +366,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
       name: name,
       phone: phone,
       password: password,
-      role: UserRole.INVESTOR,
+      role: role,
+      nationalId: nationalId,
+      governorate: governorate, // Farm Address for breeder
       status: UserStatus.PENDING,
       documentsVerified: false,
       profilePictureUrl: `https://i.pravatar.cc/150?u=${Math.random()}`,
     };
     setUsers([...users, newUser]);
     setIsRegistering(false);
-    setSuccess('تم إنشاء الحساب بنجاح! حسابك الآن قيد المراجعة، سيقوم المسؤول بتفعيله قريباً.');
-    setFormData(prev => ({ ...prev, name: '', password: '' }));
+    setSuccess('تم إنشاء الحساب بنجاح! حسابك الآن قيد المراجعة، يمكنك الدخول لتصفح المنصة وسيتم تفعيل كامل الصلاحيات قريباً.');
+    setFormData(prev => ({ ...prev, name: '', password: '', nationalId: '', governorate: '' }));
   };
 
   return (
@@ -389,9 +400,32 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, users, setUsers }) =
              </div>
           )}
           <form onSubmit={isRegistering ? handleRegisterSubmit : handleLoginSubmit} className="space-y-4">
+            {isRegistering && (
+              <div className="flex gap-4 p-1 bg-gray-100 rounded-xl mb-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: UserRole.INVESTOR })}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.role === UserRole.INVESTOR ? 'bg-white text-primary shadow-sm' : 'text-gray-500'}`}
+                >
+                  أنا مستثمر
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: UserRole.BREEDER })}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.role === UserRole.BREEDER ? 'bg-white text-primary shadow-sm' : 'text-gray-500'}`}
+                >
+                  أنا مربي
+                </button>
+              </div>
+            )}
+            
             {isRegistering && <Input label="الاسم بالكامل" name="name" value={formData.name} onChange={handleInputChange} placeholder="أحمد محمد" required />}
+            {isRegistering && <Input label="الرقم القومي" name="nationalId" type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={14} value={formData.nationalId} onChange={handleInputChange} placeholder="290xxxxxxxxxxx" required />}
+            {isRegistering && formData.role === UserRole.BREEDER && <Input label="عنوان المزرعة" name="governorate" value={formData.governorate} onChange={handleInputChange} placeholder="مثال: الشرقية، مركز بلبيس" required />}
+            
             <Input label="رقم الهاتف" name="phone" type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={11} value={formData.phone} onChange={handleInputChange} placeholder="01xxxxxxxxx" required />
             <Input label="كلمة المرور" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="********" required />
+            
             {error && (
                <div className="mb-2 p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm flex items-start gap-2">
                   <AlertTriangle size={16} className="shrink-0 mt-0.5" />
@@ -482,6 +516,9 @@ const ProfileView: React.FC<{
             <div className="space-y-4">
                <div> <label className="text-sm text-gray-500">رقم الهاتف</label> <p className="font-medium text-black">{user.phone}</p> </div>
                <div> <label className="text-sm text-gray-500">الرقم القومي</label> <p className="font-medium text-black">{user.nationalId || 'غير مسجل'}</p> </div>
+               {user.role === UserRole.BREEDER && (
+                  <div> <label className="text-sm text-gray-500">عنوان المزرعة</label> <p className="font-medium text-black">{user.governorate || 'غير محدد'}</p> </div>
+               )}
             </div>
          </Card>
          <Card className="p-6">
@@ -1396,6 +1433,16 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
 
   return (
     <div className="space-y-6">
+        {user.status === UserStatus.PENDING && (
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl text-orange-700 text-sm flex items-start gap-3 shadow-sm">
+                <Info size={20} className="shrink-0 text-orange-500" />
+                <div>
+                    <p className="font-bold">تنبيه: حسابك قيد المراجعة حالياً.</p>
+                    <p className="text-xs mt-1">يمكنك تصفح لوحة التحكم، ولكن لن تتمكن من تقديم طلبات تمويل جديدة أو تأكيد استثمارات حتى يتم تفعيل حسابك من قبل الإدارة لضمان أمن المنصة.</p>
+                </div>
+            </div>
+        )}
+
         <div className="flex justify-between items-center"> <h2 className="text-xl font-bold text-black">دوراتي الإنتاجية</h2> <Button onClick={() => setIsModalOpen(true)}><Plus size={18}/> إضافة دورة</Button> </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCycles.map(cycle => {
@@ -1510,9 +1557,15 @@ const BreederDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cycl
                     <p className="text-[10px] text-orange-700">سيتم مراجعة بيانات الدورة من قبل الإدارة قبل طرحها للاستثمار لضمان الجودة.</p>
                 </div>
 
-                <Button className="w-full py-4 text-lg shadow-lg shadow-primary/10" onClick={handleAddCycle} disabled={!cycleImage}>
-                    إرسال الطلب للمراجعة
-                </Button>
+                {user.status === UserStatus.ACTIVE ? (
+                  <Button className="w-full py-4 text-lg shadow-lg shadow-primary/10" onClick={handleAddCycle} disabled={!cycleImage}>
+                      إرسال الطلب للمراجعة
+                  </Button>
+                ) : (
+                    <div className="bg-orange-100 p-4 rounded-xl text-center text-orange-800 text-xs font-bold border border-orange-200">
+                        حسابك في انتظار التفعيل لإرسال طلبات المراجعة
+                    </div>
+                )}
             </div>
         </Modal>
     </div>
@@ -1667,6 +1720,16 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
 
     return (
         <div className="space-y-6">
+            {user.status === UserStatus.PENDING && (
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl text-orange-700 text-sm flex items-start gap-3 shadow-sm">
+                    <Info size={20} className="shrink-0 text-orange-500" />
+                    <div>
+                        <p className="font-bold">تنبيه: حسابك قيد المراجعة حالياً.</p>
+                        <p className="text-xs mt-1">يمكنك تصفح الفرص المتاحة، ولكن لن تتمكن من إتمام أي عمليات استثمار أو تحويل أموال حتى يتم تفعيل حسابك من قبل الإدارة لضمان أمن معاملاتك المالية.</p>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-xl font-bold text-black">فرص الاستثمار المتاحة</h2>
                 <div className="relative w-full md:w-80">
@@ -1835,13 +1898,19 @@ const InvestorDashboard: React.FC<{ user: User; cycles: Cycle[]; setCycles: (cyc
                         </div>
                     </div>
 
-                    <Button 
-                        className="w-full py-4 text-lg shadow-xl shadow-primary/20" 
-                        onClick={handleConfirmInvest}
-                        disabled={amountVal <= 0 || !receiptImage}
-                    >
-                        تأكيد طلب الاستثمار
-                    </Button>
+                    {user.status === UserStatus.ACTIVE ? (
+                      <Button 
+                          className="w-full py-4 text-lg shadow-xl shadow-primary/20" 
+                          onClick={handleConfirmInvest}
+                          disabled={amountVal <= 0 || !receiptImage}
+                      >
+                          تأكيد طلب الاستثمار
+                      </Button>
+                    ) : (
+                        <div className="bg-orange-100 p-4 rounded-xl text-center text-orange-800 text-xs font-bold border border-orange-200">
+                            حسابك في انتظار التفعيل لتأكيد طلبات الاستثمار
+                        </div>
+                    )}
                 </div>
             </Modal>
         </div>

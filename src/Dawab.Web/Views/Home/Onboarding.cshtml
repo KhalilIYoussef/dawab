@@ -1,0 +1,77 @@
+@{
+    ViewData["Title"] = "ابدأ رحلتك مع دواب";
+}
+
+<section class="bg-gradient-to-b from-primary-50 via-white to-gray-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+        <div class="max-w-3xl mx-auto text-center">
+            <span class="inline-flex items-center gap-2 bg-white border border-primary-100 text-primary-800 px-3 py-1.5 rounded-full text-xs font-bold">
+                <i data-lucide="route" class="w-4 h-4"></i>
+                بداية سهلة، وخطوات واضحة
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-black text-gray-900 leading-tight mt-5">اختر دورك في منظومة دواب</h1>
+            <p class="text-sm sm:text-base text-gray-600 leading-7 mt-4">سواء كنت تبحث عن فرصة استثمار منظمة أو تدير مزرعة وتريد توسيع إنتاجك، تبدأ الرحلة بحساب مناسب لك.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-7 mt-10">
+            <article class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col">
+                <div class="w-14 h-14 rounded-2xl bg-green-50 text-primary flex items-center justify-center">
+                    <i data-lucide="chart-no-axes-combined" class="w-7 h-7"></i>
+                </div>
+                <p class="text-xs font-bold text-primary mt-5">للمستثمر</p>
+                <h2 class="text-2xl font-black text-gray-900 mt-1">خلّي استثمارك أقرب للإنتاج</h2>
+                <p class="text-sm text-gray-600 leading-7 mt-3">تصفح دورات التسمين المتاحة، راجع تفاصيلها وخطة الرعاية، ثم تابع تقارير الدورة من حسابك بعد تقديم طلب الاستثمار.</p>
+                <ul class="space-y-3 mt-6 text-sm text-gray-700">
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-primary shrink-0 mt-1"></i><span>استكشف معلومات الدورة والمربي والتمويل المطلوب.</span></li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-primary shrink-0 mt-1"></i><span>ارفع إيصال التحويل ليُراجع طلبك من الإدارة.</span></li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-primary shrink-0 mt-1"></i><span>تابع السجلات والعقود وحالة استثماراتك من المحفظة.</span></li>
+                </ul>
+                <a asp-controller="Auth" asp-action="Register" asp-route-role="Investor" class="mt-8 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-700 text-white font-black px-6 py-3.5 rounded-xl transition-colors">
+                    إنشاء حساب مستثمر
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </a>
+            </article>
+
+            <article class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col">
+                <div class="w-14 h-14 rounded-2xl bg-orange-50 text-secondary flex items-center justify-center">
+                    <i data-lucide="tractor" class="w-7 h-7"></i>
+                </div>
+                <p class="text-xs font-bold text-secondary mt-5">للمربي</p>
+                <h2 class="text-2xl font-black text-gray-900 mt-1">حوّل خبرتك إلى دورة منظمة</h2>
+                <p class="text-sm text-gray-600 leading-7 mt-3">جهّز بيانات مزرعتك ودورة التسمين، وشارك خطة الإنتاج مع المستثمرين، ثم وثّق تقدم العمل بالتقارير اليومية.</p>
+                <ul class="space-y-3 mt-6 text-sm text-gray-700">
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-secondary shrink-0 mt-1"></i><span>أنشئ دورة ببيانات واضحة للأوزان والأعداد والتكلفة.</span></li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-secondary shrink-0 mt-1"></i><span>أرسل الدورة للمراجعة قبل إتاحتها للتمويل.</span></li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-secondary shrink-0 mt-1"></i><span>سجّل الأوزان والتغذية والرعاية البيطرية باستمرار.</span></li>
+                </ul>
+                <a asp-controller="Auth" asp-action="Register" asp-route-role="Breeder" class="mt-8 inline-flex items-center justify-center gap-2 bg-secondary hover:bg-secondary-700 text-white font-black px-6 py-3.5 rounded-xl transition-colors">
+                    إنشاء حساب مربي
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </a>
+            </article>
+        </div>
+
+        <div class="max-w-4xl mx-auto mt-10 bg-white/80 border border-gray-100 rounded-3xl p-5 sm:p-7">
+            <h2 class="text-lg font-black text-gray-900 text-center">ماذا يحدث بعد التسجيل؟</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-6">
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-primary-50 text-primary font-black flex items-center justify-center mx-auto">١</div>
+                    <h3 class="font-bold text-sm text-gray-900 mt-2">أنشئ حسابك</h3>
+                    <p class="text-xs text-gray-500 leading-6 mt-1">اختر نوع الحساب وأكمل بياناتك الأساسية.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-primary-50 text-primary font-black flex items-center justify-center mx-auto">٢</div>
+                    <h3 class="font-bold text-sm text-gray-900 mt-2">استكمل المراجعة</h3>
+                    <p class="text-xs text-gray-500 leading-6 mt-1">تراجع الإدارة الحساب والبيانات المطلوبة قبل تفعيل الإجراءات.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-primary-50 text-primary font-black flex items-center justify-center mx-auto">٣</div>
+                    <h3 class="font-bold text-sm text-gray-900 mt-2">ابدأ من لوحتك</h3>
+                    <p class="text-xs text-gray-500 leading-6 mt-1">تابع الفرص أو أدِر دوراتك حسب دورك في المنصة.</p>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-500 mt-7">لديك حساب بالفعل؟ <a asp-controller="Auth" asp-action="Login" class="text-primary font-bold hover:underline">سجّل الدخول</a></p>
+    </div>
+</section>

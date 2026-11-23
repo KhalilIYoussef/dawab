@@ -1,0 +1,94 @@
+@model Dawab.Web.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "إنشاء حساب جديد";
+}
+
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-lg w-full bg-white p-5 sm:p-8 rounded-3xl border border-gray-100 shadow-xl shadow-primary/5 space-y-6" x-data="{ selectedRole: '@Model.Role' }">
+        <div class="text-center space-y-2">
+            <img src="~/images/dawab-mark.svg" alt="شعار دواب" class="w-16 h-16 object-contain mx-auto" asp-append-version="true" />
+            <h2 class="text-2xl font-black text-gray-900">انضم إلى مجتمع دَوَابّ</h2>
+            <p class="text-xs text-gray-400">سجل حسابك كمستثمر أو كمربي ماشية</p>
+        </div>
+
+        <form asp-action="Register" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-xs text-red-600 bg-red-50 p-3 rounded-xl"></div>
+
+            <!-- Role Selector Tabs -->
+            <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1.5 rounded-2xl text-xs font-bold">
+                <label class="text-center py-2.5 rounded-xl cursor-pointer transition-all" :class="selectedRole === 'Investor' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'">
+                    <input type="radio" asp-for="Role" value="Investor" class="hidden" x-model="selectedRole" />
+                    <span>أنا مستثمر</span>
+                </label>
+                <label class="text-center py-2.5 rounded-xl cursor-pointer transition-all" :class="selectedRole === 'Breeder' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'">
+                    <input type="radio" asp-for="Role" value="Breeder" class="hidden" x-model="selectedRole" />
+                    <span>أنا مربي ماشية</span>
+                </label>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">الاسم بالكامل</label>
+                <input asp-for="Name" placeholder="أحمد محمد علي" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                <span asp-validation-for="Name" class="text-[10px] text-red-500"></span>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">رقم الهاتف</label>
+                <input asp-for="Phone" type="tel" placeholder="010XXXXXXXX" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                <span asp-validation-for="Phone" class="text-[10px] text-red-500"></span>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">كلمة المرور</label>
+                <input asp-for="Password" type="password" placeholder="••••••••" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                <span asp-validation-for="Password" class="text-[10px] text-red-500"></span>
+            </div>
+
+            <!-- Breeder Specific Fields -->
+            <template x-if="selectedRole === 'Breeder'">
+                <div class="space-y-4 pt-2 border-t border-gray-100">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700">اسم المزرعة / الحظيرة</label>
+                        <input asp-for="FarmName" placeholder="مزرعة الأمل لتسمين العجول" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900" />
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700">المحافظة</label>
+                        <select asp-for="Governorate" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900">
+                            <option value="الشرقية">الشرقية</option>
+                            <option value="الفيوم">الفيوم</option>
+                            <option value="البحيرة">البحيرة</option>
+                            <option value="الدقهلية">الدقهلية</option>
+                            <option value="بني سويف">بني سويف</option>
+                            <option value="المنوفية">المنوفية</option>
+                        </select>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Investor KYC Fields -->
+            <template x-if="selectedRole === 'Investor'">
+                <div class="space-y-4 pt-2 border-t border-gray-100">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700">الرقم القومي (14 رقم)</label>
+                        <input asp-for="NationalId" placeholder="29000000000000" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900" />
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700">رقم الآيبان (IBAN) لاستلام الأرباح</label>
+                        <input asp-for="Iban" placeholder="EG00000000000000000000000000" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900" />
+                    </div>
+                </div>
+            </template>
+
+            <button type="submit" class="w-full py-4 bg-primary hover:bg-primary-700 text-white font-bold rounded-2xl text-sm shadow-lg shadow-primary/20 transition-all mt-4">
+                تأكيد وإنشاء الحساب
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-gray-500">
+            لديك حساب بالفعل؟ <a asp-action="Login" class="text-primary font-bold hover:underline">سجل دخولك هنا</a>
+        </div>
+    </div>
+</div>

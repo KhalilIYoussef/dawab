@@ -1,0 +1,478 @@
+@model Dawab.Application.DTOs.Dashboard.AdminDashboardDto
+@{
+    ViewData["Title"] = "لوحة تحكم الإدارة العامة";
+    var activeCycles = Model.Cycles.Where(c => c.Status == Dawab.Domain.Enums.CycleStatus.Active).ToList();
+    var pendingCycles = Model.Cycles.Where(c => c.Status == Dawab.Domain.Enums.CycleStatus.Pending).ToList();
+    var fundingCycles = Model.Cycles.Where(c => c.Status == Dawab.Domain.Enums.CycleStatus.Funding).ToList();
+    var pendingInvestments = Model.Investments.Where(i => i.Status == Dawab.Domain.Enums.InvestmentStatus.PendingApproval).ToList();
+    var totalInvested = Model.Investments.Where(i => i.Status == Dawab.Domain.Enums.InvestmentStatus.Approved).Sum(i => i.Amount);
+}
+
+<div class="mx-auto max-w-[1500px] space-y-6" x-data="{ tab: new URLSearchParams(window.location.search).get('tab') || 'overview' }">
+    <div class="flex flex-col gap-1 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div><p class="text-xs font-bold text-emerald-700">الرئيسية <span class="px-1 text-slate-300">/</span> لوحة تحكم الإدارة العامة</p><h1 class="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">لوحة تحكم الإدارة العامة</h1><p class="mt-1 text-sm text-slate-500">نظرة شاملة على الأداء والعمليات الرئيسية في منصة دواب.</p></div>
+        <span class="mt-2 inline-flex items-center gap-2 self-start rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 sm:mt-0"><i data-lucide="shield-check" class="h-4 w-4"></i>إدارة المنصة</span>
+    </div>
+    <!-- TAB 1: OVERVIEW -->
+    <div x-show="tab === 'overview'" class="space-y-8 animate-in fade-in">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <span class="block text-xs text-gray-400 font-bold">إجمالي المستخدمين</span>
+                <span class="text-3xl font-black text-gray-900 mt-1">@Model.Users.Count</span>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <span class="block text-xs text-gray-400 font-bold">الدورات النشطة</span>
+                <span class="text-3xl font-black text-primary mt-1">@activeCycles.Count</span>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <span class="block text-xs text-gray-400 font-bold">إجمالي الاستثمارات المعتمدة</span>
+                <span class="text-3xl font-black text-gray-900 mt-1">@totalInvested.ToString("N0") ج.م</span>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <span class="block text-xs text-gray-400 font-bold">صندوق التأمين المزدوج</span>
+                <span class="text-3xl font-black text-yellow-600 mt-1">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") ج.م</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions Panel -->
+        <div class="bg-primary-900 text-white p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-1 text-center md:text-right">
+                <h3 class="text-xl font-black">أمان الحسابات والشفافية المالية</h3>
+                <p class="text-xs text-primary-100">يوجد @pendingInvestments.Count طلب تحويل بانتظار المراجعة، و @pendingCycles.Count دورة بانتظار الاعتماد، و @fundingCycles.Count دورة مفتوحة للتمويل.</p>
+            </div>
+            <div class="flex gap-3">
+                <button data-dashboard-tab="investments" @@click="tab = 'investments'" class="bg-white text-primary font-black px-6 py-3 rounded-2xl text-xs hover:bg-gray-100 transition-colors">مراجعة التحويلات</button>
+                <button data-dashboard-tab="cycles" @@click="tab = 'cycles'" class="bg-primary-700 text-white font-black px-6 py-3 rounded-2xl text-xs hover:bg-primary-600 transition-colors">مراجعة الدورات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: USERS & KYC -->
+    <div x-show="tab === 'users'" data-admin-list class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in">
+        <div class="p-5 sm:p-6 border-b border-gray-100 space-y-4">
+            <div><h3 class="font-black text-gray-900 text-lg">سجل المستخدمين ومستندات التحقق (KYC)</h3><p class="text-xs text-gray-500 mt-1">ابحث بالاسم أو الهاتف، ثم صفِّ النتائج حسب الصفة وحالة الحساب.</p></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <input data-list-search placeholder="بحث بالاسم أو رقم الهاتف..." class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                <select data-list-filter="role" class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="">كل الصفات</option><option value="Admin">إدارة</option><option value="Breeder">مربي</option><option value="Investor">مستثمر</option></select>
+                <select data-list-filter="status" class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="">كل الحالات</option><option value="Pending">بانتظار المراجعة</option><option value="Active">نشط</option><option value="Rejected">مرفوض</option><option value="Suspended">موقوف</option></select>
+                <select data-page-size class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="10">10 لكل صفحة</option><option value="25">25 لكل صفحة</option><option value="50">50 لكل صفحة</option></select>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-gray-50 border-b text-gray-400 font-bold">
+                    <tr>
+                        <th class="p-4 text-gray-700">المستخدم</th>
+                        <th class="p-4 text-gray-700">رقم الهاتف</th>
+                        <th class="p-4 text-gray-700">الصفة</th>
+                        <th class="p-4 text-gray-700">الحالة</th>
+                        <th class="p-4 text-gray-700">التحقق الورقي (للمربي)</th>
+                        <th class="p-4 text-gray-700 text-center">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var u in Model.Users)
+                    {
+                        <tr data-list-row data-role="@u.Role" data-status="@u.Status" class="hover:bg-gray-50/70 transition-colors">
+                            <td class="p-4"><a asp-action="ReviewUser" asp-route-id="@u.Id" class="font-bold text-slate-900 hover:text-emerald-700">@u.Name</a><a asp-action="ReviewUser" asp-route-id="@u.Id" class="mt-1 block text-[11px] font-bold text-emerald-700 hover:underline">فتح ملف المراجعة</a></td>
+                            <td class="p-4 text-gray-600">@u.Phone</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-black @(u.Role == Dawab.Domain.Enums.UserRole.Admin ? "bg-purple-100 text-purple-800" : (u.Role == Dawab.Domain.Enums.UserRole.Breeder ? "bg-orange-100 text-orange-800" : "bg-blue-100 text-blue-800"))">
+                                    @u.Role
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold @(u.Status == Dawab.Domain.Enums.UserStatus.Active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700")">
+                                    @u.Status
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                @if (u.Role == Dawab.Domain.Enums.UserRole.Breeder)
+                                {
+                                    if (u.PhysicalPapersVerified)
+                                    {
+                                        <span class="text-green-700 font-bold flex items-center gap-1">
+                                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                            <span>أوراق معتمدة</span>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="VerifyPhysicalPapers" method="post" class="inline">
+                                            <input type="hidden" name="breederId" value="@u.Id" />
+                                            <button type="submit" class="bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold px-2.5 py-1 rounded-lg border border-orange-200">
+                                                تأكيد استلام الأوراق
+                                            </button>
+                                        </form>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-gray-300">-</span>
+                                }
+                            </td>
+                            <td class="p-4 text-center">
+                                @if (u.Status == Dawab.Domain.Enums.UserStatus.Pending)
+                                {
+                                    <div class="flex items-center justify-center gap-2">
+                                        <form asp-action="ApproveUser" asp-route-id="@u.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold px-3 py-1 rounded-lg">تفعيل</button>
+                                        </form>
+                                        <form asp-action="RejectUser" asp-route-id="@u.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1 rounded-lg">رفض</button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Users.Any())
+                    {
+                        <tr data-list-empty><td colspan="6" class="p-8 text-center text-gray-500">لا يوجد مستخدمون لعرضهم حالياً.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div data-list-pagination class="border-t border-gray-100 px-5 py-4"></div>
+    </div>
+
+    <!-- TAB 3: CYCLES -->
+    <div x-show="tab === 'cycles'" data-admin-list class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in">
+        <div class="p-5 sm:p-6 border-b border-gray-100 space-y-4">
+            <div><h3 class="font-black text-gray-900 text-lg">سجل دورات التسمين والإنتاج</h3><p class="text-xs text-gray-500 mt-1">تابع الدورة والمربي والتمويل، وصفِّ حسب مرحلة دورة الاستثمار.</p></div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input data-list-search placeholder="بحث باسم الحيوان أو المربي..." class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                <select data-list-filter="status" class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="">كل مراحل الدورة</option><option value="Pending">بانتظار المراجعة</option><option value="Funding">مفتوحة للتمويل</option><option value="Active">قيد الإنتاج</option><option value="Completed">مكتملة</option><option value="Rejected">مرفوضة</option><option value="Cancelled">ملغاة</option></select>
+                <select data-page-size class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="10">10 لكل صفحة</option><option value="25">25 لكل صفحة</option><option value="50">50 لكل صفحة</option></select>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-gray-50 border-b text-gray-400 font-bold">
+                    <tr>
+                        <th class="p-4 text-gray-700">الدورة</th>
+                        <th class="p-4 text-gray-700">المربي</th>
+                        <th class="p-4 text-gray-700">الهدف المالي</th>
+                        <th class="p-4 text-gray-700">التمويل المحقق</th>
+                        <th class="p-4 text-gray-700">الحالة</th>
+                        <th class="p-4 text-gray-700 text-center">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var c in Model.Cycles)
+                    {
+                        <tr data-list-row data-status="@c.Status" class="hover:bg-gray-50/70 transition-colors">
+                            <td class="p-4 font-bold text-gray-900">@c.AnimalType</td>
+                            <td class="p-4 text-gray-600">@c.BreederName</td>
+                            <td class="p-4 font-bold text-gray-900">@c.FundingGoal.ToString("N0") ج.م</td>
+                            <td class="p-4 font-bold text-primary">@c.CurrentFunding.ToString("N0") ج.م</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold @(c.Status == Dawab.Domain.Enums.CycleStatus.Active ? "bg-green-100 text-green-700" : c.Status == Dawab.Domain.Enums.CycleStatus.Funding ? "bg-blue-100 text-blue-700" : c.Status == Dawab.Domain.Enums.CycleStatus.Rejected || c.Status == Dawab.Domain.Enums.CycleStatus.Cancelled ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700")">
+                                    @(c.Status == Dawab.Domain.Enums.CycleStatus.Pending ? "بانتظار المراجعة" : c.Status == Dawab.Domain.Enums.CycleStatus.Funding ? "مفتوحة للتمويل" : c.Status == Dawab.Domain.Enums.CycleStatus.Active ? "قيد الإنتاج" : c.Status == Dawab.Domain.Enums.CycleStatus.Completed ? "مكتملة" : c.Status == Dawab.Domain.Enums.CycleStatus.Rejected ? "مرفوضة" : "ملغاة")
+                                </span>
+                            </td>
+                            <td class="p-4 text-center">
+                                @if (c.Status == Dawab.Domain.Enums.CycleStatus.Pending)
+                                {
+                                    <div class="flex flex-wrap items-center justify-center gap-2">
+                                        <form asp-action="ApproveCycle" asp-route-id="@c.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold px-3 py-1 rounded-lg">اعتماد وفتح التمويل</button>
+                                        </form>
+                                        <form asp-action="RejectCycle" asp-route-id="@c.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1 rounded-lg">رفض الدورة</button>
+                                        </form>
+                                    </div>
+                                }
+                                else if (c.Status == Dawab.Domain.Enums.CycleStatus.Funding)
+                                {
+                                    var pendingCycleInvestments = pendingInvestments.Count(investment => investment.CycleId == c.Id);
+                                    if (c.CurrentFunding >= c.FundingGoal && pendingCycleInvestments == 0)
+                                    {
+                                        <form asp-action="StartProduction" asp-route-id="@c.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold px-3 py-1 rounded-lg">بدء الإنتاج</button>
+                                        </form>
+                                    }
+                                    else if (pendingCycleInvestments > 0)
+                                    {
+                                        <span class="text-xs text-gray-500">راجع طلبات التحويل أولاً</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-gray-500">بانتظار اكتمال التمويل</span>
+                                    }
+                                }
+                                else if (c.Status == Dawab.Domain.Enums.CycleStatus.Active)
+                                {
+                                    <button hx-get="/Admin/SettleModal?cycleId=@c.Id" 
+                                            hx-target="#modal-container" 
+                                            hx-swap="innerHTML"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1 rounded-lg shadow-sm">
+                                        تسوية وبيع
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Cycles.Any())
+                    {
+                        <tr data-list-empty><td colspan="6" class="p-8 text-center text-gray-500">لا توجد دورات لعرضها حالياً.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div data-list-pagination class="border-t border-gray-100 px-5 py-4"></div>
+    </div>
+
+    <!-- TAB: ANIMAL CATALOG -->
+    <div x-show="tab === 'animals'" data-admin-list class="space-y-6 animate-in fade-in">
+        <section class="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm sm:p-7">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div><h3 class="font-black text-gray-900 text-lg">إدارة أنواع الحيوانات</h3><p class="mt-1 text-xs text-gray-500">حدّد الأنواع والقيم الافتراضية التي تظهر للمربين عند إنشاء الدورة.</p></div>
+                <button type="button" data-open-animal-form="create" class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-700"><i data-lucide="plus" class="h-4 w-4"></i>إضافة نوع حيوان</button>
+            </div>
+        </section>
+
+        <section class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+            <div class="grid grid-cols-1 gap-3 border-b border-gray-100 p-5 sm:grid-cols-3 sm:p-6">
+                <input data-list-search placeholder="بحث باسم الحيوان أو السلالة..." class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                <select data-list-filter="status" class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="">كل الأنواع</option><option value="Active">نشط</option><option value="Inactive">متوقف</option></select>
+                <select data-page-size class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="10">10 لكل صفحة</option><option value="25">25 لكل صفحة</option><option value="50">50 لكل صفحة</option></select>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <thead class="border-b bg-gray-50 font-bold text-gray-600"><tr><th class="p-4">النوع أو السلالة</th><th class="p-4">الأوزان الافتراضية</th><th class="p-4">سعر الرأس</th><th class="p-4">تأمين الحظيرة</th><th class="p-4">مدة الدورة</th><th class="p-4">الحالة</th><th class="p-4">إجراء</th></tr></thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach (var animal in Model.Animals)
+                        {
+                            <tr data-list-row data-status="@(animal.IsActive ? "Active" : "Inactive")">
+                                <td class="p-4 font-bold">@animal.Name</td>
+                                <td class="p-4">@animal.DefaultInitialWeight.ToString("N1") ← @animal.DefaultTargetWeight.ToString("N1") كجم</td>
+                                <td class="p-4">@animal.DefaultPricePerHead.ToString("N2") ج.م</td>
+                                <td class="p-4">@animal.DefaultBarnInsuranceCost.ToString("N2") ج.م</td>
+                                <td class="p-4">@animal.DefaultDurationDays يوم</td>
+                                <td class="p-4"><span class="rounded-full px-2.5 py-1 font-bold @(animal.IsActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600")">@(animal.IsActive ? "نشط" : "متوقف")</span></td>
+                                <td class="p-4">
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" data-open-animal-form="edit" data-id="@animal.Id" data-name="@animal.Name" data-initial-weight="@animal.DefaultInitialWeight.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-target-weight="@animal.DefaultTargetWeight.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-price="@animal.DefaultPricePerHead.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-insurance="@animal.DefaultBarnInsuranceCost.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-duration="@animal.DefaultDurationDays" class="rounded-lg bg-blue-50 px-3 py-1.5 font-bold text-blue-700 hover:bg-blue-100">تعديل</button>
+                                        <form asp-action="SetAnimalActive" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@animal.Id" />
+                                            <input type="hidden" name="isActive" value="@(!animal.IsActive)" />
+                                            <button type="submit" class="rounded-lg px-3 py-1.5 font-bold @(animal.IsActive ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700")">@(animal.IsActive ? "إيقاف" : "تفعيل")</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Animals.Any())
+                        {
+                            <tr data-list-empty><td colspan="7" class="p-8 text-center text-gray-500">لا توجد أنواع حيوانات معرفة بعد.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div data-list-pagination class="border-t border-gray-100 px-5 py-4"></div>
+        </section>
+    </div>
+
+    <dialog id="animal-form-modal" class="w-[min(94vw,42rem)] rounded-3xl p-0 shadow-2xl backdrop:bg-slate-950/50">
+        <form id="animal-form" method="post" class="space-y-5 p-5 sm:p-7">
+            @Html.AntiForgeryToken()
+            <input id="animal-form-id" type="hidden" name="id" />
+            <div class="flex items-start justify-between gap-4">
+                <div><h3 id="animal-form-title" class="text-xl font-black text-gray-900">إضافة نوع حيوان</h3><p class="mt-1 text-xs text-gray-500">القيم تستخدم كإعدادات أولية ويمكن للمربي تعديلها داخل الدورة.</p></div>
+                <button type="button" data-close-animal-form class="rounded-xl bg-gray-100 px-3 py-2 text-sm font-bold text-gray-600">إغلاق</button>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label class="text-xs font-bold text-gray-700 sm:col-span-2">اسم الحيوان أو السلالة<input id="animal-form-name" name="Name" maxlength="120" required class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5" /></label>
+                <label class="text-xs font-bold text-gray-700">الوزن الابتدائي الافتراضي (كجم)<input id="animal-form-initial-weight" name="DefaultInitialWeight" type="number" min="0.1" step="0.1" required class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5" /></label>
+                <label class="text-xs font-bold text-gray-700">الوزن المستهدف الافتراضي (كجم)<input id="animal-form-target-weight" name="DefaultTargetWeight" type="number" min="0.1" step="0.1" required class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5" /></label>
+                <label class="text-xs font-bold text-gray-700">سعر الرأس الافتراضي (ج.م)<input id="animal-form-price" name="DefaultPricePerHead" type="number" min="1" step="0.01" required class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5" /></label>
+                <label class="text-xs font-bold text-gray-700">رسوم تأمين الحظيرة (ج.م)<input id="animal-form-insurance" name="DefaultBarnInsuranceCost" type="number" min="0" step="0.01" required class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5" /></label>
+                <label class="text-xs font-bold text-gray-700 sm:col-span-2">مدة الدورة الافتراضية (يوم)<input id="animal-form-duration" name="DefaultDurationDays" type="number" min="1" max="3650" required class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 sm:max-w-[calc(50%-0.5rem)]" /></label>
+            </div>
+            <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                <button type="button" data-close-animal-form class="rounded-xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-700">إلغاء</button>
+                <button id="animal-form-submit" type="submit" class="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-700">حفظ النوع</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- TAB 4: PRODUCTION MONITORING -->
+    <div x-show="tab === 'monitoring'" class="space-y-6 animate-in fade-in">
+        <div>
+            <h3 class="font-black text-gray-900 text-lg">متابعة تطور الدورات النشطة</h3>
+            <p class="text-xs text-gray-500 mt-1">افتح سجل الدورة لمراجعة تقارير التغذية والأوزان والتحصينات اليومية.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            @foreach (var cycle in activeCycles)
+            {
+                <article class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="relative h-44">
+                        <img src="@cycle.ImageUrl" alt="@cycle.AnimalType" class="w-full h-full object-cover" />
+                        <span class="absolute top-3 right-3 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-black">نشطة</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h4 class="font-black text-gray-900">@cycle.AnimalType</h4>
+                                <p class="text-xs text-gray-500 mt-1">المربي: @cycle.BreederName</p>
+                            </div>
+                            <span class="text-xs font-bold text-primary">@cycle.TotalHeads رأس</span>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-bold text-gray-500">
+                                <span>التمويل المحقق</span>
+                                <span>@cycle.FundingProgressPercentage%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full rounded-full" style="width: @cycle.FundingProgressPercentage%"></div>
+                            </div>
+                        </div>
+                        <a asp-controller="Cycles" asp-action="Details" asp-route-id="@cycle.Id" class="block w-full text-center border border-gray-200 hover:bg-gray-50 text-gray-800 font-bold py-2.5 rounded-xl text-xs transition-colors">فتح سجل المتابعة</a>
+                    </div>
+                </article>
+            }
+        </div>
+        @if (!activeCycles.Any())
+        {
+            <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                <i data-lucide="activity" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+                <p class="text-gray-500 font-medium">لا توجد دورات نشطة لمراقبتها حالياً.</p>
+            </div>
+        }
+    </div>
+
+    <!-- TAB 5: INVESTMENTS & TRANSFERS -->
+    <div x-show="tab === 'investments'" data-admin-list class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in">
+        <div class="p-5 sm:p-6 border-b border-gray-100 space-y-4">
+            <div><h3 class="font-black text-gray-900 text-lg">طلبات الاستثمار والتحويلات البنكية</h3><p class="text-xs text-gray-500 mt-1">ابحث باسم المستثمر أو نوع الدورة، وصفِّ الطلبات حسب حالة التحويل.</p></div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input data-list-search placeholder="بحث بالمستثمر أو الدورة..." class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                <select data-list-filter="status" class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="">كل حالات الطلب</option><option value="PendingApproval">بانتظار المراجعة</option><option value="Approved">معتمد</option><option value="Rejected">مرفوض</option><option value="Refunded">مسترد</option></select>
+                <select data-page-size class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="10">10 لكل صفحة</option><option value="25">25 لكل صفحة</option><option value="50">50 لكل صفحة</option></select>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-gray-50 border-b text-gray-400 font-bold">
+                    <tr>
+                        <th class="p-4 text-gray-700">المستثمر</th>
+                        <th class="p-4 text-gray-700">الدورة</th>
+                        <th class="p-4 text-gray-700">المبلغ</th>
+                        <th class="p-4 text-gray-700">رسوم المنصة (2.5%)</th>
+                        <th class="p-4 text-gray-700">رسوم التأمين (3%)</th>
+                        <th class="p-4 text-gray-700">الحالة</th>
+                        <th class="p-4 text-gray-700 text-center">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var inv in Model.Investments)
+                    {
+                        <tr data-list-row data-status="@inv.Status" class="hover:bg-gray-50/70 transition-colors">
+                            <td class="p-4 font-bold text-gray-900">@inv.InvestorName</td>
+                            <td class="p-4 text-gray-600">@inv.CycleAnimalType</td>
+                            <td class="p-4 font-bold text-gray-900">@inv.Amount.ToString("N0") ج.م</td>
+                            <td class="p-4 text-gray-500">@inv.PlatformFee.ToString("N0") ج.م</td>
+                            <td class="p-4 text-blue-600 font-bold">@inv.AnimalInsuranceFee.ToString("N0") ج.م</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold @(inv.Status == Dawab.Domain.Enums.InvestmentStatus.Approved ? "bg-green-100 text-green-700" : inv.Status == Dawab.Domain.Enums.InvestmentStatus.Rejected ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700")">
+                                    @(inv.Status == Dawab.Domain.Enums.InvestmentStatus.Approved ? "معتمد" : inv.Status == Dawab.Domain.Enums.InvestmentStatus.Rejected ? "مرفوض" : "بانتظار المراجعة")
+                                </span>
+                            </td>
+                            <td class="p-4 text-center">
+                                @if (inv.Status == Dawab.Domain.Enums.InvestmentStatus.PendingApproval)
+                                {
+                                    <div class="flex items-center justify-center gap-2">
+                                        <form asp-action="ApproveInvestment" asp-route-id="@inv.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold px-3 py-1 rounded-lg">تأكيد الاستلام</button>
+                                        </form>
+                                        <form asp-action="RejectInvestment" asp-route-id="@inv.Id" method="post" class="inline">
+                                            <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1 rounded-lg">رفض الطلب</button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Investments.Any())
+                    {
+                        <tr data-list-empty><td colspan="7" class="p-8 text-center text-gray-500">لا توجد طلبات استثمار أو تحويلات لعرضها حالياً.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div data-list-pagination class="border-t border-gray-100 px-5 py-4"></div>
+    </div>
+
+    <!-- TAB 5: SETTLEMENT PAYOUTS -->
+    <div x-show="tab === 'payouts'" data-admin-list class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in">
+        <div class="p-5 sm:p-6 border-b border-gray-100 space-y-4">
+            <div><h3 class="font-black text-gray-900 text-lg">مستحقات المستثمرين بعد التسوية</h3><p class="text-xs text-gray-500 mt-1">سجّل رقم مرجع التحويل بعد إتمامه فعلياً؛ لا يتم تحويل الأموال تلقائياً من المنصة.</p></div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input data-list-search placeholder="بحث بالمستثمر أو الدورة..." class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                <select data-list-filter="status" class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="">كل حالات التحويل</option><option value="Pending">بانتظار التحويل</option><option value="Transferred">تم التحويل</option></select>
+                <select data-page-size class="rounded-xl border border-gray-200 px-3 py-2.5 text-sm"><option value="10">10 لكل صفحة</option><option value="25">25 لكل صفحة</option><option value="50">50 لكل صفحة</option></select>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-gray-50 border-b text-gray-400 font-bold"><tr><th class="p-4">المستثمر</th><th class="p-4">الدورة</th><th class="p-4">رأس المال المسترد</th><th class="p-4">حصة الربح</th><th class="p-4">الإجمالي</th><th class="p-4">التحويل</th></tr></thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var payout in Model.InvestorPayouts)
+                    {
+                        <tr data-list-row data-status="@(payout.IsTransferred ? "Transferred" : "Pending")">
+                            <td class="p-4 font-bold">@payout.InvestorName</td><td class="p-4">@payout.CycleAnimalType</td>
+                            <td class="p-4">@payout.CapitalReturned.ToString("N2") ج.م</td><td class="p-4">@payout.ProfitShare.ToString("N2") ج.م</td>
+                            <td class="p-4 font-black">@payout.TotalPayout.ToString("N2") ج.م</td>
+                            <td class="p-4">
+                                @if (payout.IsTransferred)
+                                {
+                                    <span class="text-green-700 font-bold">تم التحويل · @payout.TransferReference</span>
+                                }
+                                else
+                                {
+                                    <form asp-action="MarkPayoutTransferred" method="post" class="flex min-w-64 gap-2">
+                                        <input type="hidden" name="id" value="@payout.Id" />
+                                        <input name="transferReference" required maxlength="100" placeholder="مرجع التحويل" class="min-w-0 flex-1 rounded-lg border border-gray-200 px-2 py-1.5" />
+                                        <button type="submit" class="rounded-lg bg-primary px-3 py-1.5 font-bold text-white">تسجيل</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.InvestorPayouts.Any())
+                    {
+                        <tr data-list-empty><td colspan="6" class="p-8 text-center text-gray-500">لا توجد تسويات مستحقة للمستثمرين بعد.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div data-list-pagination class="border-t border-gray-100 px-5 py-4"></div>
+    </div>
+
+    <!-- TAB 6: INSURANCE FUND -->
+    <div x-show="tab === 'insurance'" class="space-y-6 animate-in fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-xs text-gray-400 font-bold">إجمالي صندوق التأمين الشامل</span>
+                <span class="text-3xl font-black text-yellow-600 mt-2 block">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") ج.م</span>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-xs text-gray-400 font-bold">تأمين حياة الماشية (المستثمرون)</span>
+                <span class="text-2xl font-black text-primary mt-2 block">@Model.InsuranceSummary.TotalAnimalLifeInsuranceCollected.ToString("N0") ج.م</span>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center">
+                <span class="block text-xs text-gray-400 font-bold">تأمين الحظيرة (المربون)</span>
+                <span class="text-2xl font-black text-secondary mt-2 block">@Model.InsuranceSummary.TotalBarnInsuranceCollected.ToString("N0") ج.م</span>
+            </div>
+        </div>
+    </div>
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+</div>

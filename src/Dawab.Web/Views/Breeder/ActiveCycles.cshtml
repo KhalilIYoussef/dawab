@@ -1,0 +1,66 @@
+@model BreederDashboardDto
+@{
+    ViewData["Title"] = "الدورات النشطة";
+    var activeCycles = Model.Cycles.Where(cycle => cycle.Status == CycleStatus.Active).ToList();
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <a asp-action="Dashboard" class="text-xs font-bold text-primary hover:underline">لوحة المربي</a>
+            <h1 class="text-3xl font-black text-gray-900 mt-1">الدورات النشطة</h1>
+            <p class="text-sm text-gray-500 mt-1">تابع تطور دوراتك وسجّل التقارير اليومية للإنتاج</p>
+        </div>
+        <a asp-action="CreateCycle" class="bg-primary hover:bg-primary-700 text-white font-bold px-5 py-3 rounded-xl text-sm shadow-md transition-colors flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            إضافة دورة جديدة
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        @foreach (var cycle in activeCycles)
+        {
+            <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-shadow">
+                <div class="relative h-48">
+                    <img src="@cycle.ImageUrl" alt="@cycle.AnimalType" class="w-full h-full object-cover" />
+                    <span class="absolute top-3 right-3 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-black">نشطة - قيد التسمين</span>
+                    @if (cycle.IsBarnInsured)
+                    {
+                        <span class="absolute top-3 left-3 bg-orange-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-black flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-3 h-3"></i> خيار التأمين مسجل
+                        </span>
+                    }
+                </div>
+                <div class="p-5 space-y-4">
+                    <div>
+                        <h2 class="font-black text-gray-900 text-lg">@cycle.AnimalType</h2>
+                        <p class="text-xs text-gray-500 mt-1">@cycle.TotalHeads رأس · مدة الدورة @cycle.ExpectedDurationDays يوم</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-gray-500">التمويل المحقق</span>
+                            <span class="text-primary">@cycle.CurrentFunding.ToString("N0") / @cycle.FundingGoal.ToString("N0") ج.م</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-primary h-full rounded-full" style="width: @cycle.FundingProgressPercentage%"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <a asp-controller="Cycles" asp-action="Details" asp-route-id="@cycle.Id" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-xl text-center text-xs transition-colors">سجل المتابعة</a>
+                        <button hx-get="/Breeder/AddLogModal?cycleId=@cycle.Id" hx-target="#modal-container" hx-swap="innerHTML" class="bg-secondary hover:bg-secondary-700 text-white font-bold py-2.5 rounded-xl text-xs transition-colors">تسجيل يومية</button>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+
+    @if (!activeCycles.Any())
+    {
+        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+            <i data-lucide="activity" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+            <h2 class="font-bold text-gray-700">لا توجد دورات نشطة حالياً</h2>
+            <p class="text-sm text-gray-400 mt-1">ستظهر دوراتك هنا بعد اعتمادها وبدء مرحلة التسمين.</p>
+            <a asp-action="Dashboard" class="inline-block mt-4 text-primary font-bold text-sm hover:underline">العودة إلى لوحة المربي</a>
+        </div>
+    }
+</div>

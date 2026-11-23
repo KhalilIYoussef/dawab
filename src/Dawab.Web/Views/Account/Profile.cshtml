@@ -1,0 +1,99 @@
+@model Dawab.Domain.Entities.User
+@{
+    ViewData["Title"] = "الملف الشخصي";
+    var governorate = Model.BreederProfile?.Governorate;
+    var nationalId = Model.KycDocument?.NationalId;
+    var isKycVerified = Model.KycDocument?.IsVerified == true;
+}
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <div>
+        <h1 class="text-3xl font-black text-gray-900">الملف الشخصي</h1>
+        <p class="text-sm text-gray-500 mt-1">بيانات حسابك وحالة التوثيق على منصة دواب</p>
+    </div>
+
+    <section class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="h-24 bg-gradient-to-l from-primary-700 to-primary-500"></div>
+        <div class="px-6 pb-6 -mt-10 flex flex-col md:flex-row md:items-end gap-4">
+            <div class="w-24 h-24 rounded-full border-4 border-white bg-primary-50 shadow-md overflow-hidden flex items-center justify-center text-3xl font-black text-primary">
+                @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
+                {
+                    <img src="@Model.ProfilePictureUrl" alt="@Model.Name" class="w-full h-full object-cover" />
+                }
+                else
+                {
+                    <span>@Model.Name.FirstOrDefault()</span>
+                }
+            </div>
+            <div class="flex-1 pb-1">
+                <h2 class="text-2xl font-black text-gray-900">@Model.Name</h2>
+                <p class="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i>
+                    @(governorate ?? "المحافظة غير محددة")
+                </p>
+            </div>
+            <span class="px-3 py-1.5 rounded-full text-xs font-black @(Model.Status == Dawab.Domain.Enums.UserStatus.Active ? "bg-green-100 text-green-800" : Model.Status == Dawab.Domain.Enums.UserStatus.Rejected ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800")">
+                @(Model.Status == Dawab.Domain.Enums.UserStatus.Active ? "حساب نشط" : Model.Status == Dawab.Domain.Enums.UserStatus.Rejected ? "الحساب مرفوض" : "الحساب قيد المراجعة")
+            </span>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-5">
+            <h3 class="font-black text-gray-900 text-lg flex items-center gap-2">
+                <i data-lucide="user-round-cog" class="w-5 h-5 text-primary"></i>
+                البيانات الشخصية
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold">رقم الهاتف</span>
+                    <span class="text-sm font-bold text-gray-900">@Model.Phone</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold">الرقم القومي</span>
+                    <span class="text-sm font-bold text-gray-900">@(nationalId ?? "غير مسجل")</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold">نوع الحساب</span>
+                    <span class="text-sm font-bold text-gray-900">@(Model.Role == Dawab.Domain.Enums.UserRole.Admin ? "مدير النظام" : Model.Role == Dawab.Domain.Enums.UserRole.Breeder ? "مربي" : "مستثمر")</span>
+                </div>
+                @if (Model.Role == Dawab.Domain.Enums.UserRole.Breeder)
+                {
+                    <div>
+                        <span class="block text-xs text-gray-400 font-bold">اسم المزرعة</span>
+                        <span class="text-sm font-bold text-gray-900">@(Model.BreederProfile?.FarmName ?? "غير مسجل")</span>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-5">
+            <h3 class="font-black text-gray-900 text-lg flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-5 h-5 text-primary"></i>
+                التوثيق والأوراق
+            </h3>
+            <div class="p-4 rounded-2xl border @(isKycVerified ? "bg-green-50 border-green-100" : "bg-yellow-50 border-yellow-100") flex items-center gap-3">
+                <i data-lucide="@(isKycVerified ? "badge-check" : "clock-3")" class="w-6 h-6 @(isKycVerified ? "text-green-600" : "text-yellow-600")"></i>
+                <div>
+                    <p class="font-bold text-sm text-gray-900">التوثيق الرقمي</p>
+                    <p class="text-xs text-gray-600">@(isKycVerified ? "تم التحقق من بياناتك" : "بانتظار مراجعة بياناتك من الإدارة")</p>
+                </div>
+            </div>
+            @if (Model.Role == Dawab.Domain.Enums.UserRole.Breeder)
+            {
+                var papersVerified = Model.BreederProfile?.PhysicalPapersVerified == true;
+                <div class="p-4 rounded-2xl border @(papersVerified ? "bg-green-50 border-green-100" : "bg-orange-50 border-orange-100") flex items-center gap-3">
+                    <i data-lucide="@(papersVerified ? "badge-check" : "file-clock")" class="w-6 h-6 @(papersVerified ? "text-green-600" : "text-orange-600")"></i>
+                    <div>
+                        <p class="font-bold text-sm text-gray-900">الأوراق الورقية للمربي</p>
+                        <p class="text-xs text-gray-600">@(papersVerified ? "تم اعتماد الأوراق" : "بانتظار استلام ومراجعة الأوراق")</p>
+                    </div>
+                </div>
+            }
+            @if (!isKycVerified)
+            {
+                <p class="text-xs text-gray-500 leading-relaxed">لرفع مستندات أو تحديث بيانات التوثيق، يرجى التواصل مع إدارة المنصة.</p>
+            }
+        </section>
+    </div>
+</div>

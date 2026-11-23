@@ -1,0 +1,282 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="~/images/dawab-mark.svg" />
+    <meta name="theme-color" content="#087a43" />
+    <title>@ViewData["Title"] - دَوَابّ | منصة الاستثمار في الثروة الحيوانية</title>
+    
+    <!-- Cairo Arabic Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: '#1b5e20',
+                            50: '#e8f5e9',
+                            100: '#c8e6c9',
+                            500: '#4caf50',
+                            600: '#388e3c',
+                            700: '#2e7d32',
+                            800: '#1b5e20',
+                            900: '#0d3d12',
+                        },
+                        secondary: {
+                            DEFAULT: '#e65100',
+                            50: '#fff3e0',
+                            100: '#ffe0b2',
+                            500: '#ff9800',
+                            600: '#fb8c00',
+                            700: '#f57c00',
+                            800: '#ef6c00',
+                            900: '#e65100',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: inline-block; }
+        .htmx-request.htmx-indicator { display: inline-block; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col antialiased" x-data="{ mobileMenuOpen: false }">
+
+    <!-- Top Announcement Bar -->
+    <div class="bg-primary-900 text-white text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2">
+        <i data-lucide="sprout" class="w-4 h-4 text-green-300"></i>
+        <span>دواب: منصة رقمية لتنظيم ومتابعة دورات الإنتاج الحيواني</span>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3">
+                    <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 group">
+                        <img src="~/images/dawab-mark.svg" alt="شعار دواب" class="w-12 h-12 object-contain transition-transform group-hover:scale-105" asp-append-version="true" />
+                        <div>
+                            <span class="text-2xl font-black text-primary-800 tracking-tight">دَوَابّ</span>
+                            <span class="block text-[10px] font-bold text-gray-400 -mt-1">DAWAB ECOSYSTEM</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden xl:flex items-center gap-1 font-medium text-sm text-gray-600">
+                    <a asp-controller="Home" asp-action="Index" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-primary font-bold bg-primary-50" : "")">الرئيسية</a>
+                    @if (Context.Session.GetString("UserId") == null)
+                    {
+                        <a asp-controller="Home" asp-action="Onboarding" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors">ابدأ رحلتك</a>
+                    }
+                    @if (Context.Session.GetString("UserId") == null || Context.Session.GetString("UserRole") == "Investor")
+                    {
+                        <a asp-controller="Cycles" asp-action="Index" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Cycles" ? "text-primary font-bold bg-primary-50" : "")">فرص الاستثمار</a>
+                    }
+                    @if (Context.Session.GetString("UserRole") == "Investor")
+                    {
+                        <a asp-controller="Investments" asp-action="Dashboard" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Investments" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "text-primary font-bold bg-primary-50" : "")">لوحة المستثمر</a>
+                        <a asp-controller="Investments" asp-action="Portfolio" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Portfolio" ? "text-primary font-bold bg-primary-50" : "")">محفظتي</a>
+                    }
+                    @if (Context.Session.GetString("UserRole") == "Breeder")
+                    {
+                        <a asp-controller="Breeder" asp-action="Dashboard" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Breeder" && ViewContext.RouteData.Values["action"]?.ToString() != "ActiveCycles" ? "text-primary font-bold bg-primary-50" : "")">لوحة المربي</a>
+                        <a asp-controller="Breeder" asp-action="ActiveCycles" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "ActiveCycles" ? "text-primary font-bold bg-primary-50" : "")">الدورات النشطة</a>
+                    }
+                    @if (Context.Session.GetString("UserRole") == "Admin")
+                    {
+                        <a asp-controller="Admin" asp-action="Dashboard" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "text-primary font-bold bg-primary-50" : "")">لوحة الإدارة</a>
+                    }
+                    @if (Context.Session.GetString("UserId") != null)
+                    {
+                        <a asp-controller="Account" asp-action="Profile" class="px-3 py-2 rounded-xl hover:text-primary hover:bg-primary-50 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Account" ? "text-primary font-bold bg-primary-50" : "")">الملف الشخصي</a>
+                    }
+                </nav>
+
+                <div class="hidden xl:flex items-center gap-3">
+                    @if (Context.Session.GetString("UserId") != null)
+                    {
+                        <div class="text-xs text-gray-600 text-left">
+                            <span class="block font-bold text-gray-900">@Context.Session.GetString("UserName")</span>
+                            <span>@(Context.Session.GetString("UserRole") == "Admin" ? "مدير النظام" : Context.Session.GetString("UserRole") == "Breeder" ? "مربي" : "مستثمر")</span>
+                        </div>
+                        <a asp-controller="Auth" asp-action="Logout" class="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-2 rounded-xl">تسجيل الخروج</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Auth" asp-action="Login" class="text-xs font-bold text-gray-700 hover:text-primary">تسجيل الدخول</a>
+                        <a asp-controller="Auth" asp-action="Register" class="text-xs font-bold bg-primary text-white px-3 py-2 rounded-xl">إنشاء حساب</a>
+                    }
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button @@click="mobileMenuOpen = !mobileMenuOpen" class="xl:hidden text-gray-700 p-2 rounded-xl hover:bg-gray-100">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div x-show="mobileMenuOpen" class="xl:hidden bg-white border-b border-gray-100 px-4 pt-2 pb-6 space-y-2">
+            <a asp-controller="Home" asp-action="Index" class="block py-2 text-gray-700 font-bold hover:text-primary">الرئيسية</a>
+            @if (Context.Session.GetString("UserId") == null)
+            {
+                <a asp-controller="Home" asp-action="Onboarding" class="block py-2 text-gray-700 font-bold hover:text-primary">ابدأ رحلتك</a>
+            }
+            @if (Context.Session.GetString("UserId") == null || Context.Session.GetString("UserRole") == "Investor")
+            {
+                <a asp-controller="Cycles" asp-action="Index" class="block py-2 text-gray-700 font-bold hover:text-primary">فرص الاستثمار</a>
+            }
+            @if (Context.Session.GetString("UserRole") == "Investor")
+            {
+                <a asp-controller="Investments" asp-action="Dashboard" class="block py-2 text-gray-700 font-bold hover:text-primary">لوحة المستثمر</a>
+                <a asp-controller="Investments" asp-action="Portfolio" class="block py-2 text-gray-700 font-bold hover:text-primary">محفظتي</a>
+            }
+            @if (Context.Session.GetString("UserRole") == "Breeder")
+            {
+                <a asp-controller="Breeder" asp-action="Dashboard" class="block py-2 text-gray-700 font-bold hover:text-primary">لوحة المربي</a>
+                <a asp-controller="Breeder" asp-action="ActiveCycles" class="block py-2 text-gray-700 font-bold hover:text-primary">الدورات النشطة</a>
+            }
+            @if (Context.Session.GetString("UserRole") == "Admin")
+            {
+                <a asp-controller="Admin" asp-action="Dashboard" class="block py-2 text-gray-700 font-bold hover:text-primary">لوحة الإدارة</a>
+            }
+            @if (Context.Session.GetString("UserId") != null)
+            {
+                <a asp-controller="Account" asp-action="Profile" class="block py-2 text-gray-700 font-bold hover:text-primary">الملف الشخصي</a>
+                <a asp-controller="Auth" asp-action="Logout" class="block py-2 text-red-600 font-bold hover:text-red-700">تسجيل الخروج</a>
+            }
+            else
+            {
+                <a asp-controller="Auth" asp-action="Login" class="block py-2 text-gray-700 font-bold hover:text-primary">تسجيل الدخول</a>
+                <a asp-controller="Auth" asp-action="Register" class="block py-2 text-gray-700 font-bold hover:text-primary">إنشاء حساب</a>
+            }
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1">
+        <!-- Notification Banner / Alert if present -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 animate-in fade-in">
+                <div class="p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3 text-green-800 text-sm font-bold shadow-sm">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600 shrink-0"></i>
+                    <span>@TempData["SuccessMessage"]</span>
+                </div>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 animate-in fade-in">
+                <div class="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-800 text-sm font-bold shadow-sm">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 shrink-0"></i>
+                    <span>@TempData["ErrorMessage"]</span>
+                </div>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <!-- HTMX Dynamic Modal Container -->
+    <div id="modal-container"></div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 text-sm border-t border-gray-800 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <img src="~/images/dawab-mark.svg" alt="" class="w-9 h-9 object-contain" asp-append-version="true" />
+                        <span class="text-xl font-black text-white">دَوَابّ</span>
+                    </div>
+                    <p class="text-xs leading-relaxed text-gray-400">
+                        منصة رقمية لتنظيم ومتابعة دورات الإنتاج الحيواني، تجمع المستثمر والمربي ضمن خطوات واضحة وسجلات قابلة للمتابعة.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-xs tracking-wider uppercase">روابط سريعة</h4>
+                    <ul class="space-y-2 text-xs">
+                        @if (Context.Session.GetString("UserId") == null || Context.Session.GetString("UserRole") == "Investor")
+                        {
+                            <li><a asp-controller="Cycles" asp-action="Index" class="hover:text-white transition-colors">فرص التسمين المتاحة</a></li>
+                        }
+                        @if (Context.Session.GetString("UserRole") == "Investor")
+                        {
+                            <li><a asp-controller="Investments" asp-action="Dashboard" class="hover:text-white transition-colors">لوحة المستثمر</a></li>
+                            <li><a asp-controller="Investments" asp-action="Portfolio" class="hover:text-white transition-colors">محفظتي</a></li>
+                        }
+                        @if (Context.Session.GetString("UserRole") == "Breeder")
+                        {
+                            <li><a asp-controller="Breeder" asp-action="Dashboard" class="hover:text-white transition-colors">لوحة المربي</a></li>
+                            <li><a asp-controller="Breeder" asp-action="ActiveCycles" class="hover:text-white transition-colors">دوراتي النشطة</a></li>
+                        }
+                        @if (Context.Session.GetString("UserRole") == "Admin")
+                        {
+                            <li><a asp-controller="Admin" asp-action="Dashboard" class="hover:text-white transition-colors">لوحة الإدارة</a></li>
+                        }
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-xs tracking-wider uppercase">معلومات مهمة</h4>
+                    <ul class="space-y-2 text-xs leading-6">
+                        <li>راجع شروط ووثائق كل دورة قبل إرسال طلب الاستثمار.</li>
+                        <li>الاستثمار في الإنتاج ينطوي على مخاطر ولا تضمن المنصة عائداً.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-xs tracking-wider uppercase">التواصل</h4>
+                    <p class="text-xs text-gray-400 leading-6">تواصل مع إدارة المنصة عبر قنوات التواصل الرسمية التي زُوّدت بها عند التسجيل.</p>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-4">
+                <p>© @DateTime.UtcNow.Year منصة دواب (Dawab). جميع الحقوق محفوظة.</p>
+                <div class="flex gap-4">
+                    <span>Clean Architecture .NET 11 MVC</span>
+                    <span>•</span>
+                    <span>HTMX & Alpine.js & Tailwind</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+        document.body.addEventListener('htmx:afterSwap', function() {
+            lucide.createIcons();
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,170 @@
+@model Dawab.Application.DTOs.Dashboard.BreederDashboardDto
+@{
+    ViewData["Title"] = "لوحة تحكم المربي";
+    var pendingCyclesCount = Model.Cycles.Count(cycle => cycle.Status == Dawab.Domain.Enums.CycleStatus.Pending);
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900">لوحة تحكم المربي</h1>
+            <p class="text-sm text-gray-500 mt-1">مرحباً بك يا @Model.Breeder.Name (@Model.Breeder.FarmName)</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+            <a asp-action="ActiveCycles" class="bg-white hover:bg-gray-50 text-gray-800 font-bold px-5 py-3 rounded-2xl text-sm transition-all border border-gray-200 flex items-center gap-2">
+                <i data-lucide="activity" class="w-4 h-4 text-primary"></i>
+                الدورات النشطة
+            </a>
+            <a asp-action="CreateCycle" class="bg-primary hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-2xl text-sm transition-all shadow-md shadow-primary/20 flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>إضافة دورة تسمين جديدة</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert if Account Pending -->
+    @if (Model.Breeder.Status == Dawab.Domain.Enums.UserStatus.Pending)
+    {
+        <div class="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3 text-xs text-orange-800 shadow-sm">
+            <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600 shrink-0 mt-0.5"></i>
+            <div>
+                <p class="font-bold text-sm">حسابك قيد المراجعة والتوثيق من قبل إدارة المنصة</p>
+                <p class="mt-1 text-orange-700">يمكنك تجهيز الدورات، وسيتم إتاحتها وفق حالة الحساب ومراجعة البيانات والوثائق المطلوبة من إدارة المنصة.</p>
+            </div>
+        </div>
+    }
+
+    <!-- Farm Overview Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="block text-xs text-gray-400 font-bold">الدورات النشطة</span>
+            <span class="text-2xl font-black text-gray-900 mt-1">@Model.ActiveCyclesCount دورة</span>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="block text-xs text-gray-400 font-bold">السعة الاستيعابية</span>
+            <span class="text-2xl font-black text-gray-900 mt-1">@Model.AvailableSpace / @Model.SpaceLimit رأس</span>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="block text-xs text-gray-400 font-bold">إجمالي التمويل المحقق</span>
+            <span class="text-2xl font-black text-primary mt-1">@Model.TotalRaisedFunds.ToString("N0") ج.م</span>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="block text-xs text-gray-400 font-bold">دورات بانتظار الاعتماد</span>
+            <span class="text-2xl font-black text-gray-900 mt-1">@pendingCyclesCount دورة</span>
+        </div>
+    </div>
+
+    <!-- Cycles List -->
+    <div class="space-y-4">
+        <h3 class="text-lg font-black text-gray-900">دوراتي الإنتاجية</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @foreach (var cycle in Model.Cycles)
+            {
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 flex flex-col justify-between group">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="@cycle.ImageUrl" alt="@cycle.AnimalType" class="w-full h-full object-cover">
+                        
+                        <div class="absolute top-3 right-3">
+                            @if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Active)
+                            {
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-green-100 text-green-800 shadow">نشطة (قيد التسمين)</span>
+                            }
+                            else if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Pending)
+                            {
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-yellow-100 text-yellow-800 shadow">بانتظار الاعتماد</span>
+                            }
+                            else if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Funding)
+                            {
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 shadow">مفتوحة للتمويل</span>
+                            }
+                            else if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Rejected)
+                            {
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 shadow">مرفوضة</span>
+                            }
+                            else
+                            {
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-gray-100 text-gray-700 shadow">مكتملة</span>
+                            }
+                        </div>
+
+                        @if (cycle.IsBarnInsured)
+                        {
+                            <div class="absolute top-3 left-3 bg-orange-600 text-white px-2.5 py-1 rounded-xl text-[10px] font-black shadow flex items-center gap-1">
+                                <i data-lucide="shield" class="w-3 h-3"></i>
+                                <span>خيار التأمين مسجل</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="p-5 space-y-4">
+                        <div>
+                            <h4 class="font-black text-gray-900 text-base">@cycle.AnimalType</h4>
+                            <p class="text-xs text-gray-400 mt-1">الرؤوس: @cycle.TotalHeads رأس | المدة: @cycle.ExpectedDurationDays يوم</p>
+                            @if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Rejected && !string.IsNullOrWhiteSpace(cycle.AdminNote))
+                            {
+                                <p class="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-700">ملاحظة الإدارة: @cycle.AdminNote</p>
+                            }
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-bold">
+                                <span class="text-gray-500">التمويل المحقق</span>
+                                <span class="text-primary font-black">@cycle.CurrentFunding.ToString("N0") / @cycle.FundingGoal.ToString("N0") ج.م</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full rounded-full" style="width: @cycle.FundingProgressPercentage%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        @if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Completed && cycle.BreederPayout.HasValue)
+                        {
+                            <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs">
+                                <p class="font-bold text-emerald-900">تمت تسوية الدورة</p>
+                                <p class="mt-1 text-gray-700">سعر البيع المسجل: @cycle.FinalSalePrice?.ToString("N2") ج.م</p>
+                                <p class="font-black text-gray-900">مستحق المربي: @cycle.BreederPayout?.ToString("N2") ج.م</p>
+                            </div>
+                        }
+
+                        <div class="pt-3 border-t border-gray-100 flex items-center gap-2">
+                            <a asp-controller="Cycles" asp-action="Details" asp-route-id="@cycle.Id" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold py-2 rounded-xl text-center transition-colors">
+                                عرض الدورة
+                            </a>
+
+                            @if (cycle.Status == Dawab.Domain.Enums.CycleStatus.Active)
+                            {
+                                <button hx-get="/Breeder/AddLogModal?cycleId=@cycle.Id" 
+                                        hx-target="#modal-container" 
+                                        hx-swap="innerHTML"
+                                        class="flex-1 bg-secondary hover:bg-secondary-700 text-white text-xs font-bold py-2 rounded-xl text-center transition-colors shadow-sm flex items-center justify-center gap-1">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    <span>تسجيل يومية</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!Model.Cycles.Any())
+        {
+            <div class="text-center py-16 px-4 bg-white rounded-3xl border border-dashed border-gray-200">
+                <i data-lucide="clipboard-list" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+                <h4 class="font-bold text-gray-700">لم تضف أي دورة بعد</h4>
+                <p class="text-sm text-gray-400 mt-1">أنشئ دورة إنتاج جديدة لبدء عرض بياناتها ومتابعتها.</p>
+                <a asp-action="CreateCycle" class="inline-flex items-center gap-2 mt-4 bg-primary hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    إضافة دورة
+                </a>
+            </div>
+        }
+    </div>
+</div>

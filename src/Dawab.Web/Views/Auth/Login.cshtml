@@ -1,0 +1,40 @@
+@model Dawab.Web.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+}
+
+<div class="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white p-5 sm:p-8 rounded-3xl border border-gray-100 shadow-xl shadow-primary/5 space-y-6">
+        <div class="text-center space-y-2">
+            <img src="~/images/dawab-mark.svg" alt="شعار دواب" class="w-16 h-16 object-contain mx-auto" asp-append-version="true" />
+            <h2 class="text-2xl font-black text-gray-900">تسجيل الدخول إلى دَوَابّ</h2>
+            <p class="text-xs text-gray-400">أدخل رقم هاتفك وكلمة المرور للمتابعة</p>
+        </div>
+
+        <form asp-action="Login" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-xs text-red-600 bg-red-50 p-3 rounded-xl"></div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">رقم الهاتف</label>
+                <input asp-for="Phone" type="tel" placeholder="010XXXXXXXX" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                <span asp-validation-for="Phone" class="text-[10px] text-red-500"></span>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">كلمة المرور</label>
+                <input asp-for="Password" type="password" placeholder="••••••••" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                <span asp-validation-for="Password" class="text-[10px] text-red-500"></span>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-primary hover:bg-primary-700 text-white font-bold rounded-2xl text-sm shadow-lg shadow-primary/20 transition-all">
+                تسجيل الدخول
+            </button>
+        </form>
+
+
+        <div class="text-center text-xs text-gray-500">
+            ليس لديك حساب بعد؟ <a asp-action="Register" class="text-primary font-bold hover:underline">أنشئ حساباً جديداً</a>
+        </div>
+    </div>
+</div>

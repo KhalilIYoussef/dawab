@@ -1,0 +1,169 @@
+@model Dawab.Application.DTOs.Users.AdminUserReviewDto
+@{
+    ViewData["Title"] = $"مراجعة ملف {Model.Name}";
+    var roleName = Model.Role == Dawab.Domain.Enums.UserRole.Breeder ? "مربي" : Model.Role == Dawab.Domain.Enums.UserRole.Investor ? "مستثمر" : "إدارة";
+    var statusName = Model.Status == Dawab.Domain.Enums.UserStatus.Active ? "نشط" : Model.Status == Dawab.Domain.Enums.UserStatus.Rejected ? "مرفوض" : Model.Status == Dawab.Domain.Enums.UserStatus.Suspended ? "موقوف" : "بانتظار المراجعة";
+}
+
+<div class="mx-auto max-w-6xl space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <div class="mb-2 flex items-center gap-2 text-xs font-bold text-emerald-700"><a asp-action="Dashboard" asp-route-tab="users" class="hover:underline">المستخدمون</a><i data-lucide="chevron-left" class="h-3.5 w-3.5"></i><span>مراجعة الملف</span></div>
+            <h1 class="text-2xl font-black text-slate-900 sm:text-3xl">مراجعة مستندات المستخدم</h1>
+            <p class="mt-1 text-sm text-slate-500">راجع بيانات الحساب والمستندات المرفقة قبل اتخاذ قرار التوثيق.</p>
+        </div>
+        <a asp-action="Dashboard" asp-route-tab="users" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"><i data-lucide="arrow-right" class="h-4 w-4"></i>العودة للمستخدمين</a>
+    </div>
+
+    <section class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+        <div class="flex flex-col gap-5 bg-gradient-to-l from-[#064b35] to-emerald-800 p-6 text-white sm:flex-row sm:items-center sm:p-8">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-white/10 text-2xl font-black">
+                @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
+                {
+                    <img src="@Model.ProfilePictureUrl" alt="@Model.Name" class="h-full w-full object-cover" />
+                }
+                else
+                {
+                    @Model.Name.FirstOrDefault()
+                }
+            </div>
+            <div class="min-w-0 flex-1">
+                <h2 class="text-xl font-black sm:text-2xl">@Model.Name</h2>
+                <p class="mt-1 text-sm text-emerald-50/80">@roleName · @Model.Phone</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <span class="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">@statusName</span>
+                <span class="rounded-full @(Model.IsKycVerified ? "bg-green-300/20 text-green-50" : "bg-amber-300/20 text-amber-50") px-3 py-1.5 text-xs font-bold">@(Model.IsKycVerified ? "موثق رقمياً" : "التوثيق غير مكتمل")</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:divide-x-reverse">
+            <div class="p-5"><span class="block text-xs font-bold text-slate-400">تاريخ إنشاء الحساب</span><span class="mt-1 block text-sm font-bold text-slate-800">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</span></div>
+            <div class="p-5"><span class="block text-xs font-bold text-slate-400">الرقم القومي</span><span class="mt-1 block text-sm font-bold text-slate-800">@(Model.NationalId ?? "غير مسجل")</span></div>
+            <div class="p-5"><span class="block text-xs font-bold text-slate-400">الحالة الحالية</span><span class="mt-1 block text-sm font-bold text-slate-800">@statusName</span></div>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
+        <section class="space-y-5 xl:col-span-3">
+            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-5 flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><i data-lucide="id-card" class="h-5 w-5"></i></span><div><h3 class="font-black text-slate-900">بيانات التحقق الرقمي</h3><p class="text-xs text-slate-500">بيانات الهوية والحساب البنكي المقدمة عند التسجيل</p></div></div>
+                @if (!Model.HasKycDocument)
+                {
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">لم يرسل المستخدم بيانات تحقق رقمية حتى الآن.</div>
+                }
+                else
+                {
+                    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs font-bold text-slate-400">الرقم القومي</dt><dd class="mt-1 break-all text-sm font-bold text-slate-800">@(Model.NationalId ?? "غير متوفر")</dd></div>
+                        <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs font-bold text-slate-400">البنك</dt><dd class="mt-1 text-sm font-bold text-slate-800">@(Model.BankName ?? "غير متوفر")</dd></div>
+                        <div class="rounded-2xl bg-slate-50 p-4 sm:col-span-2"><dt class="text-xs font-bold text-slate-400">رقم IBAN</dt><dd class="mt-1 break-all text-sm font-bold text-slate-800">@(Model.Iban ?? "غير متوفر")</dd></div>
+                    </dl>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                {
+                    <div class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4"><p class="text-xs font-bold text-red-700">سبب الرفض السابق</p><p class="mt-1 text-sm text-red-800">@Model.RejectionReason</p></div>
+                }
+            </div>
+
+            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-5 flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><i data-lucide="files" class="h-5 w-5"></i></span><div><h3 class="font-black text-slate-900">المستندات المرفقة</h3><p class="text-xs text-slate-500">صور الهوية والعقد والوثائق الداعمة</p></div></div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @DocumentCard("صورة الهوية - الوجه الأمامي", Model.IdCardFrontUrl, "image")
+                    @DocumentCard("صورة الهوية - الوجه الخلفي", Model.IdCardBackUrl, "image")
+                    @DocumentCard("العقد", Model.ContractUrl, "file")
+                </div>
+            </div>
+
+            @if (Model.Role == Dawab.Domain.Enums.UserRole.Breeder)
+            {
+                <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+                    <div class="mb-5 flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><i data-lucide="house" class="h-5 w-5"></i></span><div><h3 class="font-black text-slate-900">بيانات المربي والأوراق الورقية</h3><p class="text-xs text-slate-500">معلومات المزرعة والتحقق من المستندات الأصلية</p></div></div>
+                    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs font-bold text-slate-400">اسم المزرعة</dt><dd class="mt-1 text-sm font-bold text-slate-800">@(Model.FarmName ?? "غير مسجل")</dd></div>
+                        <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs font-bold text-slate-400">المحافظة</dt><dd class="mt-1 text-sm font-bold text-slate-800">@(Model.Governorate ?? "غير محددة")</dd></div>
+                        <div class="rounded-2xl bg-slate-50 p-4 sm:col-span-2"><dt class="text-xs font-bold text-slate-400">العنوان</dt><dd class="mt-1 text-sm font-bold text-slate-800">@(Model.Address ?? "غير مسجل")</dd></div>
+                    </dl>
+                    <div class="mt-4 flex flex-col gap-4 rounded-2xl border border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">الفيش الجنائي</p>
+                            <div class="mt-1">@DocumentCard("فتح الفيش الجنائي", Model.CriminalRecordUrl, "file")</div>
+                            <p class="mt-2 text-xs font-bold @(Model.PhysicalPapersVerified ? "text-green-700" : "text-amber-700")">@(Model.PhysicalPapersVerified ? "تم اعتماد الأوراق الورقية" : Model.PhysicalPapersSent ? "تم إرسال الأوراق وتنتظر المراجعة" : "لم يتم تأكيد استلام الأوراق")</p>
+                        </div>
+                        @if (!Model.PhysicalPapersVerified)
+                        {
+                            <form asp-action="VerifyUserPhysicalPapers" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="breederId" value="@Model.Id" />
+                                <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 sm:w-auto"><i data-lucide="badge-check" class="h-4 w-4"></i>تأكيد مراجعة الأوراق</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+
+        <aside class="space-y-5 xl:col-span-2">
+            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-4 flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><i data-lucide="clipboard-check" class="h-5 w-5"></i></span><div><h3 class="font-black text-slate-900">قرار مراجعة التوثيق</h3><p class="text-xs text-slate-500">اعتماد البيانات أو توضيح سبب الرفض</p></div></div>
+                <div class="space-y-4">
+                    <form asp-action="ReviewUserKyc" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="approve" value="true" />
+                        <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-800"><i data-lucide="check" class="h-4 w-4"></i>اعتماد التوثيق وتفعيل الحساب</button>
+                    </form>
+                    <form asp-action="ReviewUserKyc" method="post" class="space-y-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="approve" value="false" />
+                        <label class="block text-xs font-bold text-slate-700">سبب الرفض<textarea name="reason" rows="3" maxlength="500" required placeholder="اكتب للمستخدم ما الذي يحتاج إلى تصحيح..." class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"></textarea></label>
+                        <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 transition hover:bg-red-100"><i data-lucide="x" class="h-4 w-4"></i>رفض التوثيق وإرسال السبب</button>
+                    </form>
+                </div>
+                @if (Model.ReviewedAt.HasValue)
+                {
+                    <p class="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">آخر مراجعة: @Model.ReviewedAt.Value.ToLocalTime().ToString("dd/MM/yyyy - HH:mm")</p>
+                }
+            </div>
+            <div class="rounded-3xl border border-emerald-100 bg-emerald-50 p-5 text-sm leading-7 text-emerald-900">
+                <p class="font-black">تنبيه للمراجعة</p>
+                <p class="mt-1 text-xs">تحقق من تطابق البيانات المدخلة مع المستندات الأصلية قبل اعتماد الحساب. أي بيانات أو ملفات لم يرسلها المستخدم تظهر بوضوح في هذا الملف.</p>
+            </div>
+        </aside>
+    </div>
+</div>
+
+@functions {
+    private Microsoft.AspNetCore.Html.IHtmlContent DocumentCard(string title, string? url, string kind)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return new Microsoft.AspNetCore.Html.HtmlString($"<div class=\"rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5\"><p class=\"text-xs font-bold text-slate-500\">{title}</p><p class=\"mt-2 text-xs text-slate-400\">لم يتم إرفاق المستند</p></div>");
+        }
+
+        if (!IsSafeDocumentUrl(url))
+        {
+            return new Microsoft.AspNetCore.Html.HtmlString($"<div class=\"rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-5\"><p class=\"text-xs font-bold text-amber-800\">{title}</p><p class=\"mt-2 text-xs text-amber-700\">رابط المستند غير صالح</p></div>");
+        }
+
+        var safeUrl = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(url);
+        var safeTitle = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(title);
+        if (kind == "image")
+        {
+            return new Microsoft.AspNetCore.Html.HtmlString($"<a href=\"{safeUrl}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50\"><img src=\"{safeUrl}\" alt=\"{safeTitle}\" class=\"h-48 w-full object-contain transition group-hover:scale-[1.02]\" /><span class=\"block border-t border-slate-100 p-3 text-xs font-bold text-slate-700\">{safeTitle} · فتح بالحجم الكامل</span></a>");
+        }
+
+        return new Microsoft.AspNetCore.Html.HtmlString($"<a href=\"{safeUrl}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm font-bold text-emerald-700 hover:bg-emerald-50\"><i data-lucide=\"file-text\" class=\"h-5 w-5\"></i>{safeTitle} · فتح المستند</a>");
+    }
+
+    private bool IsSafeDocumentUrl(string url)
+    {
+        if (url.StartsWith("/", StringComparison.Ordinal) && !url.StartsWith("//", StringComparison.Ordinal) && !url.Contains('\\'))
+        {
+            return true;
+        }
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+}

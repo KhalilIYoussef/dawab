@@ -1,0 +1,26 @@
+@model Dawab.Application.DTOs.Investments.FeeCalculationDto
+
+<div class="bg-gray-50 p-4 rounded-2xl space-y-2 border border-gray-100 text-xs">
+    <div class="flex justify-between text-gray-600">
+        <span>قيمة الاستثمار:</span>
+        <span class="font-bold text-gray-900">@Model.InvestmentAmount.ToString("N0") ج.م</span>
+    </div>
+
+    <div class="flex justify-between text-gray-600">
+        <span>رسوم إدارية وتشغيلية (2.5%):</span>
+        <span class="font-bold text-gray-900">@Model.PlatformFee.ToString("N0") ج.م</span>
+    </div>
+
+    @if (Model.HasAnimalInsurance)
+    {
+        <div class="flex justify-between text-blue-700">
+            <span>رسوم تأمين حياة الماشية (3.0%):</span>
+            <span class="font-bold">@Model.AnimalInsuranceFee.ToString("N0") ج.م</span>
+        </div>
+    }
+
+    <div class="pt-2 border-t border-gray-200 flex justify-between items-center text-sm">
+        <span class="font-bold text-gray-900">إجمالي المبلغ المطلوب تحويله:</span>
+        <span class="text-lg font-black text-primary">@Model.TotalAmountToPay.ToString("N0") ج.م</span>
+    </div>
+</div>

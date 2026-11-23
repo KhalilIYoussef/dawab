@@ -1,0 +1,160 @@
+@model InvestorDashboardViewModel
+@{
+    ViewData["Title"] = "لوحة المستثمر";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+    <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+            <p class="text-xs font-bold text-primary uppercase tracking-wide">مساحة المستثمر</p>
+            <h1 class="text-3xl font-black text-gray-900 mt-1">لوحة المستثمر</h1>
+            <p class="text-sm text-gray-500 mt-1">تابع استثماراتك وابدأ الاستثمار في دورة جديدة</p>
+        </div>
+        <a asp-controller="Cycles" asp-action="Index" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-700 text-white font-bold px-5 py-3 rounded-xl text-sm shadow-md transition-colors">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            كل فرص الاستثمار
+        </a>
+    </header>
+
+    @if (Model.AccountStatus == UserStatus.Pending)
+    {
+        <div class="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3 text-orange-800">
+            <i data-lucide="info" class="w-5 h-5 text-orange-600 shrink-0"></i>
+            <div>
+                <p class="font-bold text-sm">حسابك قيد المراجعة</p>
+                <p class="text-xs mt-1 leading-relaxed">يمكنك تصفح الفرص، لكن يلزم تفعيل الحساب من الإدارة قبل إرسال طلب استثمار.</p>
+            </div>
+        </div>
+    }
+
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="ملخص الاستثمارات">
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-green-50 text-primary flex items-center justify-center shrink-0">
+                <i data-lucide="wallet" class="w-6 h-6"></i>
+            </div>
+            <div class="min-w-0">
+                <span class="block text-xs text-gray-500 font-bold">رأس المال المعتمد</span>
+                <span class="text-xl sm:text-2xl font-black text-gray-900">@Model.ApprovedInvestmentTotal.ToString("N0") ج.م</span>
+            </div>
+        </div>
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+            </div>
+            <div class="min-w-0">
+                <span class="block text-xs text-gray-500 font-bold">استثمارات معتمدة</span>
+                <span class="text-xl sm:text-2xl font-black text-gray-900">@Model.ApprovedInvestmentsCount</span>
+            </div>
+        </div>
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0">
+                <i data-lucide="clock-3" class="w-6 h-6"></i>
+            </div>
+            <div class="min-w-0">
+                <span class="block text-xs text-gray-500 font-bold">طلبات قيد المراجعة</span>
+                <span class="text-xl sm:text-2xl font-black text-gray-900">@Model.PendingInvestmentsCount</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+                <h2 class="text-xl font-black text-gray-900">فرص الاستثمار المتاحة</h2>
+                <p class="text-xs text-gray-500 mt-1">اختر دورة واطّلع على تفاصيلها قبل الاستثمار</p>
+            </div>
+            <a asp-controller="Cycles" asp-action="Index" class="text-sm font-bold text-primary hover:underline">عرض كل الفرص</a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            @foreach (var cycle in Model.AvailableCycles)
+            {
+                <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-shadow flex flex-col">
+                    <div class="relative h-48">
+                        <img src="@cycle.ImageUrl" alt="@cycle.AnimalType" class="w-full h-full object-cover" />
+                        <span class="absolute top-3 left-3 bg-white/95 text-primary px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm">متبقي @cycle.RemainingFunding.ToString("N0") ج.م</span>
+                        @if (cycle.IsBarnInsured)
+                        {
+                            <span class="absolute top-3 right-3 bg-orange-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                                <i data-lucide="shield-check" class="w-3 h-3"></i> خيار التأمين مسجل
+                            </span>
+                        }
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col gap-4">
+                        <div>
+                            <h3 class="font-black text-gray-900 text-lg">@cycle.AnimalType</h3>
+                            <p class="text-xs text-gray-500 mt-1">المربي: @cycle.BreederName</p>
+                            <p class="text-xs text-gray-500 mt-2 line-clamp-2">@cycle.Description</p>
+                        </div>
+                        <div class="space-y-1.5 mt-auto">
+                            <div class="flex justify-between text-[11px] font-bold">
+                                <span class="text-gray-500">تقدم التمويل @cycle.FundingProgressPercentage%</span>
+                                <span class="text-primary">الهدف @cycle.FundingGoal.ToString("N0") ج.م</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full rounded-full" style="width: @cycle.FundingProgressPercentage%"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a asp-controller="Cycles" asp-action="Details" asp-route-id="@cycle.Id" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-xl text-center text-xs transition-colors">التفاصيل</a>
+                            @if (Model.AccountStatus == UserStatus.Active)
+                            {
+                                <button hx-get="/Investments/InvestModal?cycleId=@cycle.Id" hx-target="#modal-container" hx-swap="innerHTML" class="bg-primary hover:bg-primary-700 text-white font-bold py-2.5 rounded-xl text-xs transition-colors">استثمر الآن</button>
+                            }
+                            else
+                            {
+                                <span class="bg-gray-100 text-gray-400 font-bold py-2.5 rounded-xl text-center text-xs">بانتظار التفعيل</span>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+
+        @if (!Model.AvailableCycles.Any())
+        {
+            <div class="text-center py-16 px-4 bg-white rounded-3xl border border-dashed border-gray-200">
+                <i data-lucide="search-x" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+                <h3 class="font-bold text-gray-700">لا توجد فرص متاحة حالياً</h3>
+                <p class="text-xs text-gray-400 mt-1">عد لاحقاً أو تصفح الدورات لمتابعة حالتها.</p>
+            </div>
+        }
+    </section>
+
+    <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+                <h2 class="text-xl font-black text-gray-900">أحدث استثماراتي</h2>
+                <p class="text-xs text-gray-500 mt-1">حالة الطلبات والعقود المرتبطة بحسابك</p>
+            </div>
+            <a asp-controller="Investments" asp-action="Portfolio" class="text-sm font-bold text-primary hover:underline">فتح المحفظة</a>
+        </div>
+
+        <div class="space-y-3">
+            @foreach (var investment in Model.Investments.Take(3))
+            {
+                <article class="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+                    <img src="@(investment.CycleImageUrl ?? string.Empty)" alt="@investment.CycleAnimalType" class="w-full h-36 sm:w-16 sm:h-16 rounded-xl object-cover shrink-0" />
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-gray-900">@investment.CycleAnimalType</h3>
+                        <p class="text-xs text-gray-500 mt-1">@investment.CreatedAt.ToString("yyyy-MM-dd") · @investment.HeadsCount رأس</p>
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-3">
+                        <span class="font-black text-gray-900">@investment.Amount.ToString("N0") ج.م</span>
+                        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold @(investment.Status == InvestmentStatus.Approved ? "bg-green-100 text-green-800" : investment.Status == InvestmentStatus.PendingApproval ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800")">
+                            @(investment.Status == InvestmentStatus.Approved ? "معتمد" : investment.Status == InvestmentStatus.PendingApproval ? "قيد المراجعة" : "مرفوض")
+                        </span>
+                    </div>
+                </article>
+            }
+            @if (!Model.Investments.Any())
+            {
+                <div class="text-center py-12 px-4 bg-white rounded-3xl border border-dashed border-gray-200">
+                    <i data-lucide="wallet" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+                    <p class="text-sm font-bold text-gray-700">لا توجد استثمارات مسجلة بعد</p>
+                    <p class="text-xs text-gray-400 mt-1">ابدأ باختيار إحدى الفرص المتاحة أعلاه.</p>
+                </div>
+            }
+        </div>
+    </section>
+</div>

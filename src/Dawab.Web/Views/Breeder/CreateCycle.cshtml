@@ -1,0 +1,172 @@
+@model Dawab.Web.ViewModels.CreateCycleViewModel
+@{
+    ViewData["Title"] = "إضافة دورة تسمين جديدة";
+    var selectedAnimal = Model.Animals.FirstOrDefault(animal => animal.Id == Model.AnimalId);
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div class="flex items-center gap-2 text-xs font-bold text-gray-500">
+        <a asp-action="Dashboard" class="hover:text-primary transition-colors">لوحة المربي</a>
+        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+        <span class="text-gray-900">إضافة دورة تسمين</span>
+    </div>
+
+    <div class="bg-white p-4 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900">إضافة دورة تسمين جديدة</h1>
+            <p class="text-xs text-gray-400 mt-1">أدخل بيانات الماشية، الوزن، وخطة التغذية والتحصينات لطرحها للاستثمار</p>
+        </div>
+
+        <form id="create-cycle-form" asp-action="CreateCycle" method="post" enctype="multipart/form-data" class="space-y-6">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-sm text-red-700 bg-red-50 border border-red-100 p-4 rounded-xl"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                    <label asp-for="AnimalId" class="block text-xs font-bold text-gray-700">نوع وسلالة الماشية</label>
+                    <select asp-for="AnimalId" id="animal-id" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        @foreach (var animal in Model.Animals)
+                        {
+                            <option value="@animal.Id"
+                                    data-initial-weight="@animal.DefaultInitialWeight.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                    data-target-weight="@animal.DefaultTargetWeight.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                    data-price="@animal.DefaultPricePerHead.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                    data-duration="@animal.DefaultDurationDays"
+                                    data-barn-insurance-cost="@animal.DefaultBarnInsuranceCost.ToString(System.Globalization.CultureInfo.InvariantCulture)">@animal.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="AnimalId" class="text-xs text-red-600"></span>
+                </div>
+
+                <!-- Total Heads -->
+                <div class="space-y-1.5">
+                    <label asp-for="TotalHeads" class="block text-xs font-bold text-gray-700">عدد الرؤوس في الدورة</label>
+                    <input type="number" asp-for="TotalHeads" min="1" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                    <span asp-validation-for="TotalHeads" class="text-xs text-red-600"></span>
+                </div>
+
+                <!-- Initial Weight -->
+                <div class="space-y-1.5">
+                    <label asp-for="InitialWeight" class="block text-xs font-bold text-gray-700">الوزن الحالي للرأس (كجم)</label>
+                    <input type="number" asp-for="InitialWeight" min="0.1" step="0.5" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                    <span asp-validation-for="InitialWeight" class="text-xs text-red-600"></span>
+                </div>
+
+                <!-- Target Weight -->
+                <div class="space-y-1.5">
+                    <label asp-for="TargetWeight" class="block text-xs font-bold text-gray-700">الوزن المستهدف عند البيع (كجم)</label>
+                    <input type="number" asp-for="TargetWeight" min="0.1" step="0.5" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                    <span asp-validation-for="TargetWeight" class="text-xs text-red-600"></span>
+                </div>
+
+                <!-- Start Price Per Head -->
+                <div class="space-y-1.5">
+                    <label asp-for="StartPricePerHead" class="block text-xs font-bold text-gray-700">تكلفة شراء وتجهيز الرأس الواحدة (ج.م)</label>
+                    <input type="number" asp-for="StartPricePerHead" min="1" step="0.01" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                    <span asp-validation-for="StartPricePerHead" class="text-xs text-red-600"></span>
+                    <p class="text-[11px] text-gray-500">هدف التمويل يُحسب تلقائياً: تكلفة الرأس × عدد الرؤوس.</p>
+                </div>
+
+                <!-- Duration in days -->
+                <div class="space-y-1.5">
+                    <label asp-for="ExpectedDurationDays" class="block text-xs font-bold text-gray-700">مدة دورة التسمين (بالأيام)</label>
+                    <input type="number" asp-for="ExpectedDurationDays" min="1" max="3650" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" required />
+                    <span asp-validation-for="ExpectedDurationDays" class="text-xs text-red-600"></span>
+                </div>
+            </div>
+
+            <span asp-validation-for="Description" class="text-xs text-red-600"></span>
+
+            <div class="space-y-4 rounded-2xl border border-gray-100 p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="font-black text-gray-900">خطة التغذية</h2>
+                        <p class="text-xs text-gray-500 mt-1">أضف أي عدد من مراحل التغذية وكميات العلف اليومية لكل رأس.</p>
+                    </div>
+                    <button type="button" data-add-row="stage-rows" class="rounded-xl bg-primary-50 px-4 py-2 text-xs font-bold text-primary">إضافة مرحلة</button>
+                </div>
+                <div id="stage-rows" class="space-y-3">
+                    @for (var index = 0; index < Model.Stages.Count; index++)
+                    {
+                        <div data-dynamic-row class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end rounded-xl bg-gray-50 p-3">
+                            <input type="hidden" data-property="StageOrder" name="Stages[@index].StageOrder" value="@(index + 1)" />
+                            <label class="text-xs text-gray-600">اسم المرحلة<input data-property="StageName" name="Stages[@index].StageName" value="@Model.Stages[index].StageName" maxlength="100" class="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></label>
+                            <label class="text-xs text-gray-600">علف مركز (كجم/رأس/يوم)<input data-property="FeedConcentrateKg" name="Stages[@index].FeedConcentrateKg" value="@Model.Stages[index].FeedConcentrateKg" type="number" min="0" step="0.1" class="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></label>
+                            <label class="text-xs text-gray-600">مواد خشنة (كجم/رأس/يوم)<input data-property="RoughageKg" name="Stages[@index].RoughageKg" value="@Model.Stages[index].RoughageKg" type="number" min="0" step="0.1" class="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></label>
+                            <button type="button" data-remove-row class="rounded-lg px-3 py-2 text-xs font-bold text-red-600">حذف</button>
+                        </div>
+                    }
+                </div>
+                <span asp-validation-for="Stages" class="text-xs text-red-600"></span>
+            </div>
+
+            <div class="space-y-3 rounded-2xl border border-gray-100 p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="font-black text-gray-900">التحصينات المقترحة</h2>
+                        <p class="text-xs text-gray-500 mt-1">أضف التحصينات المناسبة لهذا النوع من الحيوانات.</p>
+                    </div>
+                    <button type="button" data-add-row="vaccine-rows" class="rounded-xl bg-primary-50 px-4 py-2 text-xs font-bold text-primary">إضافة تحصين</button>
+                </div>
+                <div id="vaccine-rows" class="space-y-2">
+                    @for (var index = 0; index < Model.VaccineNames.Count; index++)
+                    {
+                        <div data-dynamic-row class="flex gap-2">
+                            <input data-property="VaccineName" name="VaccineNames[@index]" value="@Model.VaccineNames[index]" maxlength="120" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" />
+                            <button type="button" data-remove-row class="rounded-lg px-3 text-xs font-bold text-red-600">حذف</button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-1.5">
+                <label asp-for="Description" class="block text-xs font-bold text-gray-700">وصف الدورة والتفاصيل الاستثمارية</label>
+                <textarea asp-for="Description" rows="3" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="اكتب نبذة عن مصدر الماشية وظروف التربية..." required></textarea>
+                <span asp-validation-for="Description" class="text-xs text-red-600"></span>
+            </div>
+
+            <!-- Barn Insurance Option -->
+            <div class="p-4 bg-orange-50/70 border border-orange-100 rounded-2xl flex items-center justify-between">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" asp-for="IsBarnInsured" class="w-5 h-5 rounded text-secondary focus:ring-secondary" checked />
+                    <div>
+                        <span class="block text-xs font-bold text-orange-900">إضافة خيار تأمين الحظيرة (<span id="barn-insurance-fee">@(selectedAnimal?.DefaultBarnInsuranceCost.ToString("N2") ?? "0")</span> ج.م)</span>
+                        <span class="block text-[10px] text-gray-500">تُحدد الرسوم حسب نوع الحيوان. راجع وثيقة التأمين لمعرفة نطاق التغطية وشروطها.</span>
+                    </div>
+                </label>
+                <i data-lucide="home" class="w-6 h-6 text-orange-600"></i>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-gray-700">صورة الماشية / الحظيرة</label>
+                <input type="file" name="imageFile" accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer" />
+            </div>
+
+            <div class="pt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                <a asp-action="Dashboard" class="text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-6 py-3 rounded-2xl text-xs transition-colors">إلغاء</a>
+                <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold px-8 py-3 rounded-2xl text-xs shadow-md shadow-primary/20 transition-all">حفظ وإرسال للاعتماد</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<template id="stage-row-template">
+    <div data-dynamic-row class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end rounded-xl bg-gray-50 p-3">
+        <input type="hidden" data-property="StageOrder" name="Stages[__index__].StageOrder" value="__order__" />
+        <label class="text-xs text-gray-600">اسم المرحلة<input data-property="StageName" name="Stages[__index__].StageName" maxlength="100" class="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></label>
+        <label class="text-xs text-gray-600">علف مركز (كجم/رأس/يوم)<input data-property="FeedConcentrateKg" name="Stages[__index__].FeedConcentrateKg" type="number" min="0" step="0.1" value="0" class="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></label>
+        <label class="text-xs text-gray-600">مواد خشنة (كجم/رأس/يوم)<input data-property="RoughageKg" name="Stages[__index__].RoughageKg" type="number" min="0" step="0.1" value="0" class="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></label>
+        <button type="button" data-remove-row class="rounded-lg px-3 py-2 text-xs font-bold text-red-600">حذف</button>
+    </div>
+</template>
+
+<template id="vaccine-row-template">
+    <div data-dynamic-row class="flex gap-2">
+        <input data-property="VaccineName" name="VaccineNames[__index__]" maxlength="120" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" />
+        <button type="button" data-remove-row class="rounded-lg px-3 text-xs font-bold text-red-600">حذف</button>
+    </div>
+</template>
+
+<script src="~/js/breeder-cycle-form.js" asp-append-version="true"></script>

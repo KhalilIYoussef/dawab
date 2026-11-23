@@ -1,0 +1,145 @@
+@model List<Dawab.Application.DTOs.Investments.InvestmentDto>
+@{
+    ViewData["Title"] = "محفظتي الاستثمارية";
+    var approvedInvestments = Model.Where(i => i.Status == Dawab.Domain.Enums.InvestmentStatus.Approved).ToList();
+    var pendingInvestments = Model.Where(i => i.Status == Dawab.Domain.Enums.InvestmentStatus.PendingApproval).ToList();
+    var totalInvested = approvedInvestments.Sum(i => i.Amount);
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900">محفظتي الاستثمارية</h1>
+            <p class="text-sm text-gray-500 mt-1">تابع حالة طلباتك والدورات المرتبطة باستثماراتك</p>
+        </div>
+
+        <a asp-controller="Cycles" asp-action="Index" class="bg-primary hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-primary/20 flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>استثمار جديد</span>
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-green-50 text-primary flex items-center justify-center font-black">
+                <i data-lucide="wallet" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <span class="block text-xs text-gray-400 font-bold">إجمالي رأس المال المستثمر</span>
+                <span class="text-2xl font-black text-gray-900">@totalInvested.ToString("N0") ج.م</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                <i data-lucide="shield-check" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <span class="block text-xs text-gray-400 font-bold">الدورات النشطة</span>
+                <span class="text-2xl font-black text-gray-900">@approvedInvestments.Count دورة</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center font-black">
+                <i data-lucide="clock" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <span class="block text-xs text-gray-400 font-bold">طلبات بانتظار الاعتماد</span>
+                <span class="text-2xl font-black text-gray-900">@pendingInvestments.Count طلب</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investments List -->
+    <div class="space-y-4">
+        <h3 class="text-lg font-black text-gray-900">سجل الاستثمارات والعقود</h3>
+
+        <div class="space-y-4">
+            @foreach (var inv in Model)
+            {
+                <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <img src="@inv.CycleImageUrl" alt="@inv.CycleAnimalType" class="w-20 h-20 rounded-2xl object-cover shrink-0">
+                        <div class="space-y-1">
+                            <h4 class="font-black text-gray-900 text-lg">@inv.CycleAnimalType</h4>
+                            <p class="text-xs text-gray-400">تاريخ الاستثمار: @inv.CreatedAt.ToString("yyyy-MM-dd")</p>
+                            
+                            <!-- Contract Codes -->
+                            @if (inv.ContractCodes.Any())
+                            {
+                                <div class="flex flex-wrap gap-1.5 pt-1">
+                                    @foreach (var code in inv.ContractCodes)
+                                    {
+                                        <span class="bg-gray-100 text-gray-800 text-[10px] font-black px-2.5 py-1 rounded-md border border-gray-200 flex items-center gap-1">
+                                            <i data-lucide="file-text" class="w-3 h-3 text-primary"></i>
+                                            <span>@code</span>
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap md:flex-nowrap items-center gap-6 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-4 md:pt-0">
+                        <div class="text-right">
+                            <span class="block text-[11px] text-gray-400 font-bold">قيمة الاستثمار</span>
+                            <span class="text-lg font-black text-gray-900">@inv.Amount.ToString("N0") ج.م</span>
+                            <span class="block text-[10px] text-gray-500 font-medium">العدد: @inv.HeadsCount رأس</span>
+                        </div>
+
+                        <div>
+                            @if (inv.Status == Dawab.Domain.Enums.InvestmentStatus.Approved)
+                            {
+                                <span class="px-3 py-1 rounded-full text-xs font-black bg-green-100 text-green-800 border border-green-200">
+                                    معتمد ونشط
+                                </span>
+                            }
+                            else if (inv.Status == Dawab.Domain.Enums.InvestmentStatus.PendingApproval)
+                            {
+                                <span class="px-3 py-1 rounded-full text-xs font-black bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                    بانتظار تأكيد التحويل
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-800 border border-red-200">
+                                    مرفوض
+                                </span>
+                            }
+                        </div>
+
+                        @if (inv.TotalPayout.HasValue)
+                        {
+                            <div class="w-full rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs">
+                                <p class="font-black text-emerald-900">نتيجة التسوية</p>
+                                <p class="mt-1 text-gray-700">رأس المال المسترد: @inv.CapitalReturned?.ToString("N2") ج.م</p>
+                                <p class="text-gray-700">حصة الربح: @inv.ProfitShare?.ToString("N2") ج.م</p>
+                                <p class="font-bold text-gray-900">إجمالي المستحق: @inv.TotalPayout?.ToString("N2") ج.م</p>
+                                <p class="mt-1 @(inv.IsPayoutTransferred ? "text-green-700" : "text-amber-700")">@(inv.IsPayoutTransferred ? $"تم التحويل · مرجع {inv.PayoutTransferReference}" : "بانتظار إتمام التحويل من الإدارة")</p>
+                            </div>
+                        }
+
+                        <a asp-controller="Cycles" asp-action="Details" asp-route-id="@inv.CycleId" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors">
+                            متابعة الدورة
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                    <i data-lucide="wallet" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+                    <h3 class="font-bold text-gray-700 text-base">لا توجد استثمارات مسجلة بعد</h3>
+                    <p class="text-xs text-gray-400 mt-1 mb-4">ابدأ الآن واختر دورة تسمين مناسبة من الفرص المتاحة</p>
+                    <a asp-controller="Cycles" asp-action="Index" class="bg-primary text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md">
+                        تصفح الفرص المتاحة
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

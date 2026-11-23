@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/Dawab.Domain/Dawab.Domain.csproj" />
+  <Project Path="src/Dawab.Application/Dawab.Application.csproj" />
+  <Project Path="src/Dawab.Infrastructure/Dawab.Infrastructure.csproj" />
+  <Project Path="src/Dawab.Web/Dawab.Web.csproj" />
+</Solution>

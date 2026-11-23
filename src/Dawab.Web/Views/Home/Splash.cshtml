@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "مرحباً بك في دواب";
+    Layout = "_Layout";
+}
+
+<section class="relative isolate min-h-[72vh] overflow-hidden bg-primary-900 text-white flex items-center">
+    <div class="absolute inset-0 -z-10">
+        <img src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1800&q=85" alt="منظر لمزرعة في الريف" class="w-full h-full object-cover opacity-25" />
+        <div class="absolute inset-0 bg-gradient-to-l from-primary-900 via-primary-900/90 to-primary-900/40"></div>
+    </div>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div class="w-24 h-24 rounded-3xl bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-7 p-3 backdrop-blur">
+            <img src="~/images/dawab-mark.svg" alt="شعار دواب" class="w-full h-full object-contain" asp-append-version="true" />
+        </div>
+        <p class="text-sm sm:text-base font-bold text-green-200 mb-3">منصة دواب للاستثمار والإنتاج الحيواني</p>
+        <h1 class="text-4xl sm:text-6xl font-black leading-tight">نقرّب المسافة بين <span class="text-yellow-300">رأس المال</span> و<span class="text-yellow-300">الإنتاج الحقيقي</span></h1>
+        <p class="max-w-2xl mx-auto mt-6 text-sm sm:text-lg leading-8 text-white/75">منظومة رقمية تجمع المستثمر بالمربي، وتنظم رحلة دورة التسمين من التمويل إلى المتابعة اليومية والتسوية، بوضوح ومسؤولية.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-3 mt-9">
+            <a asp-action="Onboarding" class="inline-flex items-center justify-center gap-2 bg-white text-primary-900 hover:bg-green-50 font-black px-7 py-3.5 rounded-2xl transition-colors">
+                ابدأ رحلتك مع دواب
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <a asp-action="Index" class="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-bold px-7 py-3.5 rounded-2xl transition-colors">اكتشف فكرة المشروع</a>
+        </div>
+        <a asp-action="Index" asp-fragment="vision" class="inline-flex items-center gap-2 text-xs text-white/60 hover:text-white mt-12">
+            <span>رؤية طويلة المدى، تبدأ بخطوة واضحة</span>
+            <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+        </a>
+    </div>
+</section>

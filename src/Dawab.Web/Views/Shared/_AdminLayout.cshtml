@@ -6,9 +6,13 @@
     <link rel="icon" type="image/svg+xml" href="~/images/dawab-mark.svg" />
     <meta name="theme-color" content="#064b35" />
     <title>@ViewData["Title"] - إدارة دَوَابّ</title>
+    
+    <!-- Cairo Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS with Full Palette -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -17,14 +21,32 @@
                     fontFamily: { sans: ['Cairo', 'sans-serif'] },
                     colors: {
                         primary: {
-                            DEFAULT: '#1b5e20', 50: '#e8f5e9', 100: '#c8e6c9',
-                            500: '#4caf50', 600: '#388e3c', 700: '#2e7d32',
-                            800: '#1b5e20', 900: '#0d3d12'
+                            DEFAULT: '#1b5e20',
+                            50: '#e8f5e9',
+                            100: '#c8e6c9',
+                            200: '#a5d6a7',
+                            300: '#81c784',
+                            400: '#66bb6a',
+                            500: '#4caf50',
+                            600: '#388e3c',
+                            700: '#2e7d32',
+                            800: '#1b5e20',
+                            900: '#0d3d12',
+                            950: '#06230b',
                         },
                         secondary: {
-                            DEFAULT: '#e65100', 50: '#fff3e0', 100: '#ffe0b2',
-                            500: '#ff9800', 600: '#fb8c00', 700: '#f57c00',
-                            800: '#ef6c00', 900: '#e65100'
+                            DEFAULT: '#e65100',
+                            50: '#fff3e0',
+                            100: '#ffe0b2',
+                            200: '#ffcc80',
+                            300: '#ffb74d',
+                            400: '#ffa726',
+                            500: '#ff9800',
+                            600: '#fb8c00',
+                            700: '#f57c00',
+                            800: '#ef6c00',
+                            900: '#e65100',
+                            950: '#431407',
                         }
                     }
                 }
@@ -35,79 +57,184 @@
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        * { font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif; }
         body { font-family: 'Cairo', sans-serif; }
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { display: inline-block; }
     </style>
 </head>
-<body class="min-h-screen bg-[#f2f7f5] text-slate-800 antialiased">
-    @{
-        var action = ViewContext.RouteData.Values["action"]?.ToString();
-        var requestedTab = Context.Request.Query["tab"].ToString();
-        var activeTab = action == "ReviewUser" ? "users" : string.IsNullOrWhiteSpace(requestedTab) ? "overview" : requestedTab;
-    }
-    <header class="sticky top-0 z-40 border-b border-emerald-900/10 bg-[#064b35] text-white shadow-lg shadow-emerald-950/10">
-        <div class="flex h-[70px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-            <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="overview" class="flex shrink-0 items-center gap-3">
-                <img src="~/images/dawab-mark.svg" alt="شعار دواب" class="h-11 w-11 rounded-xl bg-white/10 p-1" asp-append-version="true" />
-                <span class="text-2xl font-black tracking-tight">دَوَابّ</span>
-            </a>
-            <nav class="hidden items-center gap-1 text-sm font-bold text-emerald-50/80 xl:flex" aria-label="روابط سريعة">
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="overview" class="rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white">الرئيسية</a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="cycles" class="rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white">الدورات</a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="investments" class="rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white">الطلبات</a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="insurance" class="rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white">التقارير</a>
-            </nav>
+<body class="min-h-screen bg-[#f3f7f4] text-slate-800 antialiased" 
+      x-data="{ 
+          tab: new URLSearchParams(window.location.search).get('tab') || 'overview',
+          setTab(t) {
+              this.tab = t;
+              const url = new URL(window.location.href);
+              url.searchParams.set('tab', t);
+              window.history.pushState({}, '', url);
+          }
+      }">
+
+    <!-- Top Admin Header -->
+    <header class="sticky top-0 z-40 border-b border-emerald-900/20 bg-[#063f2e] text-white shadow-md">
+        <div class="flex h-[72px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <!-- Brand -->
             <div class="flex items-center gap-3">
+                <a asp-controller="Admin" asp-action="Dashboard" @@click.prevent="setTab('overview')" class="flex shrink-0 items-center gap-3 group">
+                    <img src="~/images/dawab-mark.svg" alt="شعار دواب" class="h-10 w-10 rounded-xl bg-white/10 p-1 transition-transform group-hover:scale-105" asp-append-version="true" />
+                    <div>
+                        <span class="text-xl font-black tracking-tight text-white block">دَوَابّ</span>
+                        <span class="text-[10px] font-bold text-emerald-200/80 -mt-1 block">لوحة الإدارة المركزية</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Center Status Badge -->
+            <div class="hidden md:flex items-center gap-2 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15 text-xs text-emerald-100 font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>النظام متصل • قاعدة بيانات SQL Server</span>
+            </div>
+
+            <!-- Right Controls: View Site & User Info -->
+            <div class="flex items-center gap-3">
+                <a asp-controller="Home" asp-action="Index" target="_blank" 
+                   class="hidden sm:inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3.5 py-2 rounded-xl border border-white/15 transition-all">
+                    <span>زيارة المنصة</span>
+                    <i data-lucide="external-link" class="w-3.5 h-3.5 text-emerald-300"></i>
+                </a>
+
                 <div class="hidden text-left sm:block">
-                    <span class="block text-sm font-bold">@Context.Session.GetString("UserName")</span>
-                    <span class="block text-[11px] text-emerald-100/70">مدير عام</span>
+                    <span class="block text-sm font-black text-white">@Context.Session.GetString("UserName")</span>
+                    <span class="block text-[11px] text-emerald-200/70 font-semibold">المدير العام</span>
                 </div>
-                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10"><i data-lucide="user-round" class="h-5 w-5"></i></span>
-                <a asp-controller="Auth" asp-action="Logout" class="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold transition hover:bg-white/20">خروج</a>
+
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-emerald-200">
+                    <i data-lucide="shield-check" class="h-5 w-5"></i>
+                </div>
+
+                <a asp-controller="Auth" asp-action="Logout" 
+                   class="rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/30 px-3 py-2 text-xs font-bold transition-colors">
+                    خروج
+                </a>
             </div>
         </div>
     </header>
 
-    <div class="mx-auto flex min-h-[calc(100vh-70px)] max-w-[1800px] flex-col lg:flex-row">
-        <aside class="shrink-0 bg-[#063f2e] text-white lg:sticky lg:top-[70px] lg:h-[calc(100vh-70px)] lg:w-[270px]">
-            <div class="hidden border-b border-white/10 px-6 py-6 lg:block">
-                <p class="text-xs font-bold tracking-widest text-emerald-200/60">مساحة الإدارة</p>
-                <p class="mt-1 text-lg font-black">إدارة منصة دواب</p>
+    <!-- Main Admin Shell: Sidebar + Content (Full Width, Sidebar pinned to right edge) -->
+    <div class="flex min-h-[calc(100vh-72px)] w-full flex-col lg:flex-row">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="shrink-0 bg-[#053224] text-white lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:w-[260px] border-l border-emerald-900/30 flex flex-col justify-between">
+            <div class="py-4">
+                <div class="px-5 py-3 hidden lg:block border-b border-white/10 mb-2">
+                    <span class="text-[11px] font-bold text-emerald-300/60 uppercase tracking-widest block">الأقسام والعمليات</span>
+                </div>
+
+                <nav class="flex gap-1.5 overflow-x-auto px-3 py-2 lg:flex-col lg:overflow-y-auto lg:px-3 lg:py-0" aria-label="القائمة الرئيسية">
+                    <!-- Tab 1: Overview -->
+                    <button @@click="setTab('overview')" 
+                            :class="tab === 'overview' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="layout-dashboard" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>الرئيسية والإحصائيات</span>
+                    </button>
+
+                    <!-- Tab 2: Investments -->
+                    <button @@click="setTab('investments')" 
+                            :class="tab === 'investments' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center justify-between rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="wallet-cards" class="h-4.5 w-4.5 shrink-0"></i>
+                            <span>التحويلات والطلبات</span>
+                        </div>
+                    </button>
+
+                    <!-- Tab 3: Cycles -->
+                    <button @@click="setTab('cycles')" 
+                            :class="tab === 'cycles' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="calendar-days" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>إدارة دورات التسمين</span>
+                    </button>
+
+                    <!-- Tab 4: Users & KYC -->
+                    <button @@click="setTab('users')" 
+                            :class="tab === 'users' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="users-round" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>المستخدمون والتوثيق (KYC)</span>
+                    </button>
+
+                    <!-- Tab 5: Animals Catalog -->
+                    <button @@click="setTab('animals')" 
+                            :class="tab === 'animals' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="beef" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>سلالات الثروة الحيوانية</span>
+                    </button>
+
+                    <!-- Tab 6: Settlements -->
+                    <button @@click="setTab('payouts')" 
+                            :class="tab === 'payouts' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="receipt-text" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>تسويات الأرباح</span>
+                    </button>
+
+                    <!-- Tab 7: Monitoring -->
+                    <button @@click="setTab('monitoring')" 
+                            :class="tab === 'monitoring' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="line-chart" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>المتابعة والأوزان البيطرية</span>
+                    </button>
+
+                    <!-- Tab 8: Insurance -->
+                    <button @@click="setTab('insurance')" 
+                            :class="tab === 'insurance' ? 'bg-emerald-600 text-white shadow-md font-black' : 'text-emerald-100/75 hover:bg-white/10 hover:text-white font-bold'"
+                            class="flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-xs sm:text-sm text-right transition-all">
+                        <i data-lucide="shield-check" class="h-4.5 w-4.5 shrink-0"></i>
+                        <span>صندوق التأمين والمطالبات</span>
+                    </button>
+                </nav>
             </div>
-            <nav class="flex gap-2 overflow-x-auto px-3 py-3 lg:flex-col lg:overflow-y-auto lg:px-4 lg:py-5" aria-label="القائمة الرئيسية">
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="overview" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "overview" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="layout-dashboard" class="h-5 w-5"></i><span>الرئيسية</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="cycles" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "cycles" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="calendar-days" class="h-5 w-5"></i><span>إدارة الدورات</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="investments" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "investments" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="arrow-left-right" class="h-5 w-5"></i><span>المستثمرون والطلبات</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="users" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "users" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="users-round" class="h-5 w-5"></i><span>مراجعة أوراق المستخدمين</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="animals" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "animals" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="beef" class="h-5 w-5"></i><span>الثروة الحيوانية</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="payouts" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "payouts" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="file-check-2" class="h-5 w-5"></i><span>تسويات المستثمرين</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="monitoring" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "monitoring" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="chart-no-axes-column-increasing" class="h-5 w-5"></i><span>التقارير والمتابعة</span></a>
-                <a asp-controller="Admin" asp-action="Dashboard" asp-route-tab="insurance" class="flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition @(activeTab == "insurance" ? "bg-emerald-700 text-white shadow-lg" : "text-emerald-50/75 hover:bg-white/10 hover:text-white")"><i data-lucide="settings-2" class="h-5 w-5"></i><span>صندوق التأمين</span></a>
-            </nav>
-            <div class="mx-4 mb-5 hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-6 text-emerald-50/70 lg:block">
-                منصة دواب لإدارة ومتابعة الثروة الحيوانية والاستثمار.
+
+            <!-- Sidebar Footer Note -->
+            <div class="p-4 hidden lg:block border-t border-white/10 text-[11px] text-emerald-200/60 leading-relaxed">
+                <span>دَوَابّ © @DateTime.UtcNow.Year</span>
+                <span class="block text-[10px] text-emerald-300/40">نظام إدارة الإنتاج والاستثمار</span>
             </div>
         </aside>
 
-        <main class="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+        <!-- Main Content Area -->
+        <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="mb-5 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800"><i data-lucide="circle-check" class="h-5 w-5 shrink-0"></i><span>@TempData["SuccessMessage"]</span></div>
+                <div class="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800 shadow-sm animate-in fade-in">
+                    <i data-lucide="check-circle" class="h-5 w-5 shrink-0 text-green-600"></i>
+                    <span>@TempData["SuccessMessage"]</span>
+                </div>
             }
             @if (TempData["ErrorMessage"] != null)
             {
-                <div class="mb-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800"><i data-lucide="triangle-alert" class="h-5 w-5 shrink-0"></i><span>@TempData["ErrorMessage"]</span></div>
+                <div class="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800 shadow-sm animate-in fade-in">
+                    <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0 text-red-600"></i>
+                    <span>@TempData["ErrorMessage"]</span>
+                </div>
             }
+
             @RenderBody()
         </main>
     </div>
 
+    <!-- Modal Container for HTMX -->
     <div id="modal-container"></div>
+
     <script>
         lucide.createIcons();
         document.body.addEventListener('htmx:afterSwap', function() { lucide.createIcons(); });
+        document.addEventListener('alpine:initialized', function() { lucide.createIcons(); });
     </script>
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

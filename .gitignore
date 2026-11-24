@@ -31,3 +31,7 @@ dist-ssr
 
 # User-uploaded files must not be committed
 src/Dawab.Web/wwwroot/uploads/
+
+# Publish profiles
+*.pubxml.user
+

@@ -9,6 +9,10 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="11.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="11.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0" />
   </ItemGroup>
 

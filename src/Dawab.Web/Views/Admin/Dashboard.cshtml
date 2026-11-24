@@ -8,45 +8,269 @@
     var totalInvested = Model.Investments.Where(i => i.Status == Dawab.Domain.Enums.InvestmentStatus.Approved).Sum(i => i.Amount);
 }
 
-<div class="mx-auto max-w-[1500px] space-y-6" x-data="{ tab: new URLSearchParams(window.location.search).get('tab') || 'overview' }">
+<div class="mx-auto max-w-[1500px] space-y-6">
     <div class="flex flex-col gap-1 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div><p class="text-xs font-bold text-emerald-700">الرئيسية <span class="px-1 text-slate-300">/</span> لوحة تحكم الإدارة العامة</p><h1 class="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">لوحة تحكم الإدارة العامة</h1><p class="mt-1 text-sm text-slate-500">نظرة شاملة على الأداء والعمليات الرئيسية في منصة دواب.</p></div>
-        <span class="mt-2 inline-flex items-center gap-2 self-start rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 sm:mt-0"><i data-lucide="shield-check" class="h-4 w-4"></i>إدارة المنصة</span>
+        <div>
+            <p class="text-xs font-bold text-emerald-700">الرئيسية <span class="px-1 text-slate-300">/</span> لوحة تحكم الإدارة العامة</p>
+            <h1 class="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">لوحة تحكم الإدارة العامة</h1>
+            <p class="mt-1 text-sm text-slate-500">نظرة شاملة على الأداء والعمليات الرئيسية والطلبات العاجلة في منصة دواب.</p>
+        </div>
+        <span class="mt-2 inline-flex items-center gap-2 self-start rounded-full bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-800 border border-emerald-200 sm:mt-0 shadow-sm">
+            <i data-lucide="shield-check" class="h-4 w-4 text-emerald-600"></i>
+            <span>إدارة المنصة المعتمدة</span>
+        </span>
     </div>
+
     <!-- TAB 1: OVERVIEW -->
     <div x-show="tab === 'overview'" class="space-y-8 animate-in fade-in">
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <span class="block text-xs text-gray-400 font-bold">إجمالي المستخدمين</span>
-                <span class="text-3xl font-black text-gray-900 mt-1">@Model.Users.Count</span>
+        <!-- 4 Key Stat Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold uppercase tracking-wider">إجمالي المستخدمين</span>
+                    <span class="text-3xl font-black text-gray-900 mt-1 block">@Model.Users.Count</span>
+                    <span class="text-[11px] text-gray-500 mt-1 block">@Model.Users.Count(u => u.Role == Dawab.Domain.Enums.UserRole.Investor) مستثمر • @Model.Users.Count(u => u.Role == Dawab.Domain.Enums.UserRole.Breeder) مربي</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <span class="block text-xs text-gray-400 font-bold">الدورات النشطة</span>
-                <span class="text-3xl font-black text-primary mt-1">@activeCycles.Count</span>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold uppercase tracking-wider">الدورات النشطة</span>
+                    <span class="text-3xl font-black text-primary-700 mt-1 block">@activeCycles.Count</span>
+                    <span class="text-[11px] text-emerald-600 mt-1 block font-bold">@fundingCycles.Count دورة مفتوحة للتمويل</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-primary-700 flex items-center justify-center font-black">
+                    <i data-lucide="layers" class="w-6 h-6"></i>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <span class="block text-xs text-gray-400 font-bold">إجمالي الاستثمارات المعتمدة</span>
-                <span class="text-3xl font-black text-gray-900 mt-1">@totalInvested.ToString("N0") ج.م</span>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold uppercase tracking-wider">الاستثمارات المعتمدة</span>
+                    <span class="text-3xl font-black text-gray-900 mt-1 block">@totalInvested.ToString("N0") <span class="text-xs text-gray-500">ج.م</span></span>
+                    <span class="text-[11px] text-amber-600 mt-1 block font-bold">@pendingInvestments.Count طلب بانتظار التحقق</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
+                    <i data-lucide="wallet" class="w-6 h-6"></i>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <span class="block text-xs text-gray-400 font-bold">صندوق التأمين المزدوج</span>
-                <span class="text-3xl font-black text-yellow-600 mt-1">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") ج.م</span>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="block text-xs text-gray-400 font-bold uppercase tracking-wider">صندوق التأمين المزدوج</span>
+                    <span class="text-3xl font-black text-yellow-600 mt-1 block">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") <span class="text-xs text-gray-500">ج.م</span></span>
+                    <span class="text-[11px] text-emerald-600 mt-1 block font-bold">تغطية شاملة ضد النفوق والحوادث</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center font-black">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
             </div>
         </div>
 
-        <!-- Quick Actions Panel -->
-        <div class="bg-primary-900 text-white p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="space-y-1 text-center md:text-right">
-                <h3 class="text-xl font-black">أمان الحسابات والشفافية المالية</h3>
-                <p class="text-xs text-primary-100">يوجد @pendingInvestments.Count طلب تحويل بانتظار المراجعة، و @pendingCycles.Count دورة بانتظار الاعتماد، و @fundingCycles.Count دورة مفتوحة للتمويل.</p>
+        <!-- Quick Actions & Alerts Panel -->
+        <div class="bg-gradient-to-r from-[#041e08] via-[#063310] to-[#0d4a17] text-white p-7 sm:p-8 rounded-3xl shadow-lg border border-emerald-900/50 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-1.5 text-center md:text-right">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-bold border border-white/10">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    <span>مركز المتابعة والاعتمادات العاجلة</span>
+                </div>
+                <h3 class="text-xl font-black text-white">إدارة الحسابات والشفافية المالية</h3>
+                <p class="text-xs text-emerald-100/80 leading-relaxed max-w-xl">
+                    يوجد <b>@pendingInvestments.Count</b> طلب تحويل بانتظار المراجعة، و <b>@pendingCycles.Count</b> دورة بانتظار الاعتماد، و <b>@fundingCycles.Count</b> دورة مفتوحة للتمويل.
+                </p>
             </div>
-            <div class="flex gap-3">
-                <button data-dashboard-tab="investments" @@click="tab = 'investments'" class="bg-white text-primary font-black px-6 py-3 rounded-2xl text-xs hover:bg-gray-100 transition-colors">مراجعة التحويلات</button>
-                <button data-dashboard-tab="cycles" @@click="tab = 'cycles'" class="bg-primary-700 text-white font-black px-6 py-3 rounded-2xl text-xs hover:bg-primary-600 transition-colors">مراجعة الدورات</button>
+            <div class="flex flex-wrap gap-3 shrink-0">
+                <button @@click="setTab('investments')" class="bg-amber-400 hover:bg-amber-500 text-gray-950 font-black px-6 py-3 rounded-2xl text-xs transition-all shadow-md flex items-center gap-2">
+                    <i data-lucide="wallet-cards" class="w-4 h-4"></i>
+                    <span>مراجعة التحويلات (@pendingInvestments.Count)</span>
+                </button>
+                <button @@click="setTab('cycles')" class="bg-white/15 hover:bg-white/25 text-white font-bold px-6 py-3 rounded-2xl text-xs border border-white/20 transition-all flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>إدارة الدورات (@Model.Cycles.Count)</span>
+                </button>
             </div>
+        </div>
+
+        <!-- Urgent Section 1: Pending Investment Transfers Awaiting Approval -->
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden space-y-4">
+            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="receipt" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-gray-900 text-base">إيصالات التحويل البنكي بانتظار الاعتماد الفوري</h3>
+                        <p class="text-xs text-gray-500">تحقق من صحة الإيصال المرفوع عبر إنستاباي أو البنك واعتمد تفعيل العقد للمستثمر.</p>
+                    </div>
+                </div>
+                <button @@click="setTab('investments')" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 self-start sm:self-center">
+                    <span>عرض سجل كل التحويلات</span>
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            @if (pendingInvestments.Any())
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-gray-50 text-gray-500 font-bold border-y border-gray-100">
+                            <tr>
+                                <th class="p-4">المستثمر</th>
+                                <th class="p-4">الدورة المستهدفة</th>
+                                <th class="p-4">المبلغ والعدد</th>
+                                <th class="p-4">إيصال التحويل</th>
+                                <th class="p-4">تاريخ الطلب</th>
+                                <th class="p-4 text-center">القرار والإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach (var inv in pendingInvestments)
+                            {
+                                <tr class="hover:bg-amber-50/40 transition-colors">
+                                    <td class="p-4">
+                                        <span class="font-bold text-gray-900 block text-sm">@inv.InvestorName</span>
+                                        <span class="text-gray-400 text-[11px]">@inv.InvestorPhone</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <span class="font-bold text-gray-800">@inv.CycleAnimalType</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <span class="font-black text-gray-900 text-sm">@inv.Amount.ToString("N0") ج.م</span>
+                                        <span class="block text-[10px] text-gray-400">@inv.HeadsCount رأس ماشية</span>
+                                    </td>
+                                    <td class="p-4">
+                                        @if (!string.IsNullOrEmpty(inv.TransferReceiptUrl))
+                                        {
+                                            <a href="@inv.TransferReceiptUrl" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold border border-gray-200 text-[11px] transition-colors">
+                                                <i data-lucide="image" class="w-3.5 h-3.5 text-primary"></i>
+                                                <span>معاينة الإيصال</span>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-400 text-[11px]">لم يُرفق إيصال</span>
+                                        }
+                                    </td>
+                                    <td class="p-4 text-gray-500">
+                                        @inv.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <form asp-action="ApproveInvestment" asp-route-id="@inv.Id" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition-colors shadow-sm flex items-center gap-1">
+                                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                                    <span>اعتماد وتفعيل</span>
+                                                </button>
+                                            </form>
+                                            <form asp-action="RejectInvestment" asp-route-id="@inv.Id" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors border border-red-200">
+                                                    رفض
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-8 text-center space-y-2">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm">لا توجد طلبات تحويل معلقة حالياً</h4>
+                    <p class="text-xs text-gray-400">جميع التحويلات البنكية تمت مراجعتها واعتمادها بنجاح.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Urgent Section 2: Pending Cycles Submitted by Breeders -->
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden space-y-4">
+            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-gray-900 text-base">دورات تسمين جديدة بانتظار المراجعة والاعتماد</h3>
+                        <p class="text-xs text-gray-500">مراجعة دراسة الجدوى وتكلفة الحظيرة لطرح الدورة للمستثمرين.</p>
+                    </div>
+                </div>
+                <button @@click="setTab('cycles')" class="text-xs text-primary font-bold hover:underline flex items-center gap-1 self-start sm:self-center">
+                    <span>عرض جميع الدورات</span>
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            @if (pendingCycles.Any())
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-gray-50 text-gray-500 font-bold border-y border-gray-100">
+                            <tr>
+                                <th class="p-4">الدورة والنوع</th>
+                                <th class="p-4">المربي والمحافظة</th>
+                                <th class="p-4">الهدف المالي</th>
+                                <th class="p-4">سعر الرأس والعدد</th>
+                                <th class="p-4">فترة التسمين</th>
+                                <th class="p-4 text-center">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach (var c in pendingCycles)
+                            {
+                                <tr class="hover:bg-blue-50/40 transition-colors">
+                                    <td class="p-4 font-bold text-gray-900 text-sm">@c.AnimalType</td>
+                                    <td class="p-4">
+                                        <span class="font-bold text-gray-800 block">@c.BreederName</span>
+                                        <span class="text-gray-400 text-[11px]">@c.BreederGovernorate</span>
+                                    </td>
+                                    <td class="p-4 font-black text-gray-900">@c.FundingGoal.ToString("N0") ج.م</td>
+                                    <td class="p-4">
+                                        <span class="font-bold text-gray-800">@c.StartPricePerHead.ToString("N0") ج.م</span>
+                                        <span class="block text-[10px] text-gray-400">@c.TotalHeads رأس</span>
+                                    </td>
+                                    <td class="p-4 text-gray-600 font-medium">@c.ExpectedDurationDays يوم</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <form asp-action="ApproveCycle" asp-route-id="@c.Id" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="bg-primary hover:bg-primary-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition-colors shadow-sm">
+                                                    اعتماد وطرح للتمويل
+                                                </button>
+                                            </form>
+                                            <form asp-action="RejectCycle" asp-route-id="@c.Id" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors border border-red-200">
+                                                    رفض
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-8 text-center space-y-2">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm">لا توجد دورات تسمين معلقة</h4>
+                    <p class="text-xs text-gray-400">جميع دورات التسمين إما نشطة أو معتمدة ومفتوحة للتمويل.</p>
+                </div>
+            }
         </div>
     </div>
 

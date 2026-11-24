@@ -8,7 +8,15 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(ApplicationDbContext context)
     {
-        await context.Database.EnsureCreatedAsync();
+        if (context.Database.IsSqlServer())
+        {
+            await context.Database.MigrateAsync();
+        }
+        else
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
+
         await EnsureAnimalCatalogSchemaAsync(context);
         await SeedAnimalsAsync(context);
 
@@ -135,7 +143,7 @@ public static class DbInitializer
             StartDate = DateTime.UtcNow.AddDays(-60),
             ExpectedDurationDays = 180,
             Status = CycleStatus.Active,
-            ImageUrl = "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=800&q=80",
+            ImageUrl = "/images/cycles/calf.jpg",
             Description = "عجل خليط عالي التحويل، شراكة بين مستثمرين في مزرعة الحاج متولي.",
             IsBarnInsured = true,
             BarnInsuranceCost = 750,
@@ -163,7 +171,7 @@ public static class DbInitializer
             StartDate = DateTime.UtcNow,
             ExpectedDurationDays = 120,
             Status = CycleStatus.Funding,
-            ImageUrl = "https://images.unsplash.com/photo-1511117833452-482268548b01?auto=format&fit=crop&w=800&q=80",
+            ImageUrl = "/images/cycles/sheep.jpg",
             Description = "دورة تسمين جماعية لـ 5 رؤوس من غنم العساف الممتاز بسلالة محسنة.",
             IsBarnInsured = true,
             BarnInsuranceCost = 750,
@@ -185,7 +193,7 @@ public static class DbInitializer
             StartDate = DateTime.UtcNow,
             ExpectedDurationDays = 100,
             Status = CycleStatus.Pending,
-            ImageUrl = "https://images.unsplash.com/photo-1484557985045-6f550bb4377c?auto=format&fit=crop&w=800&q=80",
+            ImageUrl = "/images/cycles/ram.jpg",
             Description = "تسمين خروف برقي ممتاز بعزبة أولاد رجب. فرصة استثمارية قصيرة المدى.",
             IsBarnInsured = false,
             BarnInsuranceCost = 0

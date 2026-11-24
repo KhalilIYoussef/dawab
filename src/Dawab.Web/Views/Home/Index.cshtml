@@ -1,276 +1,565 @@
 ﻿@model Dawab.Application.DTOs.Dashboard.HomeDashboardDto
 @{
-    ViewData["Title"] = "دواب | نربط الاستثمار بالإنتاج الحيواني";
-}
-
-@{
+    ViewData["Title"] = "دَوَابّ | المنصة الأولى للاستثمار في الثروة الحيوانية والإنتاج الحقيقي";
     var featuredCycle = Model.FeaturedCycles.FirstOrDefault();
 }
 
-<!-- Welcome / Splash Hero -->
-<section class="relative isolate overflow-hidden bg-primary-900 text-white">
-    <div class="absolute inset-0 -z-10">
-        <img src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1800&q=85" alt="مزرعة في الريف" class="w-full h-full object-cover opacity-20" />
-        <div class="absolute inset-0 bg-gradient-to-l from-primary-900 via-primary-900/90 to-primary-900/50"></div>
-        <div class="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-green-500/10 blur-3xl"></div>
+<!-- Hero Section with Guaranteed Dark Green Background & Sharp Contrast -->
+<section class="relative isolate overflow-hidden hero-gradient-bg text-white">
+    <!-- Ambient Photo Watermark (Darkened and blended) -->
+    <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <img src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=2000&q=80" 
+             alt="مزارع الثروة الحيوانية" 
+             class="w-full h-full object-cover opacity-20 mix-blend-luminosity filter brightness-75" />
+        <div class="absolute inset-0 bg-[#041e08]/85"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#031706] via-transparent to-[#031706]/70"></div>
+        <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl"></div>
     </div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-            <div class="lg:col-span-7 text-center lg:text-right">
-                <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 text-green-100 text-xs font-bold border border-white/15 backdrop-blur">
-                    <i data-lucide="sprout" class="w-4 h-4"></i>
-                    منصة دواب للإنتاج الحيواني
-                </span>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mt-6">
-                    استثمار أقرب إلى <span class="text-yellow-300">الإنتاج الحقيقي</span>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-32">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            
+            <!-- Hero Text Content -->
+            <div class="lg:col-span-7 text-center lg:text-right space-y-6">
+                <!-- Trust Pill Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-emerald-200 text-xs sm:text-sm font-bold shadow-sm">
+                    <span class="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>المنصة الأولى للاستثمار التشاركي الحيواني في مصر</span>
+                    <span class="text-white/40">•</span>
+                    <span class="text-amber-300 font-extrabold">متوافق 100% مع الشريعة</span>
+                </div>
+
+                <!-- Main Headline -->
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] text-white">
+                    استثمر في <span class="text-amber-400">الإنتاج الحيواني</span> بعوائد حقيقية وضمانات موثقة
                 </h1>
-                <p class="text-base sm:text-lg text-white/75 leading-8 max-w-2xl mx-auto lg:mx-0 mt-5">
-                    دواب تنظم التعاون بين المستثمر والمربي في دورات تسمين واضحة الخطوات؛ من عرض بيانات الدورة ومراجعتها، إلى متابعة سجلاتها وتسويتها.
+
+                <!-- Subtitle with high contrast -->
+                <p class="text-base sm:text-lg text-emerald-100/90 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
+                    نربطك بأفضل مزارع التسمين المؤهلة بعقود إلكترونية رسمية، إشراف بيطري حكومي وخاص، وتأمين شامل مزدوج لحماية رأس مالك طوال دورة الإنتاج.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mt-8">
-                    @if (Context.Session.GetString("UserRole") == "Breeder")
-                    {
-                        <a asp-controller="Breeder" asp-action="CreateCycle" class="inline-flex items-center justify-center gap-2 bg-white text-primary-900 hover:bg-green-50 font-black px-7 py-3.5 rounded-2xl transition-colors">
-                            <i data-lucide="plus" class="w-5 h-5"></i>
-                            أنشئ دورة إنتاج
-                        </a>
-                    }
-                    else if (Context.Session.GetString("UserRole") == "Investor")
-                    {
-                        <a asp-controller="Cycles" asp-action="Index" class="inline-flex items-center justify-center gap-2 bg-white text-primary-900 hover:bg-green-50 font-black px-7 py-3.5 rounded-2xl transition-colors">
-                            استكشف الدورات المتاحة
-                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        </a>
-                    }
-                    else if (Context.Session.GetString("UserId") == null)
-                    {
-                        <a asp-controller="Home" asp-action="Onboarding" class="inline-flex items-center justify-center gap-2 bg-white text-primary-900 hover:bg-green-50 font-black px-7 py-3.5 rounded-2xl transition-colors">
-                            ابدأ رحلتك مع دواب
-                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        </a>
-                        <a asp-controller="Cycles" asp-action="Index" class="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-bold px-7 py-3.5 rounded-2xl transition-colors">تصفح الدورات</a>
-                    }
-                    else
-                    {
-                        <a asp-controller="Admin" asp-action="Dashboard" class="inline-flex items-center justify-center gap-2 bg-white text-primary-900 hover:bg-green-50 font-black px-7 py-3.5 rounded-2xl transition-colors">لوحة الإدارة</a>
-                    }
-                    <a href="#vision" class="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-bold px-7 py-3.5 rounded-2xl transition-colors">
-                        اكتشف رؤيتنا
-                        <i data-lucide="arrow-down" class="w-4 h-4"></i>
+
+                <!-- Action CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+                    <a href="#calculator" 
+                       class="inline-flex items-center justify-center gap-2.5 bg-amber-500 hover:bg-amber-600 text-gray-950 font-black px-8 py-4 rounded-2xl transition-all shadow-xl shadow-amber-500/25 hover:scale-[1.02]">
+                        <i data-lucide="calculator" class="w-5 h-5 text-gray-950"></i>
+                        <span>احسب أرباحك التقديرية</span>
+                    </a>
+
+                    <a asp-controller="Cycles" asp-action="Index" 
+                       class="inline-flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white font-bold px-8 py-4 rounded-2xl border-2 border-white/30 backdrop-blur transition-all">
+                        <span>تصفح الدورات المتاحة</span>
+                        <i data-lucide="arrow-left" class="w-5 h-5 text-white"></i>
                     </a>
                 </div>
-                <div class="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-3 mt-8 text-xs sm:text-sm text-white/70">
-                    <span class="inline-flex items-center gap-2"><i data-lucide="clipboard-check" class="w-4 h-4 text-green-300"></i>معلومات منظمة للدورة</span>
-                    <span class="inline-flex items-center gap-2"><i data-lucide="activity" class="w-4 h-4 text-green-300"></i>سجلات لمتابعة التقدم</span>
-                    <span class="inline-flex items-center gap-2"><i data-lucide="users-round" class="w-4 h-4 text-green-300"></i>مساحة مشتركة للمستثمر والمربي</span>
+
+                <!-- Feature Highlights Under CTA -->
+                <div class="grid grid-cols-3 gap-3 pt-6 border-t border-white/15 text-xs sm:text-sm text-white">
+                    <div class="flex items-center gap-2 justify-center lg:justify-start">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-400/30">
+                            <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold">عقود رسمية ملزمة</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 justify-center lg:justify-start">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0 border border-blue-400/30">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold">تأمين شامل 100%</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 justify-center lg:justify-start">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/30">
+                            <i data-lucide="stethoscope" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold">رعاية بيطرية دورية</span>
+                    </div>
                 </div>
-                @if (Context.Session.GetString("UserId") == null)
-                {
-                    <a asp-controller="Home" asp-action="Splash" class="inline-flex items-center gap-2 text-sm font-bold text-green-200 hover:text-white mt-6 transition-colors">
-                        <i data-lucide="play-circle" class="w-4 h-4"></i>
-                        شاهد مقدمة دواب
-                    </a>
-                }
             </div>
 
-            <div class="lg:col-span-5 max-w-lg mx-auto w-full">
-                <div class="relative bg-white/10 rounded-[2rem] p-3 border border-white/15 shadow-2xl backdrop-blur-sm">
+            <!-- Right Hero Card / Live Opportunity Preview -->
+            <div class="lg:col-span-5 max-w-md mx-auto w-full">
+                <div class="relative bg-black/40 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl space-y-4">
+                    <!-- Header of preview card -->
+                    <div class="flex justify-between items-center pb-3 border-b border-white/15">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span class="text-xs font-bold text-white tracking-wide">فرصة تسمين مميزة الآن</span>
+                        </div>
+                        <span class="bg-amber-400 text-gray-950 text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm">
+                            عائد متوقع 22% - 28%
+                        </span>
+                    </div>
+
                     @if (featuredCycle != null)
                     {
-                        <a asp-controller="Cycles" asp-action="Details" asp-route-id="@featuredCycle.Id" class="block group">
-                            <div class="relative h-64 sm:h-72 rounded-[1.4rem] overflow-hidden">
-                                <img src="@(string.IsNullOrWhiteSpace(featuredCycle.ImageUrl) ? "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=900&q=80" : featuredCycle.ImageUrl)" alt="@featuredCycle.AnimalType" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <span class="absolute top-4 right-4 bg-white/95 text-primary-900 px-3 py-1.5 rounded-full text-xs font-black">من الدورات المتاحة</span>
-                            </div>
-                            <div class="px-3 pt-4 pb-2">
-                                <div class="flex items-start justify-between gap-3">
-                                    <h2 class="font-black text-white text-lg">@featuredCycle.AnimalType</h2>
-                                    <span class="text-xs text-green-100 shrink-0">@featuredCycle.RemainingFunding.ToString("N0") ج.م متبقية</span>
+                        <div class="space-y-4">
+                            <!-- Image Container -->
+                            <div class="relative h-56 rounded-2xl overflow-hidden group">
+                                <img src="@(string.IsNullOrWhiteSpace(featuredCycle.ImageUrl) ? "https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&w=900&q=80" : featuredCycle.ImageUrl)" 
+                                     alt="@featuredCycle.AnimalType" 
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30"></div>
+                                <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-xl border border-white/20">
+                                    دورة @featuredCycle.ExpectedDurationDays يوم
                                 </div>
-                                <p class="text-xs text-white/65 mt-2 line-clamp-2">@featuredCycle.Description</p>
-                                <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden mt-4">
-                                    <div class="bg-yellow-300 h-full rounded-full" style="width: @featuredCycle.FundingProgressPercentage%"></div>
+                                <div class="absolute bottom-3 right-3 left-3 text-white">
+                                    <h3 class="text-xl font-black drop-shadow">@featuredCycle.AnimalType</h3>
+                                    <p class="text-xs text-amber-300 font-bold mt-0.5">سعر الرأس: @featuredCycle.StartPricePerHead.ToString("N0") ج.م</p>
                                 </div>
-                                <div class="flex justify-between text-[11px] text-white/70 mt-2"><span>التقدم في التمويل</span><span>@featuredCycle.FundingProgressPercentage%</span></div>
                             </div>
-                        </a>
+
+                            <!-- Metrics Grid inside card -->
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="bg-white/10 border border-white/15 rounded-xl p-3">
+                                    <span class="text-white/70 block text-[11px] font-medium">الوزن الحالي / المستهدف</span>
+                                    <span class="text-white font-bold text-sm">@featuredCycle.InitialWeight.ToString("N0") كجم ← @featuredCycle.TargetWeight.ToString("N0") كجم</span>
+                                </div>
+                                <div class="bg-white/10 border border-white/15 rounded-xl p-3">
+                                    <span class="text-white/70 block text-[11px] font-medium">المتبقي للتمويل</span>
+                                    <span class="text-emerald-300 font-bold text-sm">@featuredCycle.RemainingFunding.ToString("N0") ج.م</span>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="space-y-1.5">
+                                <div class="flex justify-between text-xs text-white font-bold">
+                                    <span>اكتمال تمويل الدورة</span>
+                                    <span class="text-amber-300 font-black">@featuredCycle.FundingProgressPercentage%</span>
+                                </div>
+                                <div class="w-full bg-white/20 h-2.5 rounded-full overflow-hidden p-0.5">
+                                    <div class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full rounded-full transition-all duration-700" 
+                                         style="width: @featuredCycle.FundingProgressPercentage%"></div>
+                                </div>
+                            </div>
+
+                            <!-- CTA in card -->
+                            <div class="pt-2">
+                                <a asp-controller="Cycles" asp-action="Details" asp-route-id="@featuredCycle.Id" 
+                                   class="w-full py-3.5 bg-white hover:bg-emerald-50 text-gray-950 font-black rounded-xl text-center text-sm transition-all flex items-center justify-center gap-2 shadow-lg">
+                                    <span>عرض التفاصيل والدراسة الكاملة</span>
+                                    <i data-lucide="chevron-left" class="w-4 h-4 text-gray-950"></i>
+                                </a>
+                            </div>
+                        </div>
                     }
                     else
                     {
-                        <div class="relative h-64 sm:h-72 rounded-[1.4rem] overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=900&q=80" alt="مزرعة في الريف" class="w-full h-full object-cover" />
-                            <div class="absolute inset-0 bg-gradient-to-t from-primary-900/90 via-primary-900/10 to-transparent"></div>
-                            <div class="absolute bottom-5 right-5 left-5">
-                                <span class="text-xs font-bold text-green-200">الفكرة ببساطة</span>
-                                <p class="text-xl font-black mt-1">دورة واضحة. متابعة مستمرة. تعاون منظم.</p>
-                            </div>
+                        <div class="p-8 text-center space-y-3">
+                            <i data-lucide="sprout" class="w-12 h-12 text-emerald-400 mx-auto"></i>
+                            <h4 class="font-bold text-white">دورات تسمين جديدة قيد الإعداد</h4>
+                            <p class="text-xs text-white/70">يتم فحص مزارع جديدة وإعداد عقود التسمين وسنعلن عنها قريباً.</p>
+                            <a asp-controller="Cycles" asp-action="Index" class="inline-block bg-white text-gray-950 font-bold px-4 py-2 rounded-xl text-xs">تصفح الأرشيف</a>
                         </div>
-                        <p class="text-xs leading-6 text-white/65 px-3 py-3">لا توجد دورات متاحة للعرض حالياً. تعرّف على طريقة عمل المنصة وكن أول من يستكشف الفرص عند إتاحتها.</p>
                     }
                 </div>
             </div>
+
         </div>
     </div>
 </section>
 
-<!-- Platform Snapshot -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-7 sm:-mt-10 relative z-20">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-primary-700">
-                <i data-lucide="layers" class="w-7 h-7"></i>
+<!-- Live Stats Overview Bar -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 sm:-mt-12 relative z-20">
+    <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 sm:p-8">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-gray-100">
+            
+            <div class="flex items-center gap-4 pt-4 sm:pt-0">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-primary-700 flex items-center justify-center shrink-0 border border-emerald-100">
+                    <i data-lucide="wallet" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-gray-400 uppercase">حجم الاستثمارات الموجهة</span>
+                    <span class="text-2xl sm:text-3xl font-black text-gray-900">@Model.TotalInvestedAmount.ToString("N0") <span class="text-xs font-bold text-gray-500">ج.م</span></span>
+                </div>
             </div>
-            <div>
-                <p class="text-xs text-gray-500 font-medium">إجمالي الدورات</p>
-                <p class="text-2xl font-black text-gray-900">@Model.TotalCyclesCount دورة</p>
-            </div>
-        </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center text-secondary">
-                <i data-lucide="tractor" class="w-7 h-7"></i>
+            <div class="flex items-center gap-4 pt-4 sm:pt-0 sm:pr-6">
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-100">
+                    <i data-lucide="layers" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-gray-400 uppercase">دورات التسمين الموثقة</span>
+                    <span class="text-2xl sm:text-3xl font-black text-gray-900">@Model.TotalCyclesCount <span class="text-xs font-bold text-gray-500">دورة</span></span>
+                </div>
             </div>
-            <div>
-                <p class="text-xs text-gray-500 font-medium">المربون النشطون</p>
-                <p class="text-2xl font-black text-gray-900">@Model.ActiveBreederCount مزارع</p>
-            </div>
-        </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <i data-lucide="banknote" class="w-7 h-7"></i>
+            <div class="flex items-center gap-4 pt-4 sm:pt-0 sm:pr-6">
+                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-100">
+                    <i data-lucide="tractor" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-gray-400 uppercase">المربون المعتمدون</span>
+                    <span class="text-2xl sm:text-3xl font-black text-gray-900">@Model.ActiveBreederCount <span class="text-xs font-bold text-gray-500">مزرعة</span></span>
+                </div>
             </div>
-            <div>
-                <p class="text-xs text-gray-500 font-medium">الاستثمارات المنفذة</p>
-                <p class="text-2xl font-black text-gray-900">@Model.TotalInvestedAmount.ToString("N0") ج.م</p>
-            </div>
-        </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600">
-                <i data-lucide="shield-check" class="w-7 h-7"></i>
+            <div class="flex items-center gap-4 pt-4 sm:pt-0 sm:pr-6">
+                <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0 border border-purple-100">
+                    <i data-lucide="shield-check" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-gray-400 uppercase">احتياطي صندوق التأمين</span>
+                    <span class="text-2xl sm:text-3xl font-black text-gray-900">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") <span class="text-xs font-bold text-gray-500">ج.م</span></span>
+                </div>
             </div>
-            <div>
-                <p class="text-xs text-gray-500 font-medium">رصيد صندوق التأمين</p>
-                <p class="text-2xl font-black text-gray-900">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") ج.م</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- Vision and How Dawab Works -->
-<section id="vision" class="bg-white border-y border-gray-100 mt-16 sm:mt-20 scroll-mt-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-        <div class="max-w-3xl mx-auto text-center">
-            <span class="text-xs font-black text-primary">رؤيتنا</span>
-            <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mt-3">سلسلة إنتاج أكثر وضوحاً وترابطاً</h2>
-            <p class="text-sm sm:text-base text-gray-600 leading-8 mt-4">نؤمن أن تطوير الإنتاج الحيواني يحتاج إلى تعاون عملي بين من يملك رأس المال ومن يمتلك الخبرة والمزرعة. تعمل دواب على تنظيم هذا التعاون رقمياً، وتوثيق خطوات الدورة ومعلوماتها بما يساعد أطرافها على المتابعة واتخاذ قرارات أوضح.</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
-            <article class="rounded-2xl bg-gray-50 border border-gray-100 p-5">
-                <div class="w-11 h-11 rounded-xl bg-green-100 text-primary flex items-center justify-center"><i data-lucide="file-search" class="w-5 h-5"></i></div>
-                <h3 class="font-black text-gray-900 mt-4">١. بيانات ومراجعة</h3>
-                <p class="text-xs leading-6 text-gray-600 mt-2">تُعرض بيانات الدورة وتخضع للمراجعة قبل إتاحتها، حتى يعرف المشاركون تفاصيلها الأساسية.</p>
-            </article>
-            <article class="rounded-2xl bg-gray-50 border border-gray-100 p-5">
-                <div class="w-11 h-11 rounded-xl bg-orange-100 text-secondary flex items-center justify-center"><i data-lucide="handshake" class="w-5 h-5"></i></div>
-                <h3 class="font-black text-gray-900 mt-4">٢. مشاركة منظمة</h3>
-                <p class="text-xs leading-6 text-gray-600 mt-2">تربط المنصة المستثمر بالدورة، وتدير طلب الاستثمار والمستندات المرتبطة به.</p>
-            </article>
-            <article class="rounded-2xl bg-gray-50 border border-gray-100 p-5">
-                <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div>
-                <h3 class="font-black text-gray-900 mt-4">٣. متابعة موثقة</h3>
-                <p class="text-xs leading-6 text-gray-600 mt-2">يسجل المربي تحديثات الدورة، مثل الأوزان والتغذية والرعاية البيطرية، لتكون متاحة للمتابعة.</p>
-            </article>
-            <article class="rounded-2xl bg-gray-50 border border-gray-100 p-5">
-                <div class="w-11 h-11 rounded-xl bg-yellow-100 text-yellow-700 flex items-center justify-center"><i data-lucide="receipt-text" class="w-5 h-5"></i></div>
-                <h3 class="font-black text-gray-900 mt-4">٤. إغلاق وتسوية</h3>
-                <p class="text-xs leading-6 text-gray-600 mt-2">عند إتمام الدورة، تُدار بيانات التسوية والتوزيعات عبر إجراءات المنصة.</p>
-            </article>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-10">
-            <div class="flex gap-4 rounded-3xl bg-primary-900 text-white p-6 sm:p-8">
-                <div class="w-12 h-12 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center"><i data-lucide="eye" class="w-6 h-6 text-green-200"></i></div>
-                <div><h3 class="text-lg font-black">وضوح قبل الوعود</h3><p class="text-sm text-white/70 leading-7 mt-2">الاستثمار في الإنتاج يرتبط بمخاطر تشغيل وسوق. تعرض دواب بيانات الدورة وسجلاتها لمساعدة المستخدم على الفهم، ولا تضمن عائداً أو نتيجة إنتاجية.</p></div>
-            </div>
-            <div class="flex gap-4 rounded-3xl bg-primary-50 border border-primary-100 p-6 sm:p-8">
-                <div class="w-12 h-12 shrink-0 rounded-2xl bg-white flex items-center justify-center text-primary"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
-                <div><h3 class="text-lg font-black text-gray-900">إجراءات حماية بحسب الدورة</h3><p class="text-sm text-gray-600 leading-7 mt-2">تظهر تفاصيل العقود والتغطيات التأمينية، إن وجدت، ضمن معلومات الدورة ومستنداتها. راجع الشروط والاستثناءات قبل اتخاذ قرارك.</p></div>
-            </div>
         </div>
     </div>
 </section>
 
-<!-- Featured Cycles Section -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
+<!-- Trust & Why Dawab Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+        <span class="text-xs font-black text-primary-700 uppercase tracking-wider bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">
+            لماذا يثق بنا المستثمرون والمربون؟
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-gray-900">
+            أعلى معايير الأمان المالي والتشغيلي
+        </h2>
+        <p class="text-gray-600 text-sm sm:text-base leading-relaxed">
+            الاستثمار في الإنتاج الحيواني مع منصة دواب ليس مجرد تمويل، بل منظومة متكاملة تضمن لك الشفافية من اليوم الأول وحتى لحظة تسوية الأرباح.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+        <!-- Feature 1 -->
+        <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-primary-700 flex items-center justify-center">
+                <i data-lucide="scale" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">توافق شرعي تام</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                مضاربة ومشاركة حقيقية قائمة على الشراء والبيع الفعلي لرؤوس الماشية، بدون فوائد ربوية أو عوائد ثابتة محرمة.
+            </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <i data-lucide="shield-alert" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">تأمين شامل مزدوج</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                وثيقة تأمين حياة الماشية ضد النفوق والأوبئة بنسبة 3%، بالإضافة إلى تأمين الحظيرة المعتمد ضد الحوادث والحرائق.
+            </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <i data-lucide="video" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">متابعة لحظية مصورة</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                تقارير دورية تشمل أوزان الماشية، جداول الأعلاف، الفحوصات البيطرية، وتوثيق مصور بالفيديو لحالة مواشيك في المزرعة.
+            </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <i data-lucide="file-signature" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-900">عقود مدنية موثقة</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                عقد استثماري قانوني رسمي يحدد حقوق الطرفين بدقة، مع أرقام تعريفية لكل رأس ماشية مسجلة باسم المستثمر.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Interactive Investment Calculator (Powered by Alpine.js) -->
+<section id="calculator" class="bg-gradient-to-b from-gray-50 to-white py-20 border-y border-gray-100 scroll-mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto space-y-3 mb-14">
+            <span class="text-xs font-black text-amber-800 uppercase tracking-wider bg-amber-100 px-4 py-1.5 rounded-full border border-amber-300">
+                حاسبة الأرباح التقديرية
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-black text-gray-900">
+                خطط لاستثمارك وتوقع أرباحك
+            </h2>
+            <p class="text-gray-600 text-sm leading-relaxed">
+                حرك المؤشر لاختيار مبلغ الاستثمار واكتشف العائد الصافي المتوقع لدورة تسمين نموذجية مدتها 6 أشهر (180 يوماً).
+            </p>
+        </div>
+
+        <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 p-8 sm:p-12" 
+             x-data="{ 
+                amount: 60000,
+                headPrice: 30000,
+                roiRate: 0.24,
+                get headsCount() { return Math.max(1, Math.floor(this.amount / this.headPrice)) },
+                get expectedProfit() { return Math.round(this.amount * this.roiRate) },
+                get totalPayout() { return this.amount + this.expectedProfit },
+                setQuickAmount(val) { this.amount = val }
+             }">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                
+                <!-- Controls Column -->
+                <div class="lg:col-span-7 space-y-8">
+                    <!-- Slider Block -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-sm font-bold text-gray-800">مبلغ الاستثمار المفضل:</label>
+                            <span class="text-2xl font-black text-primary-800" x-text="Number(amount).toLocaleString('ar-EG') + ' ج.م'"></span>
+                        </div>
+
+                        <input type="range" 
+                               min="10000" 
+                               max="300000" 
+                               step="5000" 
+                               x-model.number="amount"
+                               class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-700 focus:outline-none" />
+
+                        <div class="flex justify-between text-[11px] text-gray-500 font-bold">
+                            <span>10,000 ج.م</span>
+                            <span>150,000 ج.م</span>
+                            <span>300,000 ج.م</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Pre-set Buttons -->
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-gray-600 block">اختيار سريع للمبالغ الشائعة:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button @@click="setQuickAmount(30000)" 
+                                    :class="amount === 30000 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                                30,000 ج.م (1 رأس)
+                            </button>
+                            <button @@click="setQuickAmount(60000)" 
+                                    :class="amount === 60000 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                                60,000 ج.م (2 رأس)
+                            </button>
+                            <button @@click="setQuickAmount(150000)" 
+                                    :class="amount === 150000 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                                150,000 ج.م (5 رؤوس)
+                            </button>
+                            <button @@click="setQuickAmount(300000)" 
+                                    :class="amount === 300000 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                                300,000 ج.م (10 رؤوس)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-amber-700 shrink-0 mt-0.5"></i>
+                        <p class="leading-relaxed">
+                            هذه الحاسبة تقديرية مبنية على متوسط أداء دورات التسمين السابقة (متوسط 24% في 6 أشهر بعد خصم عمولة المنصة وحصة المربي). تخضع النتيجة النهائية لأسعار بيع السوق الحي عند إغلاق الدورة.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Result Card Column with Guaranteed Dark Green Gradient -->
+                <div class="lg:col-span-5 cta-gradient-bg text-white p-7 rounded-3xl shadow-xl space-y-6 border border-emerald-900">
+                    <div class="flex justify-between items-center border-b border-white/15 pb-4">
+                        <span class="text-xs font-bold text-emerald-200">العائد الصافي المتوقع</span>
+                        <span class="bg-amber-400 text-gray-950 font-black text-xs px-2.5 py-1 rounded-full shadow-sm">
+                            متوسط 24% / 6 أشهر
+                        </span>
+                    </div>
+
+                    <div class="space-y-4 text-sm">
+                        <div class="flex justify-between items-center text-white/90">
+                            <span>عدد الرؤوس التقديري:</span>
+                            <span class="font-black text-white text-base" x-text="headsCount + ' رأس ماشية'"></span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-white/90">
+                            <span>فترة دورة التسمين:</span>
+                            <span class="font-bold text-white">6 أشهر (180 يوماً)</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-emerald-300">
+                            <span class="font-bold">صافي الأرباح المتوقعة:</span>
+                            <span class="font-black text-lg" x-text="Number(expectedProfit).toLocaleString('ar-EG') + ' ج.م'"></span>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/15 flex justify-between items-center">
+                            <div>
+                                <span class="block text-xs text-emerald-100/70">إجمالي المسترد (رأس المال + الربح)</span>
+                                <span class="text-2xl font-black text-amber-300" x-text="Number(totalPayout).toLocaleString('ar-EG') + ' ج.م'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a asp-controller="Cycles" asp-action="Index" 
+                       class="w-full py-4 bg-amber-500 hover:bg-amber-600 text-gray-950 font-black rounded-xl text-center text-sm transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
+                        <span>استثمر الآن في الدورات النشطة</span>
+                        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-950"></i>
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- How Dawab Works (Step by Step) -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="text-center max-w-2xl mx-auto space-y-3 mb-16">
+        <span class="text-xs font-black text-primary-700 uppercase tracking-wider bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">
+            خطوات بسيطة ومضمونة
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-gray-900">
+            كيف تبدأ استثمارك في 4 خطوات؟
+        </h2>
+        <p class="text-gray-600 text-sm leading-relaxed">
+            منصة رقمية سلسة تتيح لك إدارة ومتابعة استثمارك في الثروة الحيوانية من هاتفك في أي مكان.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+        
+        <!-- Step 1 -->
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative group hover:-translate-y-1 transition-all">
+            <span class="w-10 h-10 rounded-2xl bg-primary text-white font-black text-sm flex items-center justify-center mb-5 shadow-md shadow-primary/20">
+                1
+            </span>
+            <h3 class="font-black text-gray-900 text-lg mb-2">اختر الدورة المناسبة</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                تصفح دورات التسمين النشطة، راجع نوع الماشية، فترة التسمين، وموقع المزرعة وخبرة المربي المعتمد.
+            </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative group hover:-translate-y-1 transition-all">
+            <span class="w-10 h-10 rounded-2xl bg-primary text-white font-black text-sm flex items-center justify-center mb-5 shadow-md shadow-primary/20">
+                2
+            </span>
+            <h3 class="font-black text-gray-900 text-lg mb-2">وثق العقد وحول المبلغ</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                حدد عدد الرؤوس أو المبلغ، ارفع إيصال التحويل البنكي أو إنستاباي، ويتم إصدار عقدك الاستثماري الموثق فوراً.
+            </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative group hover:-translate-y-1 transition-all">
+            <span class="w-10 h-10 rounded-2xl bg-primary text-white font-black text-sm flex items-center justify-center mb-5 shadow-md shadow-primary/20">
+                3
+            </span>
+            <h3 class="font-black text-gray-900 text-lg mb-2">تابع النمو بالفيديو</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                استلم سجلات دورية مصورة عن زيادة الأوزان، جرعات التطعيم، وجودة الأعلاف المستهلكة من داخل الحظيرة.
+            </p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative group hover:-translate-y-1 transition-all">
+            <span class="w-10 h-10 rounded-2xl bg-amber-500 text-gray-950 font-black text-sm flex items-center justify-center mb-5 shadow-md shadow-amber-500/20">
+                4
+            </span>
+            <h3 class="font-black text-gray-900 text-lg mb-2">استلم رأس المال والأرباح</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+                عند انتهاء الدورة وبيع الماشية في المزاد أو للأسواق الكبرى، تُحول أرباحك ورأس مالك مباشرة لحسابك البنكي.
+            </p>
+        </div>
+
+    </div>
+</section>
+
+<!-- Active Featured Cycles Grid -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-gray-100">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-12">
         <div>
-            <div class="text-xs font-bold text-primary uppercase tracking-wider mb-1">فرص مميزة</div>
-            <h2 class="text-3xl font-black text-gray-900">أحدث دورات التسمين المتاحة</h2>
+            <span class="text-xs font-black text-primary-700 uppercase tracking-wider bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">
+                فرص متاحة الآن
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mt-3">دورات تسمين نشطة للاستثمار</h2>
         </div>
-        <a asp-controller="Cycles" asp-action="Index" class="text-primary font-bold hover:underline flex items-center gap-1.5 text-sm">
-            <span>عرض جميع الدورات</span>
-            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        <a asp-controller="Cycles" asp-action="Index" class="inline-flex items-center gap-2 text-primary font-bold hover:text-primary-700 transition-colors text-sm">
+            <span>تصفح جميع الفرص المتاحة</span>
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
         </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         @foreach (var cycle in Model.FeaturedCycles)
         {
             <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col group">
-                <div class="relative h-52 overflow-hidden">
+                <!-- Cycle Image & Badges -->
+                <div class="relative h-56 overflow-hidden">
                     <img src="@cycle.ImageUrl" alt="@cycle.AnimalType" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     
-                    <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-bold text-primary shadow">
+                    <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow">
                         متبقي: @cycle.RemainingFunding.ToString("N0") ج.م
                     </div>
 
                     @if (cycle.IsBarnInsured)
                     {
-                        <div class="absolute top-3 right-3 bg-orange-600/95 text-white px-2.5 py-1 rounded-xl text-[10px] font-black shadow flex items-center gap-1">
-                            <i data-lucide="shield" class="w-3 h-3"></i>
-                            <span>خيار التأمين مسجل</span>
+                        <div class="absolute top-3 right-3 bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[10px] font-black shadow flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                            <span>تأمين حظيرة معتمد</span>
                         </div>
                     }
+
+                    <div class="absolute bottom-3 right-3 left-3 text-white">
+                        <span class="text-[11px] font-bold text-emerald-300">دورة تسمين لمدة @cycle.ExpectedDurationDays يوماً</span>
+                        <h3 class="font-black text-xl text-white">@cycle.AnimalType</h3>
+                    </div>
                 </div>
 
-                <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-black text-gray-900 text-lg leading-tight">@cycle.AnimalType</h3>
+                <!-- Cycle Body -->
+                <div class="p-6 flex-1 flex flex-col justify-between space-y-5">
+                    <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">@cycle.Description</p>
+
+                    <!-- Key stats pill grid -->
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                        <div>
+                            <span class="text-gray-500 block text-[10px] font-medium">سعر الرأس:</span>
+                            <span class="font-black text-gray-900 text-sm">@cycle.StartPricePerHead.ToString("N0") ج.م</span>
                         </div>
-                        <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">@cycle.Description</p>
+                        <div>
+                            <span class="text-gray-500 block text-[10px] font-medium">الوزن المتوقع:</span>
+                            <span class="font-black text-gray-900 text-sm">@cycle.TargetWeight.ToString("N0") كجم</span>
+                        </div>
                     </div>
 
-                    <!-- Progress Bar -->
+                    <!-- Funding Progress -->
                     <div class="space-y-1.5">
                         <div class="flex justify-between text-xs font-bold">
-                            <span class="text-gray-500">التمويل: @cycle.FundingProgressPercentage%</span>
-                            <span class="text-primary">@cycle.FundingGoal.ToString("N0") ج.م</span>
+                            <span class="text-gray-600">اكتمال التمويل: @cycle.FundingProgressPercentage%</span>
+                            <span class="text-primary font-black">@cycle.FundingGoal.ToString("N0") ج.م</span>
                         </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
                             <div class="bg-primary h-full rounded-full transition-all duration-500" style="width: @cycle.FundingProgressPercentage%"></div>
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-gray-100 flex items-center gap-2">
-                        <a asp-controller="Cycles" asp-action="Details" asp-route-id="@cycle.Id" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-xl text-center text-xs transition-colors">
-                            تفاصيل الدورة
+                    <!-- Action Buttons -->
+                    <div class="pt-2 flex items-center gap-2">
+                        <a asp-controller="Cycles" asp-action="Details" asp-route-id="@cycle.Id" 
+                           class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 rounded-xl text-center text-xs transition-colors">
+                            تفاصيل ودراسة الدورة
                         </a>
+
                         @if (Context.Session.GetString("UserRole") == "Investor")
                         {
                             <button hx-get="/Investments/InvestModal?cycleId=@cycle.Id" 
                                     hx-target="#modal-container" 
                                     hx-swap="innerHTML"
-                                    class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-2.5 rounded-xl text-center text-xs transition-colors shadow-sm">
+                                    class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-center text-xs transition-colors shadow-sm">
                                 استثمر الآن
                             </button>
                         }
-                        else if (Context.Session.GetString("UserId") == null)
+                        else
                         {
-                            <a asp-controller="Auth" asp-action="Login" class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-2.5 rounded-xl text-center text-xs transition-colors shadow-sm">سجل الدخول للاستثمار</a>
+                            <a asp-controller="Auth" asp-action="Login" 
+                               class="flex-1 bg-primary hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-center text-xs transition-colors shadow-sm">
+                                ابدأ الاستثمار
+                            </a>
                         }
                     </div>
                 </div>
@@ -280,26 +569,205 @@
 
     @if (!Model.FeaturedCycles.Any())
     {
-        <div class="text-center rounded-3xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12">
-            <div class="w-14 h-14 rounded-2xl bg-white text-gray-400 flex items-center justify-center mx-auto shadow-sm"><i data-lucide="calendar-days" class="w-7 h-7"></i></div>
-            <h3 class="font-black text-gray-900 mt-4">لا توجد دورات متاحة حالياً</h3>
-            <p class="text-sm text-gray-500 mt-2">نعمل على مراجعة الدورات الجديدة. يمكنك العودة لاحقاً أو التعرف على خطوات الانضمام.</p>
-            <a asp-controller="Home" asp-action="Onboarding" class="inline-flex items-center gap-2 text-primary font-bold text-sm mt-4 hover:underline">تعرّف على طريقة البدء <i data-lucide="arrow-left" class="w-4 h-4"></i></a>
+        <div class="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
+            <i data-lucide="calendar" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+            <h3 class="font-bold text-gray-700">لا توجد دورات متاحة للعرض حالياً</h3>
+            <p class="text-xs text-gray-500 mt-1">يتم مراجعة دورات جديدة من قبل فريق الإشراف البيطري وسيتم طرحها قريباً.</p>
         </div>
     }
 </section>
 
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 sm:pb-20">
-    <div class="relative overflow-hidden rounded-[2rem] bg-gradient-to-l from-primary-900 to-primary-700 px-6 py-10 sm:px-10 sm:py-12 text-center text-white">
-        <div class="absolute -left-12 -top-20 w-56 h-56 rounded-full bg-white/5"></div>
-        <div class="relative">
-            <span class="text-xs font-bold text-green-200">خطوتك التالية</span>
-            <h2 class="text-2xl sm:text-3xl font-black mt-2">لكل طرف طريق واضح للبدء</h2>
-            <p class="text-sm text-white/70 mt-3">اختر حساب المستثمر لاستكشاف الدورات، أو حساب المربي لإدارة دورة إنتاج.</p>
-            @if (Context.Session.GetString("UserId") == null)
-            {
-                <a asp-controller="Home" asp-action="Onboarding" class="inline-flex items-center justify-center gap-2 bg-white text-primary-900 font-black px-7 py-3.5 rounded-xl mt-6 hover:bg-green-50 transition-colors">اختيار نوع الحساب <i data-lucide="arrow-left" class="w-4 h-4"></i></a>
-            }
+<!-- Dual Insurance & Capital Protection Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="insurance-gradient-bg rounded-[2.5rem] p-8 sm:p-14 text-white relative overflow-hidden border border-emerald-900/50 shadow-2xl">
+        <div class="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl"></div>
+        <div class="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl"></div>
+
+        <div class="relative grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div class="lg:col-span-7 space-y-6">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    منظومة الأمان وحماية رأس المال
+                </span>
+
+                <h2 class="text-3xl sm:text-4xl font-black leading-tight text-white">
+                    كيف تحمي منصة دواب استثمارك ضد المخاطر؟
+                </h2>
+
+                <p class="text-sm sm:text-base text-emerald-100/90 leading-relaxed font-medium">
+                    الإنتاج الحيواني ثروة حقيقية، ولإدارته باحترافية قمنا بتأسيس منظومة حماية مزدوجة تعوض المستثمر وتؤمن سير العمليات:
+                </p>
+
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-1 border border-emerald-400/30">
+                            <i data-lucide="check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-base">وثيقة تأمين حياة الماشية (3.0%)</h4>
+                            <p class="text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                صندوق تعويضي تكافلي يغطي حالات النفوق أو الأمراض الوبائية الطارئة، مع فحص دوري من الأطباء البيطريين لتعويض رأس المال فوراً.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-1 border border-amber-400/30">
+                            <i data-lucide="check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-base">تأمين وسلامة الحظائر</h4>
+                            <p class="text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                اشتراطات صارمة للمزارع تشمل التهوية، كاميرات المراقبة، التطهير الدوري، وتأمين الحظائر ضد مخاطر الحريق والسرقة.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0 mt-1 border border-blue-400/30">
+                            <i data-lucide="check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-base">فحص جنائي وأوراق قانونية للمربين</h4>
+                            <p class="text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                لا يتم قبول أي مربٍ إلا بعد التحقق الميداني من المزرعة وفحص صحيفة الحالة الجنائية وتوقيع عقود الأمانة والالتزام.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Badge Card -->
+            <div class="lg:col-span-5 bg-black/40 backdrop-blur-md rounded-3xl p-8 border border-white/20 text-center space-y-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-400 text-gray-950 flex items-center justify-center mx-auto font-black shadow-lg">
+                    <i data-lucide="award" class="w-9 h-9"></i>
+                </div>
+                <h3 class="text-xl font-black text-white">ضمان الشفافية بنسبة 100%</h3>
+                <p class="text-xs text-emerald-100/80 leading-relaxed">
+                    جميع المعاملات المالية مسجلة في حساباتك ويمكنك تصدير كشوف حساب مفصلة مع صور وسجلات التحويل البنكي لكل دورة.
+                </p>
+                <div class="pt-4 border-t border-white/15">
+                    <span class="block text-xs text-emerald-200/70">رصيد صندوق الحماية التكافلي الحالي:</span>
+                    <span class="text-2xl font-black text-amber-300">@Model.InsuranceSummary.TotalFundBalance.ToString("N0") ج.م</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- For Breeders Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="bg-orange-50 border border-orange-200 rounded-3xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="space-y-3 text-right">
+            <span class="text-xs font-black text-orange-800 uppercase tracking-wider bg-orange-100 px-4 py-1.5 rounded-full border border-orange-200">
+                بوابة المربين وأصحاب المزارع
+            </span>
+            <h3 class="text-2xl sm:text-3xl font-black text-gray-900">
+                تمتلك مزرعة وخبرة في التسمين؟ وسع مشروعك معنا
+            </h3>
+            <p class="text-xs sm:text-sm text-gray-600 max-w-2xl leading-relaxed">
+                نوفر لك التمويل اللازم لشراء رؤوس الماشية والأعلاف، ونتولى إدارة المستثمرين وتأمين الدورة لتتفرغ أنت للرعاية والإنتاج وتحقيق أعلى أرباح.
+            </p>
+        </div>
+
+        <div class="shrink-0 flex flex-col sm:flex-row gap-3">
+            <a asp-controller="Auth" asp-action="Register" class="bg-secondary hover:bg-orange-700 text-white font-bold px-7 py-3.5 rounded-2xl text-sm transition-all shadow-md shadow-secondary/20 flex items-center gap-2 justify-center">
+                <i data-lucide="tractor" class="w-4 h-4"></i>
+                <span>انضم كمربي معتمد</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Frequently Asked Questions (FAQ) with Alpine.js -->
+<section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20" x-data="{ activeFaq: null }">
+    <div class="text-center space-y-3 mb-12">
+        <span class="text-xs font-black text-primary-700 uppercase tracking-wider bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">
+            الأسئلة الشائعة
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-gray-900">
+            كل ما تود معرفته عن منصة دواب
+        </h2>
+    </div>
+
+    <div class="space-y-4">
+        <!-- FAQ 1 -->
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <button @@click="activeFaq = activeFaq === 1 ? null : 1" 
+                    class="w-full p-5 text-right font-black text-gray-900 text-sm sm:text-base flex justify-between items-center hover:bg-gray-50 transition-colors">
+                <span>هل الاستثمار عبر منصة دواب متوافق مع الشريعة الإسلامية؟</span>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-300" :class="activeFaq === 1 ? 'rotate-180 text-primary' : ''"></i>
+            </button>
+            <div x-show="activeFaq === 1" x-collapse class="p-5 pt-0 text-xs sm:text-sm text-gray-700 leading-relaxed border-t border-gray-100">
+                نعم، بنسبة 100%. الاستثمار قائم على عقد "المضاربة والمشاركة المشروعة" في تجارة وإنتاج فعلي (شراء الماشية، تسمينها، وبيعها في السوق). الأرباح مقسمة بنسب معلومة من صافي الربح الفعلي بعد البيع (60% للمستثمرين، 30% للمربي، 10% للمنصة)، ولا توجد أي فائدة ربوية ثابتة أو مضمونة مسبقاً.
+            </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <button @@click="activeFaq = activeFaq === 2 ? null : 2" 
+                    class="w-full p-5 text-right font-black text-gray-900 text-sm sm:text-base flex justify-between items-center hover:bg-gray-50 transition-colors">
+                <span>ما هي الضمانات التي تحمي رأس مالي؟</span>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-300" :class="activeFaq === 2 ? 'rotate-180 text-primary' : ''"></i>
+            </button>
+            <div x-show="activeFaq === 2" x-collapse class="p-5 pt-0 text-xs sm:text-sm text-gray-700 leading-relaxed border-t border-gray-100">
+                نوفر 4 ضمانات رئيسية: 1) عقد استثمار رسمي مدني ملزم يحمل أرقام تعريفية للرؤوس المستثمر بها. 2) وثيقة تأمين حياة الماشية ضد النفوق والأوبئة (3%). 3) تأمين الحظيرة المعتمد ضد الحوادث. 4) التحقق الجنائي والقانوني وتوثيق الضمانات على المربي قبل تسليمه أي دورة.
+            </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <button @@click="activeFaq = activeFaq === 3 ? null : 3" 
+                    class="w-full p-5 text-right font-black text-gray-900 text-sm sm:text-base flex justify-between items-center hover:bg-gray-50 transition-colors">
+                <span>كيف يمكنني متابعة أوزان وصحة الماشية أثناء الدورة؟</span>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-300" :class="activeFaq === 3 ? 'rotate-180 text-primary' : ''"></i>
+            </button>
+            <div x-show="activeFaq === 3" x-collapse class="p-5 pt-0 text-xs sm:text-sm text-gray-700 leading-relaxed border-t border-gray-100">
+                من خلال لوحة تحكم المستثمر على المنصة، يسجل المربي والطبيب البيطري سجلات دورية مصورة تشمل قياسات الوزن الفعلي ومعدل التحويل الغذائي اليومي، مع جدول التطعيمات البيطرية ونوع الأعلاف المستهلكة.
+            </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <button @@click="activeFaq = activeFaq === 4 ? null : 4" 
+                    class="w-full p-5 text-right font-black text-gray-900 text-sm sm:text-base flex justify-between items-center hover:bg-gray-50 transition-colors">
+                <span>متى وكيف يتم تحويل رأس المال والأرباح إلى حسابي؟</span>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-300" :class="activeFaq === 4 ? 'rotate-180 text-primary' : ''"></i>
+            </button>
+            <div x-show="activeFaq === 4" x-collapse class="p-5 pt-0 text-xs sm:text-sm text-gray-700 leading-relaxed border-t border-gray-100">
+                عند اكتمال مدة دورة التسمين (عادة 4 إلى 6 أشهر) وبيع الماشية، تقوم إدارة المنصة بتسوية الحسابات وحساب صافي الأرباح وإيداع كامل رأس المال بالإضافة للأرباح في حسابك البنكي أو محفظتك أو إنستاباي خلال 72 ساعة عمل.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final Bottom CTA Banner with Guaranteed Solid Dark Green Gradient -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="relative overflow-hidden rounded-[2.5rem] cta-gradient-bg px-8 py-16 sm:px-14 sm:py-20 text-center text-white shadow-2xl border border-emerald-900/60">
+        <div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl"></div>
+        <div class="absolute -left-20 -top-20 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl"></div>
+
+        <div class="relative max-w-2xl mx-auto space-y-6">
+            <span class="inline-block text-xs font-black text-amber-300 uppercase tracking-widest bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
+                ابدأ اليوم
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">
+                اجعل أموالك تنمو في استثمار حقيقي ملموس
+            </h2>
+            <p class="text-sm sm:text-base text-emerald-100/90 leading-relaxed font-medium">
+                انضم الآن لمئات المستثمرين في مصر وحقق عوائد استثنائية مع منصة دواب.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <a asp-controller="Auth" asp-action="Register" 
+                   class="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-gray-950 font-black px-9 py-4 rounded-2xl text-base shadow-xl transition-all hover:scale-105">
+                    <span>إنشاء حساب استثماري مجاناً</span>
+                    <i data-lucide="arrow-left" class="w-5 h-5 text-gray-950"></i>
+                </a>
+                <a asp-controller="Cycles" asp-action="Index" 
+                   class="inline-flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white font-bold px-8 py-4 rounded-2xl border-2 border-white/30 backdrop-blur transition-all">
+                    <span>استكشاف الدورات أولاً</span>
+                </a>
+            </div>
         </div>
     </div>
 </section>

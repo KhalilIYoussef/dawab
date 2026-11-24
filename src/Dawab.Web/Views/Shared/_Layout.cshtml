@@ -26,21 +26,29 @@
                             DEFAULT: '#1b5e20',
                             50: '#e8f5e9',
                             100: '#c8e6c9',
+                            200: '#a5d6a7',
+                            300: '#81c784',
+                            400: '#66bb6a',
                             500: '#4caf50',
                             600: '#388e3c',
                             700: '#2e7d32',
                             800: '#1b5e20',
                             900: '#0d3d12',
+                            950: '#06230b',
                         },
                         secondary: {
                             DEFAULT: '#e65100',
                             50: '#fff3e0',
                             100: '#ffe0b2',
+                            200: '#ffcc80',
+                            300: '#ffb74d',
+                            400: '#ffa726',
                             500: '#ff9800',
                             600: '#fb8c00',
                             700: '#f57c00',
                             800: '#ef6c00',
                             900: '#e65100',
+                            950: '#431407',
                         }
                     }
                 }
@@ -58,7 +66,20 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
+        * { font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif; }
         body { font-family: 'Cairo', sans-serif; }
+        .hero-gradient-bg {
+            background: #06230b !important;
+            background: linear-gradient(135deg, #031706 0%, #06280e 45%, #0c3e16 100%) !important;
+        }
+        .cta-gradient-bg {
+            background: #06230b !important;
+            background: linear-gradient(135deg, #031706 0%, #093712 50%, #134e1c 100%) !important;
+        }
+        .insurance-gradient-bg {
+            background: #06230b !important;
+            background: linear-gradient(135deg, #021204 0%, #06260c 60%, #0a3d13 100%) !important;
+        }
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: inline-block; }
         .htmx-request.htmx-indicator { display: inline-block; }
